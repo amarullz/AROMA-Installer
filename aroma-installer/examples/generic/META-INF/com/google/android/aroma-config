@@ -1,0 +1,430 @@
+##
+#
+# AROMA Installer - AROMA Configuration
+#       (c) 2011 by Ahmad Amarullah
+#           amarullz - xda-developers
+#           http://www.amarullz.com/
+#
+#       Version 1.0
+#
+# INFO:
+#   If you want the installer working, please sign your
+#   script in http://www.amarullz.com/
+#
+#   <aroma-assets> = META-INF/com/google/android/aroma
+#   <dp>           = Device Pixelate. WVGA/QHD = 3, HVGA = 2.
+##
+
+
+##
+# Calibrate Touchscreen
+#  defaut: HTC Desire Touch Screen Calibrate Data 8,-20,8,-20
+#
+# For other device, run the installer, then press "menu"
+# and select Calibrating Tools. Follow Instructions, and make
+# sure the touch screen has been valid in the testing step.
+#
+# In the end, there will be alert dialog with calibration data
+# ( green ), replace this calibrate() function with that data.
+#
+calibrate("8","-20","8","-20");
+
+
+##
+# Custom Key Code - Usefull For Some Device which not used
+#                   Standard key code for up/down/select/back/menu
+#
+# You can capture the keycode in
+# recovery using "aroma-keycapture-flashable.zip" Available in
+# AROMA Installer Thread.
+#
+# Press some key when it run, it will return key code,
+# that key can override up/down/select/back/menu actions in
+# AROMA Installer, you can even set your home key for up, or
+# volume down for select item
+#
+#-------- Uncomment & Modify this Code:
+#
+# ini_set("customkeycode_up",     "115");
+# ini_set("customkeycode_down",   "114");
+# ini_set("customkeycode_select", "116");
+# ini_set("customkeycode_menu",   "139");
+# ini_set("customkeycode_back",   "158");
+#
+
+
+##
+# Set UI Color
+# foo   = Main Color ( If Gradient, it was Top Color )
+# foo_g = Main Color Gradient ( Bottom Color )
+#
+#   winbg       : Main/Top Most Window Backgroud
+#   textbg      : Textbox, Checkbox, and any scrollable UI Background
+#   textfg      : Textbox, Checkbox, and any scrollable UI Text Foreground
+#   textfg_gray : Gray Text ( on Optionbox/Checkbox Item Description )
+#   controlbg   : Control / Button / Checkbox border - Background Color
+#   controlfg   : Button Text Color
+#   selectbg    : Selected Element Background ( Pushed/focused Button/items, etc )
+#   selectfg    : Selected Element Text/Foreground Color
+#   titlebg     : Window Title Background
+#   titlefg     : Window Title Text Foreground Color
+#   navbg       : Bottom Bar (Navigation Bar) Background. Next-Previous Area
+#   border      : Common Border Color
+#
+#--- If not sets, It will use default colors ( Sense Like )
+#
+# Supported 3 & 6 Char Hex Colors:
+#   #fff or #ffffff
+#   #469 or #46689a
+#
+#--- Uncomment to use custom color scheme: (Dark)
+# setcolor("winbg",       "#444");
+# setcolor("winbg_g",     "#222");
+# setcolor("textbg",      "#333");
+# setcolor("textfg",      "#fff");
+# setcolor("textfg_gray", "#bbb");
+# setcolor("controlbg",   "#444");
+# setcolor("controlbg_g", "#222");
+# setcolor("controlfg",   "#fff");
+# setcolor("selectbg",    "#653");
+# setcolor("selectbg_g",  "#542");
+# setcolor("selectfg",    "#ffd");
+# setcolor("titlebg",     "#333");
+# setcolor("titlebg_g",   "#000");
+# setcolor("titlefg",     "#fff");
+# setcolor("navbg",       "#333");
+# setcolor("navbg_g",     "#222");
+# setcolor("border",      "#666");
+# setcolor("border_g",    "#444");
+
+
+##
+# Initializing Rom Information
+#
+ini_set("rom_name",             "AROMA ROM");
+ini_set("rom_version",          "1.0");
+ini_set("rom_author",           "amarullz");
+ini_set("rom_device",           "HTC Desire (bravo)");
+
+
+##
+# Show Splash for 4 seconds ( 1000 = 1 sec )
+#   "sample" will read <aroma-assets>/"sample".png
+#
+# Image Will auto arrange into center horizontal&vertical
+#
+splash(4000, "sample");
+
+
+##
+# View Box UI.
+#
+# Arguments:
+#   1. Title Text ( max: 31 chars )
+#   2. Text To Show In Window ( max: 1023 chars )
+#   3. PNG Icons, relative to <aroma-assets> ( max width & height: 70 * <dp> )
+#
+viewbox(
+  # Arg 1
+    "Welcome",
+  
+  # Arg 2
+    "You are about to Installing AROMA ROM for HTC Desire GSM (bravo).\n\n"+
+    "AROMA ROM for HTC Desire GSM, Bring your old Desire Hardware "+
+    "Into Stunning Android 5.0 Jelly with AROMA UI, yet "+
+    "Powerfull, Stable and Fastest ROM for HTC Desire.\n\n\n"+
+    "  VERSION : <#080>1.0</#> Insane Edition\n"+
+    "  UPDATED : <#080>Dec, 30 2011</#>\n\n\n"+
+    "Press Next to Continue the Installation...",
+  
+  # Arg 3
+    "icons/info"
+);
+
+
+##
+# Agreement Box UI.
+#
+# Arguments:
+#   1. Title Text ( max: 31 chars )
+#   2. Info Text To Show below title ( max: 1023 chars )
+#   3. PNG Icons, relative to <aroma-assets> ( max width & height: 70 * <dp> )
+#   4. Text. ( can readed from file, with "readfile_aroma" )
+#   5. Agreement Text in checkbox
+#   6. Alert Text when user not checked the checkbox
+#
+agreebox(
+  # Arg 1
+    "Terms Of Use",
+  
+  # Arg 2
+    "Please read carefully The AROMA ROM Terms of Use Below...",
+  
+  # Arg 3
+    "icons/agreement",
+  
+  # Arg 4
+    ## Read From File: Will read <aroma-assets>/sample.txt
+    readfile_aroma("sample.txt"),
+  
+  # 5
+    "I Agree with this Terms Of Use...",
+  
+  # 6
+    "Please check the agreement..."
+);
+
+
+##
+# Text Box UI. - Same with Agreement, but without checkbox and alert.
+#
+# Arguments:
+#   1. Title Text ( max: 31 chars )
+#   2. Info Text To Show below title ( max: 1023 chars )
+#   3. PNG Icons, relative to <aroma-assets> ( max width & height: 70 * <dp> )
+#   4. Text. ( can readed from file, with "readfile_aroma" )
+#
+textbox(
+  # Arg 1
+    "Changelogs",
+  
+  # Arg 2
+  "AROMA ROM Changelogs",
+  
+  # Arg 3
+    "icons/info",
+  
+  # Arg 4
+    readfile_aroma("sample.txt")
+);
+
+
+##
+#
+# Show please wait Interface.
+#
+pleasewait("Creating Test Temp File...");
+
+
+##
+#
+# Create Temp text file. fill be store at
+# /tmp/aroma-data/"test.txt"
+#
+writetmpfile("test.txt","This is test txt...");
+
+
+##
+#
+# Show Alert Dialog...
+#
+# Arguments:
+#   1. Title Text ( max: 31 chars )
+#   2. Info Text To Show below title ( max: 512 chars )
+#   3. PNG Icons, relative to <aroma-assets> ( max width & height: 70 * <dp> )
+#   4. OK Button Text. if not defined, it will use "OK"
+#
+alert(
+  # Arg 1
+    "Temp File Has Been Created",
+  
+  # Arg 2
+    "Test with: \n"+
+    " > adb shell\n"+
+    " # cd /tmp/aroma-data\n"+
+    " # cat test.txt\n\n"+
+    "Thanks...",
+  
+  # Arg 3
+    "icons/info",
+  
+  # Arg 4
+    "Yahoo..."
+);
+
+
+
+pleasewait("Test Variable & Calculation...");
+##
+#
+# Test Variable and Math Calculation
+#
+  setvar("foo","Initial Value");
+  appendvar("foo"," Append After");
+  prependvar("foo","Prepend Before ");
+
+#
+# result: "Prepend Before Initial Value Append After"
+#
+  setvar("calculating",
+    # 40 * (5+10)
+    cal("40","*",cal("5","+","10"))
+  );
+
+
+pleasewait("Get Partitions Size...");
+#
+# getdisksize( path to mount point, unit size - m=MB, k=KB, b=byte )
+#
+setvar("systemsize",getdisksize("/system","k"));
+setvar("sdextsize", getdisksize("/sd-ext","m"));
+
+
+#
+# Show Data In Alert
+#
+alert(
+  # Arg 1
+    "Test Variables & Calc",
+  
+  # Arg 2
+    "foo: \n"+
+    getvar("foo")+"\n"+
+    
+    "calculating: \n"+
+      getvar("calculating")+"\n\n"+
+    
+    "/system: "+
+    getvar("systemsize")+"KB\n"+
+    
+    "/sd-ext: \n"+
+    getvar("sdextsize")+"MB\n"+
+  
+  # Arg 3
+    "icons/alert",
+  
+  # Arg 4
+    "Yeah"
+);
+
+##
+# Show Menubox
+#
+menubox(
+  # Title
+    "Install Type",
+  
+  # Sub Title
+    "Lorem Ipsum Dolore",
+  
+  # Icon
+    "icons/install",
+    
+  # Will be saved in /tmp/aroma-data/type.prop
+    "type.prop",
+    
+  # Items ( per 3 arguments ): Title, Subtitle/description, Icon
+    # Item 1
+    "Typical",    "Install default recommended packages into your phone.", "icons/install",
+    
+    # Item 2
+    "Customize",  "Install only selected packages into your phone.", "icons/apps"
+);
+
+##
+# Select Box
+#
+selectbox(
+  # Title
+    "Select Main Mods",
+  
+  # Sub Title
+    "Please Select ROM Mods Below:",
+  
+  # Icon
+    "icons/apps",
+  
+  # Will be saved in /tmp/aroma-data/mods.prop
+    "mods.prop",
+  
+  # Items ( per 3 arguments ): Title, Subtitle/description, Item Type
+  #   Item Type:
+  #   0 = Unchecked by default
+  #   1 = Checked by default
+  #   2 = Item Group Title ( the subtitle won't be used )
+  #
+    # Group 1
+    "SD-EXT Mods","",2,
+      
+      # Item 1.1
+      "Generic APP2SD",
+        "Default Mods with APKs in sd-ext, and Data in Internal Storage", 1,
+      
+      # Item 1.2
+      "AD2SDX by amarullz",
+        "Enhanced Mods with All non-system files in sd-ext",0,
+    
+    # Group 2
+    "Boot Animation","",2,
+      # Item 2.1
+      "Galaxy Nexus",
+        "Boot Animation from Galaxy Nexus ROM.", 1,
+      
+      # Item 2.2
+      "Generic HTC",
+        "Generic White HTC Quietly Briliant Boot Animation.",0
+);
+
+##
+# Check Box
+#
+checkbox(
+  # Title
+    "Select Main Mods",
+  
+  # Sub Title
+    "Please Select Apps To Install:",
+  
+  # Icon
+    "icons/personalize",
+  
+  # Will be saved in /tmp/aroma-data/mods.prop
+    "mods.prop",
+  
+  # Items ( per 3 arguments ): Title, Subtitle/description, Item Type
+  #   Item Type:
+  #   0 = Unchecked by default
+  #   1 = Checked by default
+  #   2 = Item Group Title ( the subtitle won't be used )
+  #
+    # Group 1
+    "SD-EXT Mods","",2,
+      
+      # Item 1.1
+      "Generic APP2SD",
+        "Default Mods with APKs in sd-ext, and Data in Internal Storage", 1,
+      
+      # Item 1.2
+      "AD2SDX by amarullz",
+        "Enhanced Mods with All non-system files in sd-ext",1,
+    
+    # Group 2
+    "Boot Animation","",2,
+      # Item 2.1
+      "Galaxy Nexus",
+        "Boot Animation from Galaxy Nexus ROM.", 1,
+      
+      # Item 2.2
+      "Generic HTC",
+        "Generic White HTC Quietly Briliant Boot Animation.",1
+);
+
+#
+# WONT DO ANYTHING IN TEST BUILD
+#
+install(
+  "Installing",
+  "Installing AROMA INSTALLER...\nPlease Wait Until it Finished...",
+  "icons/install"
+);
+
+# Set Next Text fo Finish
+ini_set("text_next", "Finish");
+
+viewbox(
+  "Installation Completed",
+    "<#080>Congratulation...</#>\n\n"+
+    "AROMA ROM Already Installed Into Your Phone\n"+
+    "Press Finish, and Reboot your phone.\n\nThanks",
+  "icons/info"
+);
