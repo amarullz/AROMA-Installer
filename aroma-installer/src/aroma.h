@@ -58,7 +58,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "1.00"
-#define AROMA_BUILD       "120128-004"
+#define AROMA_BUILD       "120129-005"
 #define AROMA_BUILD_CN    "Anggrek"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -509,6 +509,7 @@ byte      aw_setfocus(AWINDOWP win,ACONTROLP ctl);          // Set Focus into Co
 void      aw_set_on_dialog(byte d);
 void atouch_plaincalibrate();
 void atouch_restorecalibrate();
+void aw_calibtools(AWINDOWP parent);
 //
 // AROMA Window Dialog Controls
 //

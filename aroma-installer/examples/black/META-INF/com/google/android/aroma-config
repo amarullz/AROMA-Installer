@@ -28,7 +28,11 @@
 # ( green ), replace this calibrate() function with that data.
 #
 calibrate("8","-20","8","-20");
-
+#
+# Show Calibrating Tools Directly before anything
+#
+#--- Remove this calibtool if you already know the calibrate data
+calibtool();
 
 ##
 # Custom Key Code - Usefull For Some Device which not used

@@ -40,7 +40,7 @@ struct ev {
     int sent, mt_idx;
 };
 
-int  ATOUCH_TOUCHMSG= 888;
+int  ATOUCH_TOUCHMSG= 330;
 byte ATOUCH_INIT    = 0;
 //330
 int atouch_pressed    = 0;
@@ -125,7 +125,7 @@ int atouch_wait(ATEV *atev){
         case KEY_CENTER: case KEY_CAMERA: case KEY_F21: case KEY_SEND:
           return ATEV_SELECT; break;
         
-        case KEY_SEARCH:
+        case KEY_SEARCH: case 229:
         case KEY_MENU: return ATEV_MENU; break;
           
         case KEY_END: case KEY_BACKSPACE:

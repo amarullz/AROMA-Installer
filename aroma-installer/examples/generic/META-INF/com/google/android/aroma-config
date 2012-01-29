@@ -48,7 +48,7 @@ calibrate("8","-20","8","-20");
 # ini_set("customkeycode_up",     "115");
 # ini_set("customkeycode_down",   "114");
 # ini_set("customkeycode_select", "116");
-# ini_set("customkeycode_menu",   "139");
+ini_set("customkeycode_menu",   "229");
 # ini_set("customkeycode_back",   "158");
 #
 
@@ -115,6 +115,11 @@ ini_set("rom_device",           "HTC Desire (bravo)");
 #
 splash(4000, "sample");
 
+#
+# Show Calibrating Tools Directly before anything
+#
+#--- Remove this calibtool if you already know the calibrate data
+calibtool("");
 
 ##
 # View Box UI.

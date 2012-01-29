@@ -1455,6 +1455,17 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   _AROMA_BACKABLE_FINISH();
   return StringValue(strdup(""));
 }
+Value* AROMA_CALIBTOOL(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos){
+    return StringValue(strdup(""));
+  }
+  //aui_initwinbg("Calibrating Tool");
+  //AWINDOWP hWin   = aw(&aui_win_bg);
+  aw_calibtools(NULL);
+  //aw_destroy(hWin);
+  return StringValue(strdup(""));
+}
 /*************
  *
  *  SHOW ALERT DIALOG
@@ -1711,6 +1722,7 @@ void RegisterAroma() {
   RegisterFunction("setcolor",      AROMA_SETCOLOR);
   RegisterFunction("ini_set",       AROMA_INI_SET);
   RegisterFunction("calibrate",     AROMA_CALIBRATE);
+  RegisterFunction("calibtool",     AROMA_CALIBTOOL);
   
   //-- VARIABLE FUNCTIONS
   RegisterFunction("setvar",        AROMA_SETVAR);

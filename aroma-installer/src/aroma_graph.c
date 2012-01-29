@@ -355,7 +355,7 @@ void ag_sync(){
   ag_isbusy = 0;
   if (!ag_sync_locked){
     ag_refreshlock=1;
-    if (ag_32==1){    
+    if (ag_32==1){
       int x,y;
       for (y=0;y<ag_fbv.yres;y++){
         int yp = y * ag_fbv.xres;
