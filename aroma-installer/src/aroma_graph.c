@@ -9,9 +9,9 @@
 int                             ag_fb=0;        //-- FrameBuffer Handler
 dword                           ag_fbsz;
 word*                           ag_fbuf;        //-- FrameBuffer Direct Memory
-dword*                          ag_fbuf32;
+byte*                           ag_fbuf32;
 word*                           ag_b;           //-- FrameBuffer Cache Memory
-dword*                          ag_b32;
+dword*                          ag_bf32;
 word*                           ag_bz;           //-- FrameBuffer Cache Memory
 dword*                          ag_bz32;
 CANVAS                          ag_c;           //-- FrameBuffer Main Canvas
@@ -23,6 +23,7 @@ byte                            ag_isrun;
 PNGFONTS                        AG_SMALL_FONT;  //-- Fonts Variables
 PNGFONTS                        AG_BIG_FONT;
 int                             ag_dp;          //-- Device Pixel
+byte                            agclp;
 
 /****************************[ DECLARED FUNCTIONS ]*****************************/
 static void *ag_thread(void *cookie);
@@ -118,7 +119,8 @@ byte ag_init(){
     ag_dp = floor( min(ag_fbv.xres,ag_fbv.yres) / 160);
     
     //-- Init Frame Buffer Size
-    ag_fbsz  = (ag_fbv.xres * ag_fbv.yres * (ag_fbv.bits_per_pixel>>3));
+    agclp    = (ag_fbv.bits_per_pixel>>3);
+    ag_fbsz  = (ag_fbv.xres * ag_fbv.yres * ((agclp==3)?4:agclp));
     
     //-- Init Frame Buffer
     if (ag_fbv.bits_per_pixel==16){
@@ -130,20 +132,33 @@ byte ag_init(){
       memcpy(ag_c.data,ag_fbuf,ag_fbsz);
     }
     else{
-      ag_32     = 1;
-      ag_fbuf32 = (dword*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
-      ag_b32    = (dword*) malloc(ag_fbsz);
-      ag_bz32   = (dword*) malloc(ag_fbsz);
-      memset(ag_b32,0,ag_fbsz);
-      ag_blank(NULL); //-- 32bit Use Blank
+      /*
+      printf("INFO 32 BIT:\n");
+      printf("RED  : O=%i, L=%i, M=%i\n",ag_fbv.red.offset,ag_fbv.red.length,ag_fbv.red.msb_right);
+      printf("GREEN: O=%i, L=%i, M=%i\n",ag_fbv.green.offset,ag_fbv.green.length,ag_fbv.green.msb_right);
+      printf("BLUE : O=%i, L=%i, M=%i\n",ag_fbv.blue.offset,ag_fbv.blue.length,ag_fbv.blue.msb_right);
+      printf("TRA : O=%i, L=%i, M=%i\n",ag_fbv.blue.offset,ag_fbv.blue.length,ag_fbv.blue.msb_right);
+      */
       
+      ag_32     = 1;
+      ag_fbuf32 = (byte*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
+      ag_bf32   = (dword*) malloc(ag_fbsz);
+      ag_bz32   = (dword*) malloc(ag_fbsz);
+      memset(ag_bf32,0,ag_fbsz);
+      ag_blank(NULL); //-- 32bit Use Blank
+
       int x,y;
       for (y=0;y<ag_fbv.yres;y++){
         int yp = y * ag_fbv.xres;
+        int yd = y * (ag_fbv.xres*agclp);
         for (x=0;x<ag_fbv.xres;x++){
           int xy = yp+x;
-          ag_b32[xy] = ag_rgb32(ag_r32(ag_fbuf32[xy]),ag_g32(ag_fbuf32[xy]),ag_b32(ag_fbuf32[xy]));
-          ag_setpixel(&ag_c,x,y,ag_rgbto16(ag_b32[xy]));
+          int dxy= yd+(x*agclp);
+          ag_bf32[xy] = ag_rgb32(
+            ag_fbuf32[dxy+(ag_fbv.red.offset>>3)],
+            ag_fbuf32[dxy+(ag_fbv.green.offset>>3)],
+            ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]);
+          ag_setpixel(&ag_c,x,y,ag_rgbto16(ag_bf32[xy]));
         }
       }
     }
@@ -163,7 +178,7 @@ void ag_close(){
   pthread_join(ag_pthread,NULL);
   pthread_detach(ag_pthread);
   if (ag_32){
-    free(ag_b32);
+    free(ag_bf32);
     free(ag_bz32);
     munmap(ag_fbuf32,ag_fbsz);
   }
@@ -284,7 +299,12 @@ void ag_busyprogress(){
         for (y=bs_y;y<bs_y+bs_h;y++){
           int yp = y * ag_fbv.xres;
           int xy  = yp+x;
-          ag_fbuf32[xy]=ag_rgb32(alp,alp,alp);
+          
+          int dxy = (y * (ag_fbv.xres * agclp))+(x*agclp);
+          ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]  =alp;
+          ag_fbuf32[dxy+(ag_fbv.green.offset>>3)]=alp;
+          ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)] =alp;
+          //ag_rgb32(alp,alp,alp);
         }
       }
     }
@@ -309,6 +329,20 @@ void ag_busyprogress(){
     }
   }
 }
+void ag32fbufcopy(){
+  int x,y;
+  for (y=0;y<ag_fbv.yres;y++){
+    int yp = y * ag_fbv.xres;
+    int yd = y * (ag_fbv.xres*agclp);
+    for (x=0;x<ag_fbv.xres;x++){
+      int xy = yp+x;
+      int dxy= yd+(x*agclp);
+      ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]   = ag_r32(ag_bf32[xy]);
+      ag_fbuf32[dxy+(ag_fbv.green.offset>>3)] = ag_g32(ag_bf32[xy]);
+      ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]  = ag_b32(ag_bf32[xy]);
+    }
+  }
+}
 void ag_refreshrate(){
   //-- Wait For Draw
   fsync(ag_fb);
@@ -316,10 +350,12 @@ void ag_refreshrate(){
   //-- Copy Data
   if (ag_32){
     if (ag_isbusy==0){
-      memcpy(ag_fbuf32,ag_b32,ag_fbsz);
+      ag32fbufcopy();
+      //memcpy(ag_fbuf32,ag_bf32,ag_fbsz);
     }
     else if(ag_isbusy==2){
-      memcpy(ag_fbuf32,ag_bz32,ag_fbsz);
+      ag32fbufcopy();
+      //memcpy(ag_fbuf32,ag_bz32,ag_fbsz);
       ag_busyprogress();
     }
     else if(ag_lastbusy<alib_tick()-50){
@@ -362,7 +398,7 @@ void ag_sync(){
         for (x=0;x<ag_fbv.xres;x++){
           int xy  = yp+x;
           color c = ag_c.data[xy];
-          ag_b32[xy] = ag_rgb32(ag_r(c),ag_g(c),ag_b(c));
+          ag_bf32[xy] = ag_rgb32(ag_r(c),ag_g(c),ag_b(c));
         }
       }
     }
@@ -428,8 +464,8 @@ static void *ag_sync_fade_thread(void * cookie){
         for (x=0;x<agw();x++){
           int xy = yp+x;
           color * s = agxy(NULL,x,y);
-          dword   d = ag_b32[xy];
-          ag_b32[xy]  = ag_calculatealpha16to32(s[0],d,255-perc);
+          dword   d = ag_bf32[xy];
+          ag_bf32[xy]  = ag_calculatealpha16to32(s[0],d,255-perc);
         }
       }
       ag_refreshrate();
