@@ -20,6 +20,8 @@ struct fb_var_screeninfo        ag_fbv;
 byte                            ag_32;          //-- FrameBuffer Type 32/16bit
 pthread_t                       ag_pthread;     //-- FrameBuffer Thread Variables
 byte                            ag_isrun;
+byte                            ag_16strd;
+int                             ag_16w;
 PNGFONTS                        AG_SMALL_FONT;  //-- Fonts Variables
 PNGFONTS                        AG_BIG_FONT;
 int                             ag_dp;          //-- Device Pixel
@@ -128,10 +130,38 @@ byte ag_init(){
       ag_fbuf = (word*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
       ag_b    = (word*) malloc(ag_fbsz);
       ag_bz   = (word*) malloc(ag_fbsz);
-      memcpy(ag_b,ag_fbuf,ag_fbsz);
-      memcpy(ag_c.data,ag_fbuf,ag_fbsz);
+      
+      //-- Resolution with Stride
+      ag_16strd = 0;
+      ag_16w    = ag_fbf.line_length/2;
+      if (ag_16w!=ag_fbv.xres) ag_16strd=1;
+      
+      if (ag_16strd==0){
+        //-- Can Use memcpy
+        memcpy(ag_b,ag_fbuf,ag_fbsz);
+        memcpy(ag_c.data,ag_fbuf,ag_fbsz);
+      }
+      else{
+        //-- Should Bit per bit
+        int x,y;
+        for (y=0;y<ag_fbv.yres;y++){
+          int yp = y * ag_fbv.xres;
+          int yd = (ag_16w*y);
+          for (x=0;x<ag_fbv.xres;x++){
+            int xy = yp+x;
+            int dxy= yd+x;
+            ag_b[xy] = ag_fbuf[dxy];
+            ag_setpixel(&ag_c,x,y,ag_b[xy]);
+          }
+        }
+      }
+      
+      
     }
     else{
+      /*printf("INFO 32 BIT:\n");
+      printf("STRIDE: %i\n",ag_fbf.line_length);
+      printf("Width : %i - %i",(ag_fbv.xres*agclp),ag_fbv.xres);
       /*
       printf("INFO 32 BIT:\n");
       printf("RED  : O=%i, L=%i, M=%i\n",ag_fbv.red.offset,ag_fbv.red.length,ag_fbv.red.msb_right);
@@ -150,7 +180,7 @@ byte ag_init(){
       int x,y;
       for (y=0;y<ag_fbv.yres;y++){
         int yp = y * ag_fbv.xres;
-        int yd = y * (ag_fbv.xres*agclp);
+        int yd = (ag_fbf.line_length*y);
         for (x=0;x<ag_fbv.xres;x++){
           int xy = yp+x;
           int dxy= yd+(x*agclp);
@@ -300,7 +330,7 @@ void ag_busyprogress(){
           int yp = y * ag_fbv.xres;
           int xy  = yp+x;
           
-          int dxy = (y * (ag_fbv.xres * agclp))+(x*agclp);
+          int dxy = (ag_fbf.line_length*y)+(x*agclp);
           ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]  =alp;
           ag_fbuf32[dxy+(ag_fbv.green.offset>>3)]=alp;
           ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)] =alp;
@@ -321,7 +351,7 @@ void ag_busyprogress(){
         alp=min(alp,255);
     
         for (y=bs_y;y<bs_y+bs_h;y++){
-          int yp = y * ag_fbv.xres;
+          int yp = y * ag_16w;
           int xy  = yp+x;
           ag_fbuf[xy]=ag_rgb(alp,alp,alp);
         }
@@ -329,17 +359,29 @@ void ag_busyprogress(){
     }
   }
 }
-void ag32fbufcopy(){
+void ag32fbufcopy(dword * bfbz){
   int x,y;
   for (y=0;y<ag_fbv.yres;y++){
     int yp = y * ag_fbv.xres;
-    int yd = y * (ag_fbv.xres*agclp);
+    int yd = (ag_fbf.line_length*y);
     for (x=0;x<ag_fbv.xres;x++){
       int xy = yp+x;
       int dxy= yd+(x*agclp);
-      ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]   = ag_r32(ag_bf32[xy]);
-      ag_fbuf32[dxy+(ag_fbv.green.offset>>3)] = ag_g32(ag_bf32[xy]);
-      ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]  = ag_b32(ag_bf32[xy]);
+      ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]   = ag_r32(bfbz[xy]);
+      ag_fbuf32[dxy+(ag_fbv.green.offset>>3)] = ag_g32(bfbz[xy]);
+      ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]  = ag_b32(bfbz[xy]);
+    }
+  }
+}
+void ag16fbufcopy(word * bfbz){
+  int x,y;
+  for (y=0;y<ag_fbv.yres;y++){
+    int yp = y * ag_fbv.xres;
+    int yd = (ag_16w*y);
+    for (x=0;x<ag_fbv.xres;x++){
+      int xy = yp+x;
+      int dxy= yd+x;
+      ag_fbuf[dxy]=bfbz[xy];
     }
   }
 }
@@ -350,11 +392,11 @@ void ag_refreshrate(){
   //-- Copy Data
   if (ag_32){
     if (ag_isbusy==0){
-      ag32fbufcopy();
+      ag32fbufcopy(ag_bf32);
       //memcpy(ag_fbuf32,ag_bf32,ag_fbsz);
     }
     else if(ag_isbusy==2){
-      ag32fbufcopy();
+      ag32fbufcopy(ag_bz32);
       //memcpy(ag_fbuf32,ag_bz32,ag_fbsz);
       ag_busyprogress();
     }
@@ -365,10 +407,22 @@ void ag_refreshrate(){
   }
   else{
     if (ag_isbusy==0){
-      memcpy(ag_fbuf,ag_b,ag_fbsz);
+      if (ag_16strd==0){
+        //-- Can Use memcpy
+        memcpy(ag_fbuf,ag_b,ag_fbsz);
+      }
+      else{
+        ag16fbufcopy(ag_b);
+      }
     }
     else if(ag_isbusy==2){
-      memcpy(ag_fbuf,ag_bz,ag_fbsz);
+      if (ag_16strd==0){
+        //-- Can Use memcpy
+        memcpy(ag_fbuf,ag_bz,ag_fbsz);
+      }
+      else{
+        ag16fbufcopy(ag_bz);
+      }
       ag_busyprogress();
     }
     else if(ag_lastbusy<alib_tick()-50){
