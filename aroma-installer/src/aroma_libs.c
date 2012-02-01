@@ -182,10 +182,10 @@ byte akinetic_uphandler(AKINETIC * p, int mouseY){
   int   firstPoint      = p->previousPoints[0];
   long  firstTime       = p->previousTimes[0];
   
-  if (currTime-firstTime<2) return 0;
-  else if (currTime-firstTime>20) return 0;
+  if (currTime-firstTime<1) firstTime--;
+  if (currTime-firstTime>25) return 0;
   int   diff            = firstPoint-currPoint;
-  long  time            = currTime - firstTime;
+  long  time            = (currTime - firstTime);
   p->velocity           = ((double) diff/(double) time)*4;
   
   return 1;

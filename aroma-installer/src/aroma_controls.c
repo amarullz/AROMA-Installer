@@ -220,6 +220,8 @@ byte aw_setfocus(AWINDOWP win,ACONTROLP ctl){
 dword aw_dispatch(AWINDOWP win){
   dword msg;
   int i;
+  
+  ui_clear_key_queue();
   while(1){
     //-- Wait For Event
     ATEV        atev;
@@ -675,10 +677,11 @@ byte aw_calibdraw(CANVAS * c,
   byte res=1;
   byte ond=1;
   byte onp=0;
+  ui_clear_key_queue();
   while (ond){
     ATEV atev;
     ui_clear_key_queue();
-    int action=atouch_wait(&atev);
+    int action=atouch_wait_ex(&atev,1);
     switch (action){
       case ATEV_MOUSEDN:{
         onp=1;
@@ -780,16 +783,16 @@ void aw_calibtools(AWINDOWP parent){
   float fully     = agh()-padsz;
   
   byte data_is_valid = 0;
-  int cal_x = 0;
-  int cal_y = 0;
-  int add_x = 0;
-  int add_y = 0;
+  float cal_x = 0;
+  float cal_y = 0;
+  int   add_x = 0;
+  int   add_y = 0;
   if ((halfx>0)&&(fullx>0)&&(halfy>0)&&(fully>0)){
-    cal_x     = round((((centerx-leftx)/halfx) + ((rightx-leftx)/fullx))/2);
-    cal_y     = round((((centery-topy)/halfy) + ((bottomy-topy)/fully))/2);
+    cal_x     = ((((centerx-leftx)/halfx) + ((rightx-leftx)/fullx))/2);
+    cal_y     = ((((centery-topy)/halfy) + ((bottomy-topy)/fully))/2);
     if ((cal_x>0)&&(cal_y>0)){
-      add_x     = -round((leftx / cal_x) - padsz);
-      add_y     = -round((topy / cal_y) - padsz);
+      add_x     = round((leftx / cal_x) - padsz);
+      add_y     = round((topy / cal_y) - padsz);
       data_is_valid = 1;
     }
   }
@@ -798,8 +801,9 @@ void aw_calibtools(AWINDOWP parent){
     atouch_set_calibrate(cal_x,add_x,cal_y,add_y);
     snprintf(datx,255,
       "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
-      "<#060>calibrate(\"%i\",\"%i\",\"%i\",\"%i\");</#>\n\n",
+      "<#060>calibrate(\"%01.4f\",\"%i\",\"%01.4f\",\"%i\");</#>\n\n",
     cal_x,add_x,cal_y,add_y);
+    
     aw_calibdraw(&ccv,-1,xpos,ypos,xtch,ytch);
     isvalid       = 1;
   }

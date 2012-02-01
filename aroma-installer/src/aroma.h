@@ -58,7 +58,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "1.00"
-#define AROMA_BUILD       "120131-007"
+#define AROMA_BUILD       "120201-009"
 #define AROMA_BUILD_CN    "Anggrek"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -189,7 +189,7 @@ typedef struct{
 //
 // AROMA Kinetic Library Structures
 //
-#define AKINETIC_HISTORY_LENGTH     5
+#define AKINETIC_HISTORY_LENGTH     10
 #define AKINETIC_DAMPERING          0.98              // Gravity
 typedef struct  {
   byte    isdown;                                     // Is Touch Down
@@ -441,8 +441,9 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
 //         Licensed under the Apache License
 //
 struct  input_event;
-void    atouch_set_calibrate(int dx, int ax, int dy, int ay);
+void    atouch_set_calibrate(float dx, int ax, float dy, int ay);
 int     atouch_wait(ATEV *atev);
+int     atouch_wait_ex(ATEV *atev, byte calibratingtouch);
 void    atouch_send_message(dword msg);
 int     vibrate(int timeout_ms);
 void    ui_init();

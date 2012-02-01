@@ -18,7 +18,7 @@
 
 ##
 # Calibrate Touchscreen
-#  defaut: HTC Desire Touch Screen Calibrate Data 8,-20,8,-20
+#  defaut: HTC Desire Touch Screen Calibrate Data [7.60,20,7.60,20]
 #
 # For other device, run the installer, then press "menu"
 # and select Calibrating Tools. Follow Instructions, and make
@@ -27,7 +27,7 @@
 # In the end, there will be alert dialog with calibration data
 # ( green ), replace this calibrate() function with that data.
 #
-calibrate("8","-20","8","-20");
+calibrate("7.60","20","7.60","20");
 #
 # Show Calibrating Tools Directly before anything
 #
