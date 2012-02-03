@@ -43,10 +43,10 @@ void acfg_init(){
   snprintf(acfg_var.text_next,31,"Next >");
   snprintf(acfg_var.text_back,31,"< Back");
   
-  snprintf(acfg_var.rom_name,31,AROMA_NAME);
-  snprintf(acfg_var.rom_version,31,AROMA_VERSION);
-  snprintf(acfg_var.rom_author,31,AROMA_BUILD_A);
-  snprintf(acfg_var.rom_device,31,"Not Defined");
+  snprintf(acfg_var.rom_name,63,AROMA_NAME);
+  snprintf(acfg_var.rom_version,63,AROMA_VERSION);
+  snprintf(acfg_var.rom_author,63,AROMA_BUILD_A);
+  snprintf(acfg_var.rom_device,63,"Not Defined");
   
   
   acfg_var.ckey_up      = 0;

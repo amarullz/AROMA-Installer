@@ -31,6 +31,9 @@ static  int       evtouch_sy      = 0;  //-- Saved Y
 static  int       evtouch_x       = 0;  //-- Translated X (Ready to use)
 static  int       evtouch_y       = 0;  //-- Translated Y (Ready to use)
 static  int       evtouch_code    = 888;//-- Touch Virtual Code
+static  int       evtouch_tx      = 0;  //-- Temporary Translated X
+static  int       evtouch_ty      = 0;  //-- Temporary Translated Y
+static  byte      evtouch_locked  = 0;
 
 //-- AROMA RELATIVE EVENT DATA
 static  int       evrel_key       = -1;
@@ -115,8 +118,8 @@ void atouch_set_calibrate(float dx, int ax, float dy, int ay){
 
 //-- TRANSLATE RAW COORDINATE INTO TRANSLATED COORDINATE
 void atouch_translate_raw(){
-  evtouch_x = max(round(((float) evtouch_rx)/touch_div_x)-touch_add_x,0);
-  evtouch_y = max(round(((float) evtouch_ry)/touch_div_y)-touch_add_y,0);
+  evtouch_tx = max(round(((float) evtouch_rx)/touch_div_x)-touch_add_x,0);
+  evtouch_ty = max(round(((float) evtouch_ry)/touch_div_y)-touch_add_y,0);
 }
 
 //-- INPUT EVENT POST MESSAGE
@@ -161,13 +164,11 @@ void ev_input_callback(int fd, short revents){
             evrel_size += ev.value;
             if (evrel_size>8) {
               //-- DOWN
-              //ev_post_message(KEY_DOWN,1);
               ev_post_message(KEY_DOWN,0);
               evrel_size=0;
             }
             else if (evrel_size<-8) {
               //-- UP
-              //ev_post_message(KEY_UP,1);
               ev_post_message(KEY_UP,0);
               evrel_size=0;
             }
@@ -176,13 +177,11 @@ void ev_input_callback(int fd, short revents){
             evrel_size += ev.value;
             if (evrel_size>8) {
               //-- RIGHT
-              //ev_post_message(KEY_RIGHT,1);
               ev_post_message(KEY_RIGHT,0);
               evrel_size=0;
             }
             else if (evrel_size<-8) {
               //-- LEFT
-              //ev_post_message(KEY_LEFT,1);
               ev_post_message(KEY_LEFT,0);
               evrel_size=0;
             }
@@ -193,45 +192,61 @@ void ev_input_callback(int fd, short revents){
         //-- Touch Input Event
         case EV_ABS:{
           if (ev.code==ABS_MT_TOUCH_MAJOR){
-            byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
-            
-            if (tmptouch!=3){
-              atouch_translate_raw(); //-- Translate RAW
+            if ((evtouch_rx>0)&&(evtouch_ry>0)){
+              byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
               
-              //-- TOUCH UP
-              if (tmptouch==1){
-                evtouch_state = 1;
-                evtouch_sx = evtouch_x;
-                evtouch_sy = evtouch_y;
-                ev_post_message(evtouch_code,1);
-              }
-              //-- TOUCH MOVE
-              else if (tmptouch==2){
-                //-- SNAP TOUCH MOVE
-                if ((abs(evtouch_sx-evtouch_x)>=agdp())||(abs(evtouch_sy-evtouch_y)>=agdp())){
-                  //-- IT MOVE MORE THAN DEVICE PIXELATE
-                  evtouch_state = 2;
+              if (tmptouch!=3){
+                atouch_translate_raw(); //-- Translate RAW
+                
+                //-- TOUCH UP
+                if (tmptouch==1){
+                  evtouch_locked=1;
+                  evtouch_x=evtouch_tx;
+                  evtouch_y=evtouch_ty;
+                  evtouch_state = 1;
                   evtouch_sx = evtouch_x;
                   evtouch_sy = evtouch_y;
-                  ev_post_message(evtouch_code,2);
+                  ev_post_message(evtouch_code,1);
                 }
-              }
-              //-- TOUCH UP
-              else{
-                evtouch_state = 0;
-                evtouch_sx = 0;
-                evtouch_sy = 0;
-                ev_post_message(evtouch_code,0);
+                //-- TOUCH MOVE
+                else if (tmptouch==2){
+                  int agdp2=agdp()*2;
+                  //-- SNAP TOUCH MOVE
+                  if ((abs(evtouch_sx-evtouch_tx)>=agdp2)||(abs(evtouch_sy-evtouch_ty)>=agdp2)){
+                    //-- IT MOVE MORE THAN DEVICE PIXELATE
+                    evtouch_locked=1;
+                    evtouch_x=evtouch_tx;
+                    evtouch_y=evtouch_ty;
+                    evtouch_state = 2;
+                    evtouch_sx = evtouch_x;
+                    evtouch_sy = evtouch_y;
+                    ev_post_message(evtouch_code,2);
+                  }
+                }
+                //-- TOUCH UP
+                else{
+                  evtouch_locked=1;
+                  evtouch_state = 0;
+                  evtouch_sx = 0;
+                  evtouch_sy = 0;
+                  evtouch_rx = 0;
+                  evtouch_ry = 0;
+                  ev_post_message(evtouch_code,0);
+                }
               }
             }
           }
           else if ((ev.code==ABS_MT_POSITION_X)||(ev.code==ABS_X)){
             //-- GOT RAW TOUCH X COORDINATE
-            if (ev.value>0) evtouch_rx = ev.value;
+            if (!evtouch_locked){
+              if (ev.value>0) evtouch_rx = ev.value;
+            }
           }
           else if ((ev.code==ABS_MT_POSITION_Y)||(ev.code==ABS_Y)){
             //-- GOT RAW TOUCH Y COORDINATE
-            if (ev.value>0) evtouch_ry = ev.value;
+            if (!evtouch_locked){
+              if (ev.value>0) evtouch_ry = ev.value;
+            }
           }
         }
         break;
@@ -320,6 +335,7 @@ void atouch_send_message(dword msg){
 //-- Clear Queue
 void ui_clear_key_queue() {
   pthread_mutex_lock(&key_queue_mutex);
+  evtouch_locked=0;
   key_queue_len = 0;
   pthread_mutex_unlock(&key_queue_mutex);
 }
@@ -368,6 +384,7 @@ int atouch_wait_ex(ATEV *atev, byte calibratingtouch){
         if (((evtouch_x<=agw())&&(evtouch_y<=agh()))||(calibratingtouch)){
           atev->x = evtouch_x;
           atev->y = evtouch_y;
+          evtouch_locked=0;
           switch(evtouch_state){
             case 1:  return ATEV_MOUSEDN; break;
             case 2:  return ATEV_MOUSEMV; break;
@@ -381,24 +398,29 @@ int atouch_wait_ex(ATEV *atev, byte calibratingtouch){
             atev->d = 0;
             if (evtouch_x<capiative_btnsz){
               atev->k = KEY_HOME;
+              evtouch_locked=0;
               return ATEV_SELECT;
             }
             else if (evtouch_x<(capiative_btnsz*2)){
               atev->k = KEY_MENU;
+              evtouch_locked=0;
               return ATEV_MENU;
             }
             else if (evtouch_x<(capiative_btnsz*3)){
               atev->k = KEY_BACK;
+              evtouch_locked=0;
               return ATEV_BACK;
             }
             else if (evtouch_x<(capiative_btnsz*4)){
               atev->k = KEY_SEARCH;
+              evtouch_locked=0;
               return ATEV_MENU;
             }
           }
           // home,menu,back,search
         }
       }
+      evtouch_locked=0;
     }
     else if ((key!=0)&&(key==acfg()->ckey_up))      return ATEV_UP;
     else if ((key!=0)&&(key==acfg()->ckey_down))    return ATEV_DOWN;

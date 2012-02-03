@@ -27,7 +27,8 @@
 # In the end, there will be alert dialog with calibration data
 # ( green ), replace this calibrate() function with that data.
 #
-calibrate("7.75","50","7.75","50");
+#-------- Uncomment This to insert calibrating data:
+# calibrate("7.75","50","7.75","50");
 
 
 ##

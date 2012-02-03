@@ -617,10 +617,10 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(typ,"text_next") == 0) snprintf(acfg()->text_next,31,val);
   else if (strcmp(typ,"text_back") == 0) snprintf(acfg()->text_back,31,val);
     
-  else if (strcmp(typ,"rom_name") == 0) snprintf(acfg()->rom_name,31,val);
-  else if (strcmp(typ,"rom_version") == 0) snprintf(acfg()->rom_version,31,val);
-  else if (strcmp(typ,"rom_author") == 0) snprintf(acfg()->rom_author,31,val);
-  else if (strcmp(typ,"rom_device") == 0) snprintf(acfg()->rom_device,31,val);
+  else if (strcmp(typ,"rom_name") == 0) snprintf(acfg()->rom_name,63,val);
+  else if (strcmp(typ,"rom_version") == 0) snprintf(acfg()->rom_version,63,val);
+  else if (strcmp(typ,"rom_author") == 0) snprintf(acfg()->rom_author,63,val);
+  else if (strcmp(typ,"rom_device") == 0) snprintf(acfg()->rom_device,63,val);
   
   else if (strcmp(typ,"customkeycode_up") == 0) acfg()->ckey_up=valkey;
   else if (strcmp(typ,"customkeycode_down") == 0) acfg()->ckey_down=valkey;

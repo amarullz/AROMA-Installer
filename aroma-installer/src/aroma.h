@@ -58,7 +58,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "1.00"
-#define AROMA_BUILD       "120201-009"
+#define AROMA_BUILD       "120202-010"
 #define AROMA_BUILD_CN    "Anggrek"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -252,10 +252,10 @@ typedef struct  {
   char  text_back[32];        // < Back
   
   // ROM Text
-  char rom_name[32];          // ROM Name
-  char rom_version[32];       // ROM Version
-  char rom_author[32];        // ROM Author
-  char rom_device[32];        // ROM Device Name
+  char rom_name[64];          // ROM Name
+  char rom_version[64];       // ROM Version
+  char rom_author[64];        // ROM Author
+  char rom_device[64];        // ROM Device Name
   
   // CUSTOM KEY
   int ckey_up;
