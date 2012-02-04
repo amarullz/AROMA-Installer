@@ -134,7 +134,15 @@ byte ag_init(){
       //-- Resolution with Stride
       ag_16strd = 0;
       ag_16w    = ag_fbf.line_length/2;
-      if (ag_16w!=ag_fbv.xres) ag_16strd=1;
+      if (ag_16w!=ag_fbv.xres){
+        if (ag_16w/2==ag_fbv.xres){
+          ag_16strd = 0;
+          ag_16w    = ag_fbv.xres;
+        }
+        else{
+          ag_16strd=1;
+        }
+      }
       
       if (ag_16strd==0){
         //-- Can Use memcpy

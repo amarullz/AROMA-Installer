@@ -246,7 +246,10 @@ static void *aroma_install_package(void *cookie){
         ai_progress_fract_c = 0;
         ai_progress_pos     = strtof(fraction_s, NULL);
       } else if (strcmp(command, "firmware") == 0) {
-        fprintf(apipe(),buffer);
+        
+        //-- Firmware Command
+        fprintf(apipe(),"%s\n",ai_trim(bufall));
+        
       } else if (strcmp(command, "ui_print") == 0) {
         char* str = strtok(NULL, "\n");
         if (str) {
