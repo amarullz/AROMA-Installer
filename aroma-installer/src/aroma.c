@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
   //-- Init Pipe & Show Splash Info
   a_splash(argv[2]);
   if (az_init(argv[3])){
-    if (parent_pid) kill(parent_pid,19);
     a_init_all();
+    if (parent_pid) kill(parent_pid,19);
     if (aui_start()){
       fprintf(apipe(),"ui_print\n");
       fprintf(apipe(),"ui_print " AROMA_NAME " Finished...\n");

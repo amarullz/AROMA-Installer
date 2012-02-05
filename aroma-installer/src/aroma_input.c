@@ -80,15 +80,15 @@ void set_key_pressed(int key,char val){
 int atmsg(){ return evtouch_code; }
 
 //-- TOUCH CALIBRATION
-float touch_div_x =7.75; float touch_div_y =7.75; int touch_add_x =50; int touch_add_y =50; //-- Used
-float ttouch_div_x=7.75; float ttouch_div_y=7.75; int ttouch_add_x=50; int ttouch_add_y=50; //-- Temporary
+float touch_div_x =7.75; float touch_div_y =7.80; int touch_add_x =50; int touch_add_y =50; //-- Used
+float ttouch_div_x=7.75; float ttouch_div_y=7.80; int ttouch_add_x=50; int ttouch_add_y=50; //-- Temporary
 
 //-- NON TRANSLATED CALIBRATING
 void atouch_plaincalibrate(){
   ttouch_div_x = touch_div_x;
-  ttouch_div_y = touch_div_x;
-  ttouch_add_x = touch_div_x;
-  ttouch_add_y = touch_div_x;
+  ttouch_div_y = touch_div_y;
+  ttouch_add_x = touch_add_x;
+  ttouch_add_y = touch_add_y;
   touch_div_x = 1;
   touch_div_y = 1;
   touch_add_x = 0;
@@ -98,22 +98,22 @@ void atouch_plaincalibrate(){
 //-- RESTORE CALIBRATION DATA
 void atouch_restorecalibrate(){
   touch_div_x = ttouch_div_x;
-  touch_div_y = ttouch_div_x;
-  touch_add_x = ttouch_div_x;
-  touch_add_y = ttouch_div_x;
+  touch_div_y = ttouch_div_y;
+  touch_add_x = ttouch_add_x;
+  touch_add_y = ttouch_add_y;
 }
 
 //-- SET CALIBRATION DATA
 void atouch_set_calibrate(float dx, int ax, float dy, int ay){
-  touch_div_x = (float) dx;
-  touch_div_y = (float) dy;
+  touch_div_x = dx;
+  touch_div_y = dy;
   touch_add_x = ax;
   touch_add_y = ay;
   
   ttouch_div_x = touch_div_x;
-  ttouch_div_y = touch_div_x;
-  ttouch_add_x = touch_div_x;
-  ttouch_add_y = touch_div_x;
+  ttouch_div_y = touch_div_y;
+  ttouch_add_x = touch_add_x;
+  ttouch_add_y = touch_add_y;
 }
 
 //-- TRANSLATE RAW COORDINATE INTO TRANSLATED COORDINATE

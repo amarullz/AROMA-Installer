@@ -542,7 +542,7 @@ Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
   if (ReadArgs(state, argv, 4, &dx, &ax, &dy, &ay) < 0){
       return NULL;
   }
-  atouch_set_calibrate((float) atof(dx),atoi(ax),(float) atof(dy),atoi(ay));
+  atouch_set_calibrate((float) strtof(dx,NULL),atoi(ax),(float) strtof(dy,NULL),atoi(ay));
   free(dx);
   free(dy);
   free(ax);
