@@ -1,3 +1,26 @@
+/*
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Descriptions:
+ * -------------
+ * Input Event Hook and Manager
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -24,6 +47,7 @@ static  char      key_pressed[KEY_MAX + 1];
 //-- AROMA EVENT DATA
 static  byte      evthread_active = 1;
 static  byte      evtouch_state   = 0;  //-- 0: Up, 1: Down, 2: Move
+static  byte      evtouch_alreadyu= 1;  //-- Already UP
 static  int       evtouch_rx      = 0;  //-- RAW X
 static  int       evtouch_ry      = 0;  //-- RAW Y
 static  int       evtouch_sx      = 0;  //-- Saved X
@@ -80,8 +104,8 @@ void set_key_pressed(int key,char val){
 int atmsg(){ return evtouch_code; }
 
 //-- TOUCH CALIBRATION
-float touch_div_x =7.75; float touch_div_y =7.80; int touch_add_x =50; int touch_add_y =50; //-- Used
-float ttouch_div_x=7.75; float ttouch_div_y=7.80; int ttouch_add_x=50; int ttouch_add_y=50; //-- Temporary
+float touch_div_x =7.90; float touch_div_y =7.90; int touch_add_x =20; int touch_add_y =20; //-- Used
+float ttouch_div_x=7.90; float ttouch_div_y=7.90; int ttouch_add_x=20; int ttouch_add_y=20; //-- Temporary
 
 //-- NON TRANSLATED CALIBRATING
 void atouch_plaincalibrate(){
@@ -145,7 +169,18 @@ void ev_input_callback(int fd, short revents){
       switch (ev.type){
         //-- Real Key Input Event
         case EV_KEY:{
-          ev_post_message(ev.code,ev.value);
+          if ((ev.code==330)&&(evtouch_alreadyu==0)&&(ev.value==0)){
+            evtouch_alreadyu=1;
+            evtouch_locked=1;
+            evtouch_state=0;
+            evtouch_sx = 0;
+            evtouch_sy = 0;
+            evtouch_rx = 0;
+            evtouch_ry = 0;
+            ev_post_message(evtouch_code,0);
+          }
+          else
+            ev_post_message(ev.code,ev.value);
         }
         break;
         
@@ -194,13 +229,13 @@ void ev_input_callback(int fd, short revents){
           if (ev.code==ABS_MT_TOUCH_MAJOR){
             if ((evtouch_rx>0)&&(evtouch_ry>0)){
               byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
-              
               if (tmptouch!=3){
                 atouch_translate_raw(); //-- Translate RAW
                 
                 //-- TOUCH UP
                 if (tmptouch==1){
                   evtouch_locked=1;
+                  evtouch_alreadyu=0;
                   evtouch_x=evtouch_tx;
                   evtouch_y=evtouch_ty;
                   evtouch_state = 1;
@@ -209,7 +244,7 @@ void ev_input_callback(int fd, short revents){
                   ev_post_message(evtouch_code,1);
                 }
                 //-- TOUCH MOVE
-                else if (tmptouch==2){
+                else if ((tmptouch==2)&&(evtouch_alreadyu==0)){
                   int agdp2=agdp()*2;
                   //-- SNAP TOUCH MOVE
                   if ((abs(evtouch_sx-evtouch_tx)>=agdp2)||(abs(evtouch_sy-evtouch_ty)>=agdp2)){
@@ -224,14 +259,15 @@ void ev_input_callback(int fd, short revents){
                   }
                 }
                 //-- TOUCH UP
-                else{
-                  evtouch_locked=1;
-                  evtouch_state = 0;
-                  evtouch_sx = 0;
-                  evtouch_sy = 0;
-                  evtouch_rx = 0;
-                  evtouch_ry = 0;
-                  ev_post_message(evtouch_code,0);
+                else if ((tmptouch==0)&&(evtouch_alreadyu==0)){
+                    evtouch_locked=1;
+                    evtouch_alreadyu=1;
+                    evtouch_state = 0;
+                    evtouch_sx = 0;
+                    evtouch_sy = 0;
+                    evtouch_rx = 0;
+                    evtouch_ry = 0;
+                    ev_post_message(evtouch_code,0);
                 }
               }
             }

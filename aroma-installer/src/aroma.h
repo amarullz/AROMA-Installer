@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Ahmad Amarullah ( amarullz - xda-developers )
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * Descriptions:
+ * -------------
+ * Main AROMA Installer HEADER
+ *
  */
 
 #ifndef __AROMA_H__
@@ -57,18 +64,17 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "1.00"
-#define AROMA_BUILD       "120205-012"
-#define AROMA_BUILD_CN    "Anggrek"
+#define AROMA_VERSION     "1.10"
+#define AROMA_BUILD       "120208-013"
+#define AROMA_BUILD_CN    "Bougenville"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
 #define AROMA_BUILD_URL   "http://www.amarullz.com/"
-#define AROMA_COPY        "© 2011 by amarullz xda-developers"
+#define AROMA_COPY        "(c) 2011-2012 by amarullz xda-developers"
 #define AROMA_TMP         "/tmp/aroma-data"
 #define AROMA_DIR         "META-INF/com/google/android/aroma"
 #define AROMA_CFG         "META-INF/com/google/android/aroma-config"
 #define AROMA_UPDATESCRPT "META-INF/com/google/android/updater-script"
-#define AROMA_SIGN        "META-INF/CERT.SA"
 #define AROMA_ORIB        "META-INF/com/google/android/update-binary-installer"
 #define AROMA_FRAMEBUFFER "/dev/graphics/fb0"
 #define AROMA_INSTALL_LOG (AROMA_TMP "/.install.log")
@@ -214,8 +220,6 @@ typedef struct  {
 //
 // AROMA Main Configuration Structure
 //
-
-
 typedef struct  {
   // Colors
   color winbg;                // Window Background
@@ -322,6 +326,8 @@ typedef struct{
 FILE *    apipe();        // Recovery pipe to communicate the command
 byte      aui_start();    // Start AROMA UI
 char*     getArgv(int id);
+void      a_reboot(byte type);
+
 
 //
 // AROMA Zip Functions

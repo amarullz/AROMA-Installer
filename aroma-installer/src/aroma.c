@@ -1,15 +1,74 @@
-#include "aroma.h"
+/*
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-FILE* acmd_pipe;
-FILE* apipe(){ return acmd_pipe; }
-int   parent_pid = 0;
-char currArgv[2][256];
+/*
+ * Descriptions:
+ * -------------
+ * Main executable for AROMA Installer Binary
+ *
+ */
+ 
+#include "aroma.h"
+#include <sys/reboot.h>
+
+//* 
+//* GLOBAL UI VARIABLES
+//* 
+static  FILE*   acmd_pipe;
+static  int     parent_pid = 0;
+static  char    currArgv[2][256];
+static  byte    reboot_opt = 0;
+
+//* 
+//* Pass Recovery PIPE
+//* 
+FILE* apipe(){
+  return acmd_pipe;
+}
+
+//* 
+//* Init Reboot Request
+//* 
+void a_check_reboot(){
+  if (reboot_opt!=0){
+    fprintf(apipe(),"ui_print\n");
+    fprintf(apipe(),"ui_print Rebooting...\n");
+    fprintf(apipe(),"ui_print\n");
+    reboot(RB_AUTOBOOT);
+  }
+}
+
+//* 
+//* Set Reboot Request
+//* 
+void a_reboot(byte type){
+  reboot_opt = type;
+}
+
+//* 
+//* Get Command Argument
+//* 
 char* getArgv(int id){
   return currArgv[id];
 }
+
+//* 
+//* Show Text Splash
+//* 
 void a_splash(char * spipe){
-  // printf("\nTEST 1: r:%i, c:%i, f:%i\n",round(4.439),ceil(4.123),floor(7.83));
-  
   int fd      = atoi(spipe);
   acmd_pipe   = fdopen(fd, "wb");
   setlinebuf(acmd_pipe);
@@ -23,13 +82,21 @@ void a_splash(char * spipe){
   fprintf(apipe(),"ui_print\n");
   usleep(500000);
 }
+
+//* 
+//* Init All Resources
+//* 
 void a_init_all(){
   //-- Init
-  ui_init();
-  ag_init();
-  ag_loadsmallfont("small");
-  ag_loadbigfont("big");
+  ui_init();                  //-- Init Event Handler
+  ag_init();                  //-- Init Graphic Framebuffer
+  ag_loadsmallfont("small");  //-- Init Small Font
+  ag_loadbigfont("big");      //-- Init Big Font
 }
+
+//* 
+//* Release All Resources
+//* 
 void a_release_all(){
   //-- Release All
   ag_closefonts();  //-- Release Fonts
@@ -39,7 +106,9 @@ void a_release_all(){
   
 }
 
-//**********[ AROMA MAIN EXECUTABLE ]**********//
+//* 
+//* AROMA Installer Main Executable
+//* 
 int main(int argc, char **argv) {
   int retval = 1;
   parent_pid = getppid();
@@ -89,6 +158,9 @@ int main(int argc, char **argv) {
   //-- Cleanup All
   fclose(acmd_pipe);
   remove_directory(AROMA_TMP);
+  
+  //-- Check Reboot
+  a_check_reboot();
   
   return retval;
 }

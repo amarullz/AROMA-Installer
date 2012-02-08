@@ -5,20 +5,20 @@
 #           amarullz - xda-developers
 #           http://www.amarullz.com/
 #
-#       Version 1.0
+#       Version 1.10
 #
 # INFO:
-#   If you want the installer working, please sign your
-#   script in http://www.amarullz.com/
-#
 #   <aroma-assets> = META-INF/com/google/android/aroma
 #   <dp>           = Device Pixelate. WVGA/QHD = 3, HVGA = 2.
+#                    dp calculated with = round(min(width,height) / 160)
+#   <aroma-tmp>    = /tmp/aroma-data/
+#
 ##
 
 
 ##
 # Calibrate Touchscreen
-#  defaut: HTC Desire Touch Screen Calibrate Data [7.75,50,7.75,50]
+#  defaut: HTC Desire Touch Screen Calibrate Data [7.90,20,7.90,20]
 #
 # For other device, run the installer, then press "menu"
 # and select Calibrating Tools. Follow Instructions, and make
@@ -28,7 +28,7 @@
 # ( green ), replace this calibrate() function with that data.
 #
 #-------- Uncomment This to insert calibrating data:
-# calibrate("7.75","50","7.75","50");
+# calibrate("7.90","20","7.90","20");
 
 
 ##
@@ -49,7 +49,7 @@
 # ini_set("customkeycode_up",     "115");
 # ini_set("customkeycode_down",   "114");
 # ini_set("customkeycode_select", "116");
-ini_set("customkeycode_menu",   "229");
+# ini_set("customkeycode_menu",   "229");
 # ini_set("customkeycode_back",   "158");
 #
 
@@ -114,7 +114,25 @@ ini_set("rom_device",           "HTC Desire (bravo)");
 #
 # Image Will auto arrange into center horizontal&vertical
 #
-splash(4000, "sample");
+#splash(4000, "sample");
+
+##
+# Show Animated Splash for
+#
+# Image Will auto arrange into center horizontal&vertical
+#
+anisplash(
+  # Number of Loop
+  10,
+  
+  # Frame 1 [ Image, duration in millisecond ]
+  "splash/ani4", 10,
+  "splash/ani3", 10,
+  "splash/ani2", 10,
+  "splash/ani1", 10,
+  "splash/ani2", 10,
+  "splash/ani3", 10
+);
 
 #
 # Show Calibrating Tools Directly before anything
@@ -434,3 +452,29 @@ viewbox(
     "Press Finish, and Reboot your phone.\n\nThanks",
   "icons/info"
 );
+
+if
+  confirm(
+    # Arg 1
+      "Reboot",
+    
+    # Arg 2
+      "Reboot Now",
+    
+    # Arg 3
+      "icons/info",
+    
+    # Arg 4 (Yes)
+      "Reboot",
+      
+    # Arg 5 (No)
+      "No"
+  )=="yes"
+then
+  #
+  # reboot("onfinish");   - Reboot if anything finished
+  # reboot("now");        - Reboot Directly
+  # reboot("disable");    - If you set reboot("now") before, use this command to revert it.
+  #
+  reboot("onfinish");
+endif;

@@ -1,86 +1,169 @@
-#include <sys/stat.h>
-#include <errno.h>
-#include "aroma.h"
-#include "edify/expr.h"
+/*
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-/*************
+/*
+ * Descriptions:
+ * -------------
+ * Source code for parsing and processing edify script (aroma-config)
  *
- *  GLOBAL VARIABLE & MACRO
- *
- ************/
-int aparse_installpos = 0;
-int aparse_backpos    = 0;
-int aparse_startpos   = 0;
-int aparse_isback     = 0;
-int aui_isbgredraw    = 0;
-int aui_minY          = 0;
-CANVAS aui_bg;
-CANVAS aui_win_bg;
-#define _AROMA_BACKABLE_INIT() int func_pos = argv[0]->start; if ((func_pos<aparse_installpos)||(func_pos<aparse_startpos)){ aparse_backpos = func_pos; return StringValue(strdup("")); }
-#define _AROMA_BACKABLE_FINISH() if (func_pos==-4) { return NULL; } aparse_backpos = func_pos;
+ */
 
-/*************
- *
- *  DRAW BACKGROUND
- *
- ************/
-void aui_bg_redraw(){
+#include <sys/stat.h>       //-- Filesystem Stats
+#include "aroma.h"          //-- Main AROMA Header
+#include "edify/expr.h"     //-- Edify Parser
+
+
+//* 
+//* GLOBAL UI VARIABLES
+//* 
+static  int     aparse_installpos = 0;  //-- Is already run install function
+static  int     aparse_backpos    = 0;  //-- Back Position in edify
+static  int     aparse_startpos   = 0;  //-- Start Position of current expression
+static  byte    aparse_isback     = 0;  //-- Is NULL return was Back Message
+static  byte    aui_isbgredraw    = 0;  //-- Is Background Need Redrawed
+static  int     aui_minY          = 0;  //-- Most Top Allowable UI Draw Position (Y)
+static  CANVAS  aui_bg;                 //-- Saved CANVAS for background
+static  CANVAS  aui_win_bg;             //-- Current drawed CANVAS for windows background
+
+//* 
+//* MACROS
+//* 
+#define _INITBACK() \
+        int func_pos = argv[0]->start; \
+        if ((func_pos<aparse_installpos)||(func_pos<aparse_startpos)){ \
+          aparse_backpos = func_pos; \
+          return StringValue(strdup("")); \
+        }
+
+#define _FINISHBACK() \
+        if (func_pos==-4){ \
+          return NULL; \
+        } \
+        aparse_backpos = func_pos;
+
+#define _INITARGS() \
+          char** args = ReadVarArgs(state, argc, argv); \
+          if (args==NULL) return NULL;
+
+#define _FREEARGS() \
+          int freearg_i; \
+          for (freearg_i=0;freearg_i<argc;++freearg_i) free(args[freearg_i]); \
+          free(args);
+
+#define MAX_FILE_GETPROP_SIZE    65536
+
+/************************************[ AROMA INSTALLER UI - LIBRARIES ]************************************/
+
+//* 
+//* Redraw Window Background
+//* 
+void aui_redraw(){
   if (!aui_isbgredraw) return;
-  
   ag_blank(&aui_bg);
   int elmP  = agdp()*4;
   int capH  = ag_fontheight(1) + (elmP*2);
   aui_minY  = capH;
   ag_roundgrad(&aui_bg,0,0,agw(),agh(),acfg()->winbg,acfg()->winbg_g,acfg()->winroundsz*agdp()+2);
   ag_roundgrad_ex(&aui_bg,0,0,agw(),capH,acfg()->titlebg,acfg()->titlebg_g,(acfg()->winroundsz*agdp())-2,1,1,0,0);
-  
   aui_isbgredraw = 0;
 }
-/*************
- *
- *  INIT BACKGROUND
- *
- ************/
-void aui_initwinbg(char * titlev){
+
+//* 
+//* Init Window Background With New Title
+//* 
+void aui_setbg(char * titlev){
   char title[32];
   snprintf(title,31,"%s",titlev);
-  aui_bg_redraw();
+  aui_redraw();
   int elmP  = agdp()*4;
   int titW  = ag_txtwidth(title,1);
   ag_draw(&aui_win_bg,&aui_bg,0,0);
   ag_textf(&aui_win_bg,titW,((agw()/2)-(titW/2))+1,elmP+1,title,acfg()->titlebg_g,1);
   ag_text(&aui_win_bg,titW,(agw()/2)-(titW/2),elmP,title,acfg()->titlefg,1);
 }
-/*************
- *
- *  FILEPROP FUNCTIONS
- *
- ************/
-#define MAX_FILE_GETPROP_SIZE    65536
-//-- Get File Prop - Function
-char * aui_filegetprop(char * filename,char *key){
-  char* result = NULL;
+
+//* 
+//* Read Strings From filesystem
+//* 
+char * aui_readfromfs(char * name){
   char* buffer = NULL;
   struct stat st;
-  
-  if (stat(filename, &st) < 0) return NULL;
-  if (st.st_size > MAX_FILE_GETPROP_SIZE) return NULL;
-  
+  if (stat(name,&st) < 0) return NULL;
+  if (st.st_size>MAX_FILE_GETPROP_SIZE) return NULL;
   buffer = malloc(st.st_size+1);
-  if (buffer == NULL)
-    goto done;
-  
-  FILE* f = fopen(filename, "rb");
+  if (buffer == NULL) goto done;
+  FILE* f = fopen(name, "rb");
   if (f == NULL) goto done;
   if (fread(buffer, 1, st.st_size, f) != st.st_size){
       fclose(f);
       goto done;
   }
-  
   buffer[st.st_size] = '\0';
   fclose(f);
+  return buffer;
+done:
+  free(buffer);
+  return NULL;
+}
+
+//* 
+//* Write Strings into file
+//* 
+void aui_writetofs(char * name, char * value){
+  FILE * fp = fopen(name,"wb");
+  if (fp!=NULL){
+    fwrite(value,1,strlen(value),fp);
+    fclose(fp);
+  }
+}
+
+//* 
+//* Read Strings From Temporary File
+//*
+char * aui_readfromtmp(char * name){
+  char path[256];
+  snprintf(path,255,"%s/%s",AROMA_TMP,name);
+  aui_readfromfs(path);
+}
+
+//* 
+//* Write Strings From Temporary File
+//*
+void aui_writetotmp(char * name, char * value){
+  char path[256];
+  snprintf(path,255,"%s/%s",AROMA_TMP,name);
+  aui_writetofs(path,value);
+}
+
+//* 
+//* Read Strings From ZIP
+//* 
+char * aui_readfromzip(char * name){
+  AZMEM filedata;
+  if (!az_readmem(&filedata,name,0)) return NULL;
+  return filedata.data;
+}
+
+//* 
+//* Parse PROP String
+//* 
+char * aui_parsepropstring(char * buffer,char *key){
+  char* result = NULL;  
+  if (buffer==NULL) return result;
   char* line = strtok(buffer, "\n");
-  
   do {
       while (*line && isspace(*line)) ++line;
       if (*line == '\0' || *line == '#') continue;
@@ -104,106 +187,78 @@ char * aui_filegetprop(char * filename,char *key){
       break;
   } while ((line = strtok(NULL, "\n")));
 done:
+  
+  return result;
+}
+
+//* 
+//* Parse PROP Files
+//* 
+char * aui_parseprop(char * filename,char *key){
+  char * buffer = aui_readfromfs(filename);
+  char * result = aui_parsepropstring(buffer,key);
   free(buffer);
   return result;
 }
-/*************
- *
- *  FileGetProp Edify
- *
- ************/
-Value* FileGetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
-  ag_setbusy();
-    char* result = NULL;
-    char* filename;
-    char* key;
-    if (ReadArgs(state, argv, 2, &filename, &key) < 0) return NULL;
-    result = aui_filegetprop(filename,key);
-    if (result == NULL) result = strdup("");
-  done:
-    free(filename);
-    free(key);
-    return StringValue(result);
-}
-/*************
- *
- *  Get File Content
- *
- ************/
-char * aui_getFileContent(char * name){
-  AZMEM filedata;
-  if (!az_readmem(&filedata,name,0)) return NULL;
-  return filedata.data;
-}
-/*************
- *
- *  Get Variable
- *
- ************/
-char * aui_getVariable(char * name){
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/__.%s.__.var",AROMA_TMP,name);
-  char* buffer = NULL;
-  struct stat st;
-  if (stat(save_prop_name,&st) < 0) return NULL;
-  if (st.st_size>MAX_FILE_GETPROP_SIZE) return NULL;
-  buffer = malloc(st.st_size+1);
-  if (buffer == NULL) goto done;
-  FILE* f = fopen(save_prop_name, "rb");
-  if (f == NULL) goto done;
-  if (fread(buffer, 1, st.st_size, f) != st.st_size){
-      fclose(f);
-      goto done;
-  }
-  buffer[st.st_size] = '\0';
-  fclose(f);
-  return buffer;
-done:
+
+//* 
+//* Parse PROP from ZIP
+//* 
+char * aui_parsepropzip(char * filename,char *key){
+  char * buffer = aui_readfromzip(filename);
+  char * result = aui_parsepropstring(buffer,key);
   free(buffer);
-  return NULL;
+  return result;
 }
-/*************
- *
- *  Write To TMP File
- *
- ************/
-void aui_writeFile(char * name, char * value){
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/%s",AROMA_TMP,name);
-  FILE * fp = fopen(save_prop_name,"wb");
+
+//* 
+//* Read Variable
+//* 
+char * aui_getvar(char * name){
+  char path[256];
+  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  return aui_readfromfs(path);
+}
+
+//* 
+//* Set Variable
+//* 
+void aui_setvar(char * name, char * value){
+  char path[256];
+  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  aui_writetofs(path,value);
+}
+
+//* 
+//* Append Variable
+//* 
+void aui_appendvar(char * name, char * value){
+  char path[256];
+  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  FILE * fp = fopen(path,"ab");
   if (fp!=NULL){
     fwrite(value,1,strlen(value),fp);
     fclose(fp);
   }
 }
-/*************
- *
- *  Set Vaariable
- *
- ************/
-void aui_setVariable(char * name, char * value){
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/__.%s.__.var",AROMA_TMP,name);
-  FILE * fp = fopen(save_prop_name,"wb");
-  if (fp!=NULL){
-    fwrite(value,1,strlen(value),fp);
-    fclose(fp);
-  }
+
+//* 
+//* Delete Variable
+//* 
+void aui_delvar(char * name){
+  char path[256];
+  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  unlink(path);
 }
-void aui_appendVariable(char * name, char * value){
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/__.%s.__.var",AROMA_TMP,name);
-  FILE * fp = fopen(save_prop_name,"ab");
-  if (fp!=NULL){
-    fwrite(value,1,strlen(value),fp);
-    fclose(fp);
-  }
-}
-void aui_prependVariable(char * name, char * value){
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/__.%s.__.var",AROMA_TMP,name);
-  char * buf = aui_getVariable(name);
-  FILE * fp = fopen(save_prop_name,"wb");
+
+//* 
+//* Prepend Variable
+//* 
+void aui_prependvar(char * name, char * value){
+  char path[256];
+  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  char * buf = aui_getvar(name);
+  FILE * fp = fopen(path,"wb");
   if (fp!=NULL){
     fwrite(value,1,strlen(value),fp);
     if (buf!=NULL){
@@ -216,148 +271,298 @@ void aui_prependVariable(char * name, char * value){
   }
 }
 
-/*************
- *
- *  Get Zip Content to String
- *
- ************/
-Value* AROMA_GETFILECONTENTS(const char* name, State* state, int argc, Expr* argv[]) {
+/************************************[ AROMA EDIFY HANDLERS ]************************************/
+
+//* 
+//* file_getprop, prop
+//* 
+Value* AROMA_FILEGETPROP(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=2) {
+    return ErrorAbort(state, "%s() expects 2 args (path, key), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+
+  //-- Parse The Prop
+  char* result;
+  if (strcmp(name,"file_getprop")==0)
+    result = aui_parseprop(args[0],args[1]);
+  else if (strcmp(name,"prop")==0){
+    char path[256];
+    snprintf(path,255,"%s/%s",AROMA_TMP,args[0]);
+    result = aui_parseprop(path,args[1]);
+  }
+  else if (strcmp(name,"zipprop")==0){
+    result = aui_parsepropzip(args[0],args[1]);
+  }
+  else if (strcmp(name,"resprop")==0){
+    char path[256];
+    snprintf(path,255,"%s/%s",AROMA_DIR,args[0]);
+    result = aui_parsepropzip(path,args[1]);
+  }
+  
+  if (result == NULL) result = strdup("");
+
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(result);
+}
+
+//* 
+//* sysprop, property_get
+//* 
+Value* AROMA_RECOVERYPROP(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=1) {
+    return ErrorAbort(state, "%s() expects 1 args (key), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+
+  //-- Parse The Prop
+  char* result = aui_parseprop("/default.prop",args[0]);
+  if (result == NULL) result = strdup("");
+
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(result);
+}
+
+//* 
+//* zipread, readfile
+//* 
+Value* AROMA_ZIPREAD(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc!=1) {
     return ErrorAbort(state, "%s() expects 1 args (zip entry path), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  char * buf = aui_getFileContent(args[0]);
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Get Arguments
+  _INITARGS();
   
-  if (buf!=NULL){
-    return StringValue(buf);
-  }  
+  //-- Read From Zip
+  char * buf = aui_readfromzip(args[0]);
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (buf!=NULL) return StringValue(buf);
   return StringValue(strdup(""));
 }
-/*************
- *
- *  Show Please Wait Progress
- *
- ************/
-Value* AROMA_ONPLEASEWAIT(const char* name, State* state, int argc, Expr* argv[]) {
-  int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
+
+//* 
+//* resread, readfile_aroma
+//* 
+Value* AROMA_RESREAD(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=1) {
+    return ErrorAbort(state, "%s() expects 1 args (zip entry path in aroma dir), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+    
+  //-- Create Path Into Resource Dir
+  char path[256];
+  snprintf(path,255,"%s/%s",AROMA_DIR,args[0]);
+  
+  //-- Read From Zip
+  char * buf = aui_readfromzip(path);
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (buf!=NULL) return StringValue(buf);
+  return StringValue(strdup(""));
+}
+
+
+//* 
+//* pleasewait
+//* 
+Value* AROMA_PLEASEWAIT(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos)
+    return StringValue(strdup(""));
   
   if (argc!=1) {
     return ErrorAbort(state, "%s() expects 1 args (wait text), got %d", name, argc);
   }
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-    
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Set Busy Text
   char txt[32];
   snprintf(txt,31,args[0]);
   ag_setbusy_withtext(txt);
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  return StringValue(strdup(""));
-}
-/*************
- *
- *  Get Zip Contents From Aroma Path
- *
- ************/
-Value* AROMA_GETFILECONTENTSA(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc!=1) {
-    return ErrorAbort(state, "%s() expects 1 args (zip entry path in aroma dir), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  char save_prop_name[256];
-  snprintf(save_prop_name,255,"%s/%s",AROMA_DIR,args[0]);
-  char * buf = aui_getFileContent(save_prop_name);
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
   
-  if (buf!=NULL){
-    return StringValue(buf);
-  }  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  Write String Into TMP File
- *
- ************/
-Value* AROMA_WRITETOTMP(const char* name, State* state, int argc, Expr* argv[]) {
+
+//* 
+//* writetmpfile, write
+//* 
+Value* AROMA_WRITEFILE(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc!=2) {
-    return ErrorAbort(state, "%s() expects 2 args (tmp filename, value), got %d", name, argc);
+    return ErrorAbort(state, "%s() expects 2 args (filename, value), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_writeFile(args[0],args[1]);
+  //-- Get Arguments
+  _INITARGS();
   
-  for (i=0;i<argc;++i) {
-    free(args[i]);
+  if (strcmp(name,"writetmpfile")==0){
+    //-- Write String Into TMP File
+    aui_writetotmp(args[0],args[1]);
   }
-  free(args);
+  else if (strcmp(name,"write")==0){
+    //-- Write String Into Filesystem
+    aui_writetofs(args[0],args[1]);
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  Get Variable
- *
- ************/
+
+//* 
+//* readtmpfile, read
+//* 
+Value* AROMA_GETFILE(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=1) {
+    return ErrorAbort(state, "%s() expects 1 args (filename), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  char * result = NULL;
+  if (strcmp(name,"readtmpfile")==0){
+    //-- Read String from TMP File
+    result = aui_readfromtmp(args[0]);
+  }
+  else if (strcmp(name,"read")==0){
+    //-- Read String from Filesystem
+    result = aui_readfromfs(args[0]);
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (result!=NULL) return StringValue(result);
+  return StringValue(strdup(""));
+}
+
+//* 
+//* getvar
+//*
 Value* AROMA_GETVAR(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc!=1) {
     return ErrorAbort(state, "%s() expects 1 args (variable name), got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  char * buf = aui_getVariable(args[0]);
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  if (buf!=NULL){
-    return StringValue(buf);
-  }
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+    
+  //-- Get Result
+  char * result = aui_getvar(args[0]);
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (result!=NULL) return StringValue(result);
   return StringValue(strdup(""));
 }
-/*************
- *
- *  Integer Comparison Function
- *
- ************/
+
+//* 
+//* setvar, appendvar, prependvar
+//*
+Value* AROMA_SAVEVAR(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=2) {
+    return ErrorAbort(state, "%s() expects 2 args (variable name, value), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Save Variable
+  if (strcmp(name,"setvar")==0){
+    //-- setvar
+    aui_setvar(args[0],args[1]);
+  }
+  else if (strcmp(name,"appendvar")==0){
+    //-- appendvar
+    aui_appendvar(args[0],args[1]);
+  }
+  else if (strcmp(name,"prependvar")==0){
+    //-- prependvar
+    aui_prependvar(args[0],args[1]);
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(strdup(""));
+}
+
+//* 
+//* cmp
+//*
 Value* AROMA_CMP(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc!=3) {
     return ErrorAbort(state, "%s() expects 3 args (val1, logic, val2), got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert Arguments
   byte ret = 0;
   int val1 = atoi(args[0]);
   int val2 = atoi(args[2]);
   
+  //-- Compare
   if (strcmp(args[1],"==")==0){
     ret = (val1==val2)?1:0;
   }
@@ -377,63 +582,34 @@ Value* AROMA_CMP(const char* name, State* state, int argc, Expr* argv[]) {
     ret = (val1!=val2)?1:0;
   }
   
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  if (ret){
-    return StringValue(strdup("1"));
-  }
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (ret) return StringValue(strdup("1"));
   return StringValue(strdup(""));
 }
 
-/*************
- *
- *  INLINE IF
- *
- ************/
-Value* AROMA_IIF(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc!=3) {
-    return ErrorAbort(state, "%s() expects 3 args (logic, trueval, falseval), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  char * ret = NULL;
-  if (args[0][0]=='\0'){
-    ret = strdup(args[2]);
-  }
-  else{
-    ret = strdup(args[1]);
-  }
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-
-  return StringValue(ret);
-}
-/*************
- *
- *  Integer Basic Math Function
- *
- ************/
-Value* AROMA_MATH(const char* name, State* state, int argc, Expr* argv[]) {
+//* 
+//* cal
+//*
+Value* AROMA_CAL(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc!=3) {
     return ErrorAbort(state, "%s() expects 3 args (val1, operator, val2), got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  byte ret = 0;
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert Arguments
+  int ret = 0;
   int val1 = atoi(args[0]);
   int val2 = atoi(args[2]);
   
+  //-- Calculating
   if (strcmp(args[1],"+")==0){
     ret = val1+val2;
   }
@@ -450,220 +626,278 @@ Value* AROMA_MATH(const char* name, State* state, int argc, Expr* argv[]) {
     ret = val1%val2;
   }
   
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Release Arguments
+  _FREEARGS();
   
-  char retstr[128];
-  snprintf(retstr,128,"%i",ret);
+  //-- Return
+  char retstr[64];
+  snprintf(retstr,64,"%i",ret);
   StringValue(strdup(retstr));
 }
-/*************
- *
- *  Set Variable
- *
- ************/
-Value* AROMA_SETVAR(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc!=2) {
-    return ErrorAbort(state, "%s() expects 2 args (variable name, value), got %d", name, argc);
+
+//* 
+//* iif
+//*
+Value* AROMA_IIF(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=3) {
+    return ErrorAbort(state, "%s() expects 3 args (logic, trueval, falseval), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_setVariable(args[0],args[1]);
+  //-- Get Arguments
+  _INITARGS();
   
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  return StringValue(strdup(""));
+  //-- Compare
+  char * ret = NULL;
+  if (args[0][0]=='\0')
+    ret = strdup(args[2]);
+  else
+    ret = strdup(args[1]);
+  
+  //-- Release Arguments
+  _FREEARGS();
+
+  //-- Return
+  return StringValue(ret);
 }
-/*************
- *
- *  Append Variable
- *
- ************/
-Value* AROMA_APPENDVAR(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc!=2) {
-    return ErrorAbort(state, "%s() expects 2 args (variable name, value), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  aui_appendVariable(args[0],args[1]);
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  return StringValue(strdup(""));
-}
-/*************
- *
- *  Prepend Variable
- *
- ************/
-Value* AROMA_PREPENDVAR(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc!=2) {
-    return ErrorAbort(state, "%s() expects 2 args (variable name, value), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  aui_prependVariable(args[0],args[1]);
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  return StringValue(strdup(""));
-}
-/*************
- *
- *  CALIBRATE TOUCH SCREEN
- *
- ************/
+
+//* 
+//* calibrate
+//*
 Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc != 4) {
     return ErrorAbort(state, "%s() expects 4 args (div-x, add-x, div-y, add-y), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  char* dx;
-  char* dy;
-  char* ax;
-  char* ay;
-  if (ReadArgs(state, argv, 4, &dx, &ax, &dy, &ay) < 0){
-      return NULL;
-  }
-  atouch_set_calibrate((float) strtof(dx,NULL),atoi(ax),(float) strtof(dy,NULL),atoi(ay));
-  free(dx);
-  free(dy);
-  free(ax);
-  free(ay);
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Set Calibration Data
+  atouch_set_calibrate((float) strtof(args[0],NULL),atoi(args[1]),(float) strtof(args[2],NULL),atoi(args[3]));
+  
+  //-- Release Arguments
+  _FREEARGS();
+
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SET UI COLORS
- *
- ************/
+
+//* 
+//* setcolor
+//*
 Value* AROMA_SETCOLOR(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc != 2) {
     return ErrorAbort(state, "%s() expects 2 args (color type, hexcolor in string), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  char* typ;
-  char* val;
-  if (ReadArgs(state, argv, 2, &typ, &val) < 0){
-      return NULL;
-  }
-  color cl = strtocolor(val);
-  if (strcmp(typ,"winbg") == 0) acfg()->winbg=cl;
-  else if (strcmp(typ,"winbg_g") == 0) acfg()->winbg_g=cl;
-  else if (strcmp(typ,"textbg") == 0) acfg()->textbg=cl;
-  else if (strcmp(typ,"textfg") == 0) acfg()->textfg=cl;
-  else if (strcmp(typ,"textfg_gray") == 0) acfg()->textfg_gray=cl;
-  else if (strcmp(typ,"controlbg") == 0) acfg()->controlbg=cl;
-  else if (strcmp(typ,"controlbg_g") == 0) acfg()->controlbg_g=cl;
-  else if (strcmp(typ,"controlfg") == 0) acfg()->controlfg=cl;
-  else if (strcmp(typ,"selectbg") == 0) acfg()->selectbg=cl;
-  else if (strcmp(typ,"selectbg_g") == 0) acfg()->selectbg_g=cl;
-  else if (strcmp(typ,"selectfg") == 0) acfg()->selectfg=cl;
-  else if (strcmp(typ,"titlebg") == 0) acfg()->titlebg=cl;
-  else if (strcmp(typ,"titlebg_g") == 0) acfg()->titlebg_g=cl;
-  else if (strcmp(typ,"titlefg") == 0) acfg()->titlefg=cl;
-  else if (strcmp(typ,"scrollbar") == 0) acfg()->scrollbar=cl;
-  else if (strcmp(typ,"navbg") == 0) acfg()->navbg=cl;
-  else if (strcmp(typ,"navbg_g") == 0) acfg()->navbg_g=cl;
-  else if (strcmp(typ,"border") == 0) acfg()->border=cl;
-  else if (strcmp(typ,"border_g") == 0) acfg()->border_g=cl;
-    
-  free(val);
-  free(typ);
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert String into Color
+  color cl = strtocolor(args[1]);
+  
+  //-- Set Color Property
+  if      (strcmp(args[0],"winbg") == 0)          acfg()->winbg=cl;
+  else if (strcmp(args[0],"winbg_g") == 0)        acfg()->winbg_g=cl;
+  else if (strcmp(args[0],"textbg") == 0)         acfg()->textbg=cl;
+  else if (strcmp(args[0],"textfg") == 0)         acfg()->textfg=cl;
+  else if (strcmp(args[0],"textfg_gray") == 0)    acfg()->textfg_gray=cl;
+  else if (strcmp(args[0],"controlbg") == 0)      acfg()->controlbg=cl;
+  else if (strcmp(args[0],"controlbg_g") == 0)    acfg()->controlbg_g=cl;
+  else if (strcmp(args[0],"controlfg") == 0)      acfg()->controlfg=cl;
+  else if (strcmp(args[0],"selectbg") == 0)       acfg()->selectbg=cl;
+  else if (strcmp(args[0],"selectbg_g") == 0)     acfg()->selectbg_g=cl;
+  else if (strcmp(args[0],"selectfg") == 0)       acfg()->selectfg=cl;
+  else if (strcmp(args[0],"titlebg") == 0)        acfg()->titlebg=cl;
+  else if (strcmp(args[0],"titlebg_g") == 0)      acfg()->titlebg_g=cl;
+  else if (strcmp(args[0],"titlefg") == 0)        acfg()->titlefg=cl;
+  else if (strcmp(args[0],"scrollbar") == 0)      acfg()->scrollbar=cl;
+  else if (strcmp(args[0],"navbg") == 0)          acfg()->navbg=cl;
+  else if (strcmp(args[0],"navbg_g") == 0)        acfg()->navbg_g=cl;
+  else if (strcmp(args[0],"border") == 0)         acfg()->border=cl;
+  else if (strcmp(args[0],"border_g") == 0)       acfg()->border_g=cl;
+  
+  //-- Background Should Be Redrawed
   aui_isbgredraw = 1;
+  
+  //-- Release Arguments
+  _FREEARGS();
+
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SET CONFIG
- *
- ************/
+
+//* 
+//* ini_set
+//*
 Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc != 2) {
     return ErrorAbort(state, "%s() expects 2 args (config name, config value in string), got %d", name, argc);
   }
+  
+  //-- This is Busy Function
   ag_setbusy();
-  char* typ;
-  char* val;
-  if (ReadArgs(state, argv, 2, &typ, &val) < 0){
-      return NULL;
-  }
-  byte valint = (byte) min(atoi(val),255);
-  int  valkey = (int) atoi(val);
   
-  //-- Property
-  if (strcmp(typ,"roundsize") == 0) acfg()->roundsz=valint;
-  else if (strcmp(typ,"button_roundsize") == 0) acfg()->btnroundsz=valint;
-  else if (strcmp(typ,"window_roundsize") == 0) acfg()->winroundsz=valint;
-  else if (strcmp(typ,"transition_frame") == 0) acfg()->fadeframes=valint;
-  else if (strcmp(typ,"text_ok") == 0) snprintf(acfg()->text_ok,31,val);
-  else if (strcmp(typ,"text_next") == 0) snprintf(acfg()->text_next,31,val);
-  else if (strcmp(typ,"text_back") == 0) snprintf(acfg()->text_back,31,val);
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert Arguments
+  byte valint = (byte) min(atoi(args[1]),255);
+  int  valkey = (int) atoi(args[1]);
+  
+  //-- Set Property
+  if      (strcmp(args[0],"roundsize") == 0)          acfg()->roundsz=valint;
+  else if (strcmp(args[0],"button_roundsize") == 0)   acfg()->btnroundsz=valint;
+  else if (strcmp(args[0],"window_roundsize") == 0)   acfg()->winroundsz=valint;
+  else if (strcmp(args[0],"transition_frame") == 0)   acfg()->fadeframes=valint;
+
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,31,args[1]);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,31,args[1]);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,31,args[1]);
     
-  else if (strcmp(typ,"rom_name") == 0) snprintf(acfg()->rom_name,63,val);
-  else if (strcmp(typ,"rom_version") == 0) snprintf(acfg()->rom_version,63,val);
-  else if (strcmp(typ,"rom_author") == 0) snprintf(acfg()->rom_author,63,val);
-  else if (strcmp(typ,"rom_device") == 0) snprintf(acfg()->rom_device,63,val);
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,63,args[1]);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,63,args[1]);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,63,args[1]);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,63,args[1]);
   
-  else if (strcmp(typ,"customkeycode_up") == 0) acfg()->ckey_up=valkey;
-  else if (strcmp(typ,"customkeycode_down") == 0) acfg()->ckey_down=valkey;
-  else if (strcmp(typ,"customkeycode_select") == 0) acfg()->ckey_select=valkey;
-  else if (strcmp(typ,"customkeycode_back") == 0) acfg()->ckey_back=valkey;
-  else if (strcmp(typ,"customkeycode_menu") == 0) acfg()->ckey_menu=valkey;
+  else if (strcmp(args[0],"customkeycode_up")==0)     acfg()->ckey_up=valkey;
+  else if (strcmp(args[0],"customkeycode_down")==0)   acfg()->ckey_down=valkey;
+  else if (strcmp(args[0],"customkeycode_select")==0) acfg()->ckey_select=valkey;
+  else if (strcmp(args[0],"customkeycode_back") == 0) acfg()->ckey_back=valkey;
+  else if (strcmp(args[0],"customkeycode_menu") == 0) acfg()->ckey_menu=valkey;
   
-   
-  free(val);
-  free(typ);
+  
+  //-- Background Should Be Redrawed
   aui_isbgredraw = 1;
+  
+  //-- Release Arguments
+  _FREEARGS();
+
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SHOW SPLASH SCREEN
- *
- ************/
-//-- Splash Screen
-Value* AROMA_SPLASH(const char* name, State* state, int argc, Expr* argv[]) {
+
+//* 
+//* anisplash
+//*
+Value* AROMA_ANISPLASH(const char* name, State* state, int argc, Expr* argv[]) {
   int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
+  if (func_pos<aparse_startpos) return StringValue(strdup(""));
+  
+  if (argc < 3) {
+    return ErrorAbort(state, "%s() expects at least 2 args (loop count, [image name, duration]), got %d", name, argc);
+  }
+  else if (((argc-1)%2)!=0){
+    return ErrorAbort(state, "%s() expects (1 + 2 * numframes) args (loop count, [image name, duration]), got %d", name, argc);
+  }
+  int frame_n= (argc-1)/2;
+  if (frame_n>32){
+    return ErrorAbort(state, "%s() Number of max frame was 32, got %s frames", name, frame_n);
   }
   
-  if (argc != 2) {
-    return ErrorAbort(state, "%s() expects 2 args (delay in milisecond, image name), got %d", name, argc);
-  }
+  //-- Set Busy before everythings ready
   ag_setbusy();
-  char* delay;
-  char* imgname;
-  if (ReadArgs(state, argv, 2, &delay, &imgname) < 0){
-      return NULL;
-  }
-  int delayint = atoi(delay);
   
-  //-- Set Temporary
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert Arguments
+  int loop_n = atoi(args[0]);
+  
+  //-- Set Temporary Background
   CANVAS tmpbg;
   ag_canvas(&tmpbg,agw(),agh());
   ag_draw(&tmpbg,agc(),0,0);
   
-  //-- Fade To Half Black
-  //ag_rectopa(agc(),0,0,agw(),agh(),0x0000,160);
+  //-- Create Splash BG
+  CANVAS splashbg;
+  ag_canvas(&splashbg,agw(),agh());
+  ag_blur(&splashbg,agc(),agdp()*2);
+    
+  PNGCANVAS * ap = malloc(sizeof(PNGCANVAS) * frame_n);
+  int       * ad = malloc(sizeof(int) * frame_n);
+  byte      * au = malloc(sizeof(byte) * frame_n);
+  
+  //-- Load PNG
+  int frame;
+  for (frame=0;frame<frame_n;frame++){
+    ad[frame] = atoi(args[(frame*2)+2]);
+    if (apng_load(&(ap[frame]),args[(frame*2)+1]))
+      au[frame] = 1;
+    else
+      au[frame] = 0;
+  }
+  
+  while (loop_n-->0){
+    //-- Load PNG
+    for (frame=0;frame<frame_n;frame++){
+      //-- Draw BG
+      ag_draw(NULL,&splashbg,0,0);
+      
+      //-- Draw Frame
+      if (au[frame]){
+        PNGCANVAS * p = &ap[frame];
+        apng_draw(NULL,p,(agw()/2)-(p->w/2),(agh()/2)-(p->h/2));
+      }
+      
+      ag_sync();
+      usleep(1000*ad[frame]);
+    }
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Release
+  for (frame=0;frame<frame_n;frame++){
+    if (au[frame]) apng_close(&ap[frame]);
+  }
+  free(ap); free(ad); free(au);
+  
+  //-- Redraw Previous Display
+  ag_draw(NULL,&tmpbg,0,0);
+  ag_sync_fade_wait(acfg()->fadeframes);
+  
+  //-- Cleanup
+  ag_ccanvas(&splashbg);
+  ag_ccanvas(&tmpbg);
+  
+  //-- Return
+  return StringValue(strdup(""));
+}
+
+//* 
+//* splash
+//*
+Value* AROMA_SPLASH(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos) return StringValue(strdup(""));
+  
+  if (argc != 2) {
+    return ErrorAbort(state, "%s() expects 2 args (delay in milisecond, image name), got %d", name, argc);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Convert Arguments
+  int delayint = atoi(args[0]);
+  
+  //-- Set Temporary Background
+  CANVAS tmpbg;
+  ag_canvas(&tmpbg,agw(),agh());
+  ag_draw(&tmpbg,agc(),0,0);
   
   //-- Create Splash BG
   CANVAS splashbg;
@@ -672,22 +906,22 @@ Value* AROMA_SPLASH(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Load PNG
   PNGCANVAS ap;
-  if (apng_load(&ap,imgname)){
+  if (apng_load(&ap,args[1])){
     apng_draw(&splashbg,&ap,(agw()/2)-(ap.w/2),(agh()/2)-(ap.h/2));
     apng_close(&ap);
   }
   ag_draw(NULL,&splashbg,0,0);
   
-  //-- Wait The Fade
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Wait The Fade Transition
   ag_sync_fade(acfg()->fadeframes);
   
-  free(delay);
-  free(imgname);
-  
-  //-- WAIT
+  //-- Wait the splash timeout
   usleep(1000*delayint);
   
-  //-- Redraw Prev Display
+  //-- Redraw Previous Display
   ag_draw(NULL,&tmpbg,0,0);
   ag_sync_fade_wait(acfg()->fadeframes);
   
@@ -695,34 +929,40 @@ Value* AROMA_SPLASH(const char* name, State* state, int argc, Expr* argv[]) {
   ag_ccanvas(&splashbg);
   ag_ccanvas(&tmpbg);
   
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  VIEW UI (String)
- *
- ************/
-Value* AROMA_VIEWUI(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
+
+//* 
+//* viewbox
+//*
+Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
+  _INITBACK();
 
   if (argc!=3) {
     return ErrorAbort(state, "%s() expects 3 args (title,desc,ico), got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_initwinbg(args[0]);
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Init Background
+  aui_setbg(args[0]);
   char text[1024];
   snprintf(text,1023,"%s",args[1]);
   
+  //-- Init Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
+  
+  //-- Draw Navigation Bar
   ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
     
   //-- Load Icon
@@ -760,16 +1000,18 @@ Value* AROMA_VIEWUI(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
+  //-- Create Window
   AWINDOWP hWin   = aw(&aui_win_bg);
-
+  
+  //-- BACK BUTTON
   if ((aparse_backpos>0)&&(aparse_backpos>aparse_installpos)){
-    //-- BACK BUTTON
     acbutton(
       hWin,
       pad,btnY,(chkW/2)-(agdp()*2),bntH,acfg()->text_back,0,
       5
     );
   }
+  
   //-- NEXT BUTTON
   ACONTROLP nxtbtn=acbutton(
     hWin,
@@ -777,12 +1019,10 @@ Value* AROMA_VIEWUI(const char* name, State* state, int argc, Expr* argv[]) {
     6
   );
 
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Release Arguments
+  _FREEARGS();
   
+  //-- Dispatch Message
   aw_show(hWin);
   aw_setfocus(hWin,nxtbtn);
   byte ondispatch     = 1;
@@ -814,45 +1054,55 @@ Value* AROMA_VIEWUI(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Window
   aw_destroy(hWin);
   
+  //-- Return
   if (aparse_isback) return NULL;
-  _AROMA_BACKABLE_FINISH();
+  _FINISHBACK();
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SHOW TEXT UI
- *
- ************/
-Value* AROMA_TEXTUI(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
+
+//* 
+//* textbox, agreebox
+//*
+Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
+  _INITBACK();
+  
+  //-- is plain textbox or agreement
   byte isplain = (strcmp(name,"textbox")==0)?1:0;
-  // textbox(title,desc,ico,text);
   if ((isplain)&&(argc!=4)) {
     return ErrorAbort(state, "%s() expects 4 args (title,desc,ico,text), got %d", name, argc);
   }
   else if ((!isplain)&&(argc!=6)) {
     return ErrorAbort(state, "%s() expects 5 args (title,desc,ico,text,agreetext,unchkmessage), got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_initwinbg(args[0]);
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Init Background
+  aui_setbg(args[0]);
   char text[256];
   snprintf(text,255,"%s",args[1]);
   
+  //-- Unchecked Alert Message
   char unchkmsg[256];
   if (!isplain) snprintf(unchkmsg,255,"%s",args[5]);
+    
+  //-- Title Text
   char titletxt[32];
   snprintf(titletxt,31,"%s",args[0]);
   
+  //-- Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
+  
+  //-- Draw Navigation Bar
   ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
     
   //-- Load Icon
@@ -890,10 +1140,12 @@ Value* AROMA_TEXTUI(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
+  //-- Create Window
   AWINDOWP hWin   = aw(&aui_win_bg);
-  ACONTROLP txtbox;
-  ACONTROLP agreecb;
   
+  //-- Create Controls
+  ACONTROLP txtbox;
+  ACONTROLP agreecb;  
   if (isplain){
     txtbox = actext(hWin,pad,chkY,chkW,chkH,args[3],0);
   }
@@ -905,8 +1157,8 @@ Value* AROMA_TEXTUI(const char* name, State* state, int argc, Expr* argv[]) {
     agreecb           = accb(hWin,pad*2,chkY+textBoxH+pad,chkW-(pad*2),chkaH,args[4],0);
   }
 
+  //-- BACK BUTTON
   if ((aparse_backpos>0)&&(aparse_backpos>aparse_installpos)){
-    //-- BACK BUTTON
     acbutton(
       hWin,
       pad,btnY,(chkW/2)-(agdp()*2),bntH,acfg()->text_back,0,
@@ -920,12 +1172,10 @@ Value* AROMA_TEXTUI(const char* name, State* state, int argc, Expr* argv[]) {
     6
   );
 
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Release Arguments
+  _FREEARGS();
   
+  //-- Dispatch Message
   aw_show(hWin);
   aw_setfocus(hWin,nxtbtn);
   byte ondispatch     = 1;
@@ -963,43 +1213,55 @@ Value* AROMA_TEXTUI(const char* name, State* state, int argc, Expr* argv[]) {
       break;
     }
   }
-  //-- Window
+  
+  //-- Destroy Window
   aw_destroy(hWin);
   
+  //-- Finish
   if (aparse_isback) return NULL;
-  _AROMA_BACKABLE_FINISH();
+  _FINISHBACK();
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SHOW CHECKBOX UI
- *
- ************/
+
+//* 
+//* checkbox
+//*
 Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
-  if (argc<7) {
+  _INITBACK();
+  if (argc<7){
     return ErrorAbort(state, "%s() expects more than 7 args, got %d", name, argc);
   }
   else if ((argc-4)%3!=0){
     return ErrorAbort(state, "%s() expects 4 args + 3 args per items, got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_initwinbg(args[0]);
-  char save_prop_name[256];
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Variable Def
+  int i;
+  
+  //-- Init Background
+  aui_setbg(args[0]);
+  
+  //-- Init Strings
+  char path[256];
   char text[256];
-  snprintf(save_prop_name,255,"%s/%s",AROMA_TMP,args[3]);
+  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
   snprintf(text,255,"%s",args[1]);
   
+  //-- Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
+  
+  //-- Draw Navigation Bar
   ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
     
   //-- Load Icon
@@ -1037,6 +1299,7 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
+  //-- Create Window
   AWINDOWP hWin   = aw(&aui_win_bg);
   
   //-- Check Box
@@ -1056,24 +1319,23 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
     pad+(agdp()*2)+(chkW/2),btnY,(chkW/2)-(agdp()*2),bntH,acfg()->text_next,0,
     6
   );
+  
   //-- Populate Checkbox Items
-  char save_prop_key[64];
+  char propkey[64];
   int idx = 0;
   int group_id = 0;
   for (i=4;i<argc;i+=3) {
     byte defchk = (byte) atoi(args[i+2]);
-    if (defchk==3){
-    }
-    else if (defchk==2){
+    if (defchk==2){
       if (accheck_addgroup(chk1,args[i],args[i+1])){
         group_id++;
         idx=0;
       }
     }
-    else{
+    else if (defchk!=3){
       idx++;
-      snprintf(save_prop_key,63,"item.%d.%d",group_id,idx);
-      char * res = aui_filegetprop(save_prop_name,save_prop_key);
+      snprintf(propkey,63,"item.%d.%d",group_id,idx);
+      char * res = aui_parseprop(path,propkey);
       if (res!=NULL){
         defchk = (strcmp(res,"1")==0)?1:0;
         free(res);
@@ -1082,16 +1344,13 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
     }
   }
   
+  //-- Release Arguments
+  _FREEARGS();
   
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Dispatch Message
   aw_show(hWin);
   aw_setfocus(hWin,nxtbtn);
-  byte ondispatch     = 1;
-  
+  byte ondispatch = 1;
   while(ondispatch){
     dword msg=aw_dispatch(hWin);
     switch (aw_gm(msg)){
@@ -1115,57 +1374,67 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
     }
   }
   //-- Collecting Items:
-  FILE * fp = fopen(save_prop_name,"wb");
+  FILE * fp = fopen(path,"wb");
   if (fp!=NULL){
     int itemcnt = accheck_itemcount(chk1);
     for (i=0;i<itemcnt;i++) {
       if (!accheck_isgroup(chk1,i)){
         byte state = accheck_ischecked(chk1,i);
-        snprintf(save_prop_key,63,"item.%d.%d=%d\n",accheck_getgroup(chk1,i),accheck_getgroupid(chk1,i)+1,state);
-        fwrite(save_prop_key,1,strlen(save_prop_key),fp);
+        snprintf(propkey,63,"item.%d.%d=%d\n",accheck_getgroup(chk1,i),accheck_getgroupid(chk1,i)+1,state);
+        fwrite(propkey,1,strlen(propkey),fp);
       }
     }
     fclose(fp);
   }
   
-  //-- Window
+  //-- Destroy Window
   aw_destroy(hWin);
   
+  //-- Finish
   if (aparse_isback) return NULL;
-  _AROMA_BACKABLE_FINISH();
+  _FINISHBACK();
   return StringValue(strdup(""));
 }
-/*************
- *
- *  SHOW SELECTBOX UI
- *
- ************/
+
+//* 
+//* selectbox
+//*
 Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
+  _INITBACK();
   if (argc<7) {
     return ErrorAbort(state, "%s() expects more than 7 args, got %d", name, argc);
   }
   else if ((argc-4)%3!=0){
     return ErrorAbort(state, "%s() expects 4 args + 3 args per items, got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_initwinbg(args[0]);
-  char save_prop_name[256];
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Variable Def
+  int i;
+  
+  //-- Init Background
+  aui_setbg(args[0]);
+  
+  //-- Init Strings
+  char path[256];
   char text[256];
-  snprintf(save_prop_name,255,"%s/%s",AROMA_TMP,args[3]);
-  //snprintf(save_prop_name,255,"%s",args[3]);
+  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
   snprintf(text,255,"%s",args[1]);
   
+  //-- Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
+  
+  //-- Draw Navigation Bar
   ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
     
   //-- Load Icon
@@ -1203,6 +1472,7 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
+  //-- Create Window
   AWINDOWP hWin   = aw(&aui_win_bg);
   
   //-- Check Box
@@ -1223,42 +1493,39 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
     6
   );
   
-  char save_prop_key[64];
+  char propkey[64];
+  
   //-- Populate Checkbox Items
   int group_id = 0;
   int idx      = 0;
   for (i=4;i<argc;i+=3) {
     byte defchk = (byte) atoi(args[i+2]);
-    if (defchk==3){
-    }
-    else if (defchk==2){
+    if (defchk==2){
       if (acopt_addgroup(opt1,args[i],args[i+1])){
         group_id++;
         idx      = 0;
       }
     }
-    else{
+    else if (defchk!=3){
       idx++;
-      snprintf(save_prop_key,63,"selected.%d",group_id);
-      char * savedsel = aui_filegetprop(save_prop_name,save_prop_key);
-      snprintf(save_prop_key,63,"%d",idx);
+      snprintf(propkey,63,"selected.%d",group_id);
+      char * savedsel = aui_parseprop(path,propkey);
+      snprintf(propkey,63,"%d",idx);
       if (savedsel!=NULL){
-        defchk = (strcmp(savedsel,save_prop_key)==0)?1:0;
+        defchk = (strcmp(savedsel,propkey)==0)?1:0;
         free(savedsel);
       }
       acopt_add(opt1,args[i],args[i+1],defchk);
     }
   }
   
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Dispatch Message
   aw_show(hWin);
   aw_setfocus(hWin,nxtbtn);
-  byte ondispatch     = 1;
-  
+  byte ondispatch = 1;  
   while(ondispatch){
     dword msg=aw_dispatch(hWin);
     switch (aw_gm(msg)){
@@ -1286,57 +1553,67 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Collecting Items:
-  FILE * fp = fopen(save_prop_name,"wb");
+  FILE * fp = fopen(path,"wb");
   if (fp!=NULL){
     for (i=0;i<=group_id;i++){
       int selidx   = acopt_getselectedindex(opt1,i);
       if (selidx!=-1){
         int selindex = acopt_getgroupid(opt1,selidx)+1;
-        snprintf(save_prop_key,63,"selected.%d=%d\n",i,selindex);
-        fwrite(save_prop_key,1,strlen(save_prop_key),fp);
+        snprintf(propkey,63,"selected.%d=%d\n",i,selindex);
+        fwrite(propkey,1,strlen(propkey),fp);
       }
     }
     fclose(fp);
   }
   
+  //-- Destroy Window
   aw_destroy(hWin);
   
+  //-- Finish
   if (aparse_isback) return NULL;
-  _AROMA_BACKABLE_FINISH();
+  _FINISHBACK();
   return StringValue(strdup(""));
 }
 
-
-/*************
- *
- *  SHOW MENUBOX UI
- *
- ************/
+//* 
+//* menubox
+//*
 Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
+  _INITBACK();
   if (argc<7) {
     return ErrorAbort(state, "%s() expects more than 7 args, got %d", name, argc);
   }
   else if ((argc-4)%3!=0){
     return ErrorAbort(state, "%s() expects 4 args + 3 args per items, got %d", name, argc);
   }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
   
-  aui_initwinbg(args[0]);
-  char save_prop_name[256];
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Variable Def
+  int i;
+  
+  //-- Init Background
+  aui_setbg(args[0]);
+  
+  //-- Init Strings
+  char path[256];
   char text[256];
-  snprintf(save_prop_name,255,"%s/%s",AROMA_TMP,args[3]);
+  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
   snprintf(text,255,"%s",args[1]);
   
+  //-- Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
+  
+  //-- Draw Navigation Bar
   ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
     
   //-- Load Icon
@@ -1374,43 +1651,35 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
+  //-- Create Window
   AWINDOWP hWin   = aw(&aui_win_bg);
   
   //-- Check Box
   ACONTROLP menu1  = acmenu(hWin,pad,chkY,chkW,chkH,6);
-  
+  ACONTROLP backbtn= NULL;
   if ((aparse_backpos>0)&&(aparse_backpos>aparse_installpos)){
     //-- BACK BUTTON
-    acbutton(
+    backbtn=acbutton(
       hWin,
       pad,btnY,(chkW/2)-(agdp()*2),bntH,acfg()->text_back,0,
       5
     );
   }
-  //-- NEXT BUTTON
-  /*
-  ACONTROLP nxtbtn = acbutton(
-    hWin,
-    pad+(agdp()*2)+(chkW/2),btnY,(chkW/2)-(agdp()*2),bntH,acfg()->text_next,0,
-    6
-  );*/
-  char save_prop_key[64];
+
+  char propkey[64];
   //-- Populate Checkbox Items
   for (i=4;i<argc;i+=3) {
     if (strcmp(args[i],"")!=0)
       acmenu_add(menu1,args[i],args[i+1],args[i+2]);
   }
 
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-
-  free(args);
-  aw_show(hWin);
-  // aw_setfocus(hWin,nxtbtn);
-  byte ondispatch     = 1;
+  //-- Release Arguments
+  _FREEARGS();
   
+  //-- Dispatch Message
+  aw_show(hWin);
+  if (backbtn!=NULL) aw_setfocus(hWin,backbtn);
+  byte ondispatch = 1;  
   while(ondispatch){
     dword msg=aw_dispatch(hWin);
     switch (aw_gm(msg)){
@@ -1438,229 +1707,55 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   int selindex = acmenu_getselectedindex(menu1)+1;
-  snprintf(save_prop_key,63,"selected=%d\n",selindex);
-  //printf(save_prop_key);
+  snprintf(propkey,63,"selected=%d\n",selindex);
   
   //-- Collecting Items:
-  FILE * fp = fopen(save_prop_name,"wb");
+  FILE * fp = fopen(path,"wb");
   if (fp!=NULL){
-    fwrite(save_prop_key,1,strlen(save_prop_key),fp);
+    fwrite(propkey,1,strlen(propkey),fp);
     fclose(fp);
     
   }
   
+  //-- Destroy Window
   aw_destroy(hWin);
   
+  //-- Finish
   if (aparse_isback) return NULL;
-  _AROMA_BACKABLE_FINISH();
-  return StringValue(strdup(""));
-}
-Value* AROMA_CALIBTOOL(const char* name, State* state, int argc, Expr* argv[]) {
-  int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
-  }
-  //aui_initwinbg("Calibrating Tool");
-  //AWINDOWP hWin   = aw(&aui_win_bg);
-  aw_calibtools(NULL);
-  //aw_destroy(hWin);
-  return StringValue(strdup(""));
-}
-/*************
- *
- *  SHOW ALERT DIALOG
- *
- ************/
-Value* AROMA_ALERT(const char* name, State* state, int argc, Expr* argv[]) {
-  int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
-  }
-  
-  if ((argc<2)||(argc>4)) {
-    return ErrorAbort(state, "%s() expects 2-4 args (title, text, [icon, ok text]), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  aw_alert(
-    NULL,
-    args[0],
-    args[1],
-    (argc>2)?args[2]:"",
-    (argc>3)?args[3]:NULL
-  );
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  _FINISHBACK();
   return StringValue(strdup(""));
 }
 
-/*************
- *
- *  SHOW CONFIRM DIALOG
- *
- ************/
-Value* AROMA_CONFIRM(const char* name, State* state, int argc, Expr* argv[]) {
-  int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
-  }
-  
-  if ((argc<2)||(argc>5)) {
-    return ErrorAbort(state, "%s() expects 2-4 args (title, text, [icon, yes text, no text]), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  byte res = aw_confirm(
-    NULL,
-    args[0],
-    args[1],
-    (argc>2)?args[2]:"",
-    (argc>3)?args[3]:NULL,
-    (argc>4)?args[4]:NULL
-  );
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  
-  if (res) return StringValue(strdup("yes"));
-  return StringValue(strdup("no"));
-}
-
-/*************
- *
- *  SHOW TEXT DIALOG
- *
- ************/
-Value* AROMA_TEXTDIALOG(const char* name, State* state, int argc, Expr* argv[]) {
-  int func_pos = argv[0]->start; 
-  if (func_pos<aparse_startpos){
-    return StringValue(strdup(""));
-  }
-  
-  if ((argc<2)||(argc>3)) {
-    return ErrorAbort(state, "%s() expects 2-3 args (title, text [, ok text]), got %d", name, argc);
-  }
-  ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  
-  aw_textdialog(
-    NULL,
-    args[0],
-    args[1],
-    (argc>2)?args[2]:NULL
-  );
-  
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  return StringValue(strdup(""));
-}
-/*************
- *
- *  TERMINATE INSTALLER
- *
- ************/
-Value* AROMA_EXIT(const char* name, State* state, int argc, Expr* argv[]) {
-  fprintf(apipe(),"ui_print\n");
-  fprintf(apipe(),"ui_print Exit Installer...\n");
-  fprintf(apipe(),"ui_print\n");
-  return NULL;
-}
-/*************
- *
- *  PARTITION INFORMATION Function
- *
- ************/
-Value* AROMA_GETPARTSIZE(const char* name, State* state, int argc, Expr* argv[]) {
-  byte ispercent=0;
-  if (strcmp(name,"getdiskusedpercent")==0){
-    if (argc!=1) {
-      return ErrorAbort(state, "%s() expects 1 args (mountpoint), got %d", name, argc);
-    }
-    ispercent=1;
-  }
-  else{
-    if ((argc!=1)&&(argc!=2)) {
-      return ErrorAbort(state, "%s() expects 1 or 2 args (mountpoint [, unit(b,k,m)]), got %d", name, argc);
-    }
-  }
-  ag_setbusy();
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  int  ret = -1;
-  int i;
-  byte mtd = ismounted(args[0]);
-  if (!mtd){
-    alib_exec("/sbin/mount",args[0]);
-    if (!ismounted(args[0])){
-      // printf("Not Mounted...\n");
-      goto done;
-    }
-  }
-  if (ispercent)
-    ret = alib_diskusage(args[0]);
-  else if (strcmp(name,"getdisksize")==0)
-    ret = alib_disksize(args[0]);
-  else
-    ret = alib_diskfree(args[0]);
-  
-  if ((ispercent==0)&&(argc==2)){
-    if (args[1][0]=='k') ret=ret/1024;
-    else if (args[1][0]=='m') ret=ret/(1024*1024);
-  }
-  if (!mtd){
-    alib_exec("/sbin/umount",args[0]);
-  }
-done:
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
-  char retstr[64];
-  snprintf(retstr,63,"%i",ret);  
-  return StringValue(strdup(retstr));
-}
-
-/*************
- *
- *  Install UI
- *
- ************/
-Value* AROMA_INSTALLUI(const char* name, State* state, int argc, Expr* argv[]) {
-  _AROMA_BACKABLE_INIT();
-  
+//* 
+//* install
+//*
+Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
+  _INITBACK();
   if (argc!=3) {
     return ErrorAbort(state, "%s() expects 3 args (title,desc,ico), got %d", name, argc);
   }
+  
+  //-- Set Busy before everythings ready
   ag_setbusy();
-  int i;
-  char** args = ReadVarArgs(state, argc, argv);
-  if (args==NULL) return NULL;
-  aui_initwinbg(args[0]);
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Init Background
+  aui_setbg(args[0]);
+  
+  //-- Init Strings
   char text[256];
   snprintf(text,255,"%s",args[1]);
+  
+  //-- Drawing Data
   int pad         = agdp() * 4;
   int chkW        = agw() - (pad*2);
   int bntH        = agdp() * 20;
   int chkH        = agh() - ( aui_minY + bntH + (pad*4));
   int chkY        = aui_minY + pad;
   int btnY        = chkY + chkH + (pad*2);
-  // ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
-    
+
   //-- Load Icon
   PNGCANVAS ap;
   byte imgE       = 0;
@@ -1696,83 +1791,423 @@ Value* AROMA_INSTALLUI(const char* name, State* state, int argc, Expr* argv[]) {
   chkY+=txtH+pad;
   chkH-=txtH+pad;
   
-  //-- Free Arguments
-  for (i=0;i<argc;++i) {
-    free(args[i]);
-  }
-  free(args);
+  //-- Release Arguments
+  _FREEARGS();
   
+  //-- Start Installer Proccess
   aroma_start_install(
     &aui_win_bg,
     pad,chkY,chkW,chkH,
     pad,btnY,chkW,bntH
   );
 
+  //-- Set Installer already Runned
   aparse_installpos = func_pos;
-  // return NULL;
+  
+  //-- Return
   return StringValue(strdup(""));
 }
-/*************
- *
- *  REGISTER FEATURES
- *
- ************/
+
+//* 
+//* calibtool
+//*
+Value* AROMA_CALIBTOOL(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos){
+    return StringValue(strdup(""));
+  }
+  aw_calibtools(NULL);
+  return StringValue(strdup(""));
+}
+
+//* 
+//* alert
+//*
+Value* AROMA_ALERT(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos){
+    return StringValue(strdup(""));
+  }
+  if ((argc<2)||(argc>4)) {
+    return ErrorAbort(state, "%s() expects 2-4 args (title, text, [icon, ok text]), got %d", name, argc);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Show Alert
+  aw_alert(
+    NULL,
+    args[0],
+    args[1],
+    (argc>2)?args[2]:"",
+    (argc>3)?args[3]:NULL
+  );
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(strdup(""));
+}
+
+//* 
+//* confirm
+//*
+Value* AROMA_CONFIRM(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos){
+    return StringValue(strdup(""));
+  }
+  if ((argc<2)||(argc>5)) {
+    return ErrorAbort(state, "%s() expects 2-4 args (title, text, [icon, yes text, no text]), got %d", name, argc);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Show Confirm
+  byte res = aw_confirm(
+    NULL,
+    args[0],
+    args[1],
+    (argc>2)?args[2]:"",
+    (argc>3)?args[3]:NULL,
+    (argc>4)?args[4]:NULL
+  );
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (res) return StringValue(strdup("yes"));
+  return StringValue(strdup("no"));
+}
+
+//* 
+//* textdialog
+//*
+Value* AROMA_TEXTDIALOG(const char* name, State* state, int argc, Expr* argv[]) {
+  int func_pos = argv[0]->start; 
+  if (func_pos<aparse_startpos){
+    return StringValue(strdup(""));
+  }
+  if ((argc<2)||(argc>3)) {
+    return ErrorAbort(state, "%s() expects 2-3 args (title, text [, ok text]), got %d", name, argc);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Show Text Dialog
+  aw_textdialog(
+    NULL,
+    args[0],
+    args[1],
+    (argc>2)?args[2]:NULL
+  );
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(strdup(""));
+}
+
+//* 
+//* exit
+//*
+Value* AROMA_EXIT(const char* name, State* state, int argc, Expr* argv[]) {
+  fprintf(apipe(),"ui_print\n");
+  fprintf(apipe(),"ui_print Exit Installer...\n");
+  fprintf(apipe(),"ui_print\n");
+  return NULL;
+}
+
+//* 
+//* exit
+//*
+Value* AROMA_REBOOT(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc != 1) {
+    return ErrorAbort(state, "%s() expects 1 arg", name);
+  }  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- SET REBOOT
+  if (strcmp(args[0],"now")==0){
+    a_reboot(1);
+    _FREEARGS();
+    return NULL; //-- Terminate Immediately
+  }
+  else if (strcmp(args[0],"onfinish")==0){
+    a_reboot(1);
+  }
+  else{
+    a_reboot(0);
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  return StringValue(strdup(""));
+}
+
+//* 
+//* back
+//*
+Value* AROMA_BACK(const char* name, State* state, int argc, Expr* argv[]) {
+  if ((aparse_backpos>0)&&(aparse_backpos>aparse_installpos)){
+    aparse_startpos = aparse_backpos;
+    aparse_backpos  = 0;
+    aparse_isback   = 1;
+  }
+  else
+    return StringValue(strdup(""));
+  return NULL;
+}
+
+//* 
+//* getdisksize, getdiskfree, getdiskusedpercent
+//*
+Value* AROMA_GETPART(const char* name, State* state, int argc, Expr* argv[]) {
+  byte ispercent=0;
+  if (strcmp(name,"getdiskusedpercent")==0){
+    if (argc!=1)
+      return ErrorAbort(state, "%s() expects 1 args (mountpoint), got %d", name, argc);
+    ispercent=1;
+  }
+  else if ((argc!=1)&&(argc!=2)){
+      return ErrorAbort(state, "%s() expects 1 or 2 args (mountpoint [, unit(b,k,m)]), got %d", name, argc);
+  }
+  char retstr[64];
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Get & Set mounted
+  int ret = -1;
+  byte mtd = ismounted(args[0]);
+  if (!mtd){
+    alib_exec("/sbin/mount",args[0]);
+    if (!ismounted(args[0])){
+      _FREEARGS();
+      goto done;
+    }
+  }
+  
+  //-- Calculating
+  if (ispercent)
+    ret = alib_diskusage(args[0]);
+  else if (strcmp(name,"getdisksize")==0)
+    ret = alib_disksize(args[0]);
+  else
+    ret = alib_diskfree(args[0]);
+  
+  //-- Set UNIT
+  if ((ispercent==0)&&(argc==2)){
+    if (args[1][0]=='k') ret=ret/1024;
+    else if (args[1][0]=='m') ret=ret/(1024*1024);
+  }
+  
+  //-- Unmount if previous was unmounted
+  if (!mtd){
+    alib_exec("/sbin/umount",args[0]);
+  }
+
+  //-- Release Arguments
+  _FREEARGS();
+  
+done:
+  //-- Finish
+  snprintf(retstr,63,"%i",ret);  
+  return StringValue(strdup(retstr));
+}
+
+//* 
+//* exit
+//*
+Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc < 1) {
+    return ErrorAbort(state, "%s() expects at least 1 arg", name);
+  }
+  char * buffer = NULL;
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+
+  //-- Init Executable
+  char path[256];
+  byte isremoveexec = 0;
+  if (strcmp(name,"zipexec")==0){
+    isremoveexec    = 1;
+    snprintf(path,255,"%s/exec_tmp",AROMA_TMP);
+    int res = az_extract(args[0],path);
+    if (res==0){
+      _FREEARGS();
+      goto done;
+    }
+  }
+  else if (strcmp(name,"resexec")==0){
+    char zpath[256];
+    isremoveexec    = 1;
+    snprintf(path, 255,"%s/exec_tmp",AROMA_TMP);
+    snprintf(zpath,255,"%s/%s",AROMA_DIR,args[0]);
+    int res = az_extract(zpath,path);
+    if (res==0){
+      _FREEARGS();
+      goto done;
+    }
+  }
+  else{
+    snprintf(path, 255,"%s",args[0]);
+  }
+  
+  //-- Init Exec CMD & Arguments
+  int i         = 0;
+  char** args2  = malloc(sizeof(char*) * (argc+1));
+  args2[0]      = path;
+  for (i=1;i<argc;i++) args2[i]=args[i];
+  args2[argc]   = NULL;
+  
+  //-- Init PIPE
+  int pipefd[2];
+  pipe(pipefd);
+  
+  //-- FORK & RUN
+  pid_t pid = fork();
+  if (pid == 0) {
+      close(pipefd[0]);
+      execv(args2[0], args2);
+      _exit(-1);
+  }
+  close(pipefd[1]);
+  
+  //-- BUFFER INTO VAR
+  aui_setvar(".exec.var","");
+  char  buf[1024];
+  FILE* fc = fdopen(pipefd[0], "r");
+  while (fgets(buf,sizeof(buf),fc)!=NULL){
+    aui_appendvar(".exec.var",buf);
+  }
+  fclose(fc);
+  free(args2);
+  buffer = aui_getvar(".exec.var");
+  aui_delvar(".exec.var");
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+done:
+  //-- Return
+  if (buffer==NULL) return StringValue(strdup("-1"));
+  return StringValue(buffer);
+}
+
+/************************************[ AROMA EDIFY REGISTER ]************************************/
+
+//* 
+//* Register AROMA edify functions
+//*
 void RegisterAroma() {
   //-- CONFIG FUNCTIONS
-  RegisterFunction("setcolor",      AROMA_SETCOLOR);
-  RegisterFunction("ini_set",       AROMA_INI_SET);
-  RegisterFunction("calibrate",     AROMA_CALIBRATE);
-  RegisterFunction("calibtool",     AROMA_CALIBTOOL);
+  RegisterFunction("setcolor",      AROMA_SETCOLOR);      //-- SET AROMA COLORSET
+  RegisterFunction("ini_set",       AROMA_INI_SET);       //-- SET INI CONFIGURATION
+  RegisterFunction("calibrate",     AROMA_CALIBRATE);     //-- SET CALIBRATION DATA
+  RegisterFunction("calibtool",     AROMA_CALIBTOOL);     //-- SHOW CALIBRATING TOOL
   
   //-- VARIABLE FUNCTIONS
-  RegisterFunction("setvar",        AROMA_SETVAR);
-  RegisterFunction("getvar",        AROMA_GETVAR);
-  RegisterFunction("appendvar",     AROMA_APPENDVAR);
-  RegisterFunction("prependvar",    AROMA_PREPENDVAR);
+  RegisterFunction("getvar",        AROMA_GETVAR);        //-- GET VARIABLE
+  RegisterFunction("setvar",        AROMA_SAVEVAR);       //-- SET VARIABLE
+  RegisterFunction("appendvar",     AROMA_SAVEVAR);       //-- APPEND STRING INTO VARIABLE
+  RegisterFunction("prependvar",    AROMA_SAVEVAR);       //-- PREPEND STRING INTO VARIABLE
   
-  //-- FILE & ZIP CONTENT FUNCTIONS
-  RegisterFunction("file_getprop",  FileGetPropFn);
-  RegisterFunction("readfile",      AROMA_GETFILECONTENTS);
-  RegisterFunction("readfile_aroma",AROMA_GETFILECONTENTSA);
-  RegisterFunction("writetmpfile",  AROMA_WRITETOTMP);
+  //-- PROP FUNCTIONS
+  RegisterFunction("file_getprop",  AROMA_FILEGETPROP);   //-- GET PROP
+  RegisterFunction("prop",          AROMA_FILEGETPROP);   //-- GET PROP FROM AROMA TMP
+  RegisterFunction("zipprop",       AROMA_FILEGETPROP);   //-- GET PROP FROM ZIP
+  RegisterFunction("resprop",       AROMA_FILEGETPROP);   //-- GET PROP FROM AROMA RESOURCE ZIP
+  RegisterFunction("sysprop",       AROMA_RECOVERYPROP);  //-- GET RECOVERY PROP
+  RegisterFunction("property_get",  AROMA_RECOVERYPROP);  //-- GET RECOVERY PROP
+  
+  //-- FILE FUNCTIONS
+  RegisterFunction("writetmpfile",  AROMA_WRITEFILE);     //-- WRITE STRING INTO TEMPORARY FILE
+  RegisterFunction("write",         AROMA_WRITEFILE);     //-- WRITE STRING INTO FILESYSTEM
+  RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRINF
+  RegisterFunction("read",          AROMA_GETFILE);       //-- READ FILESYSTEM AS STRING
+  
+  
+  //-- ZIP CONTENT FUNCTIONS
+  RegisterFunction("readfile",      AROMA_ZIPREAD);       //-- [Deprecated] - Renamed to zipread
+  RegisterFunction("readfile_aroma",AROMA_RESREAD);       //-- [Deprecated] - Renamed to resread
+  RegisterFunction("zipread",       AROMA_ZIPREAD);       //-- Read String From Zip
+  RegisterFunction("resread",       AROMA_RESREAD);       //-- Read Strinf From Resource
+  
+  //-- EXEC
+  RegisterFunction("zipexec",       AROMA_EXEC);          //-- Exec Program From Zip
+  RegisterFunction("resexec",       AROMA_EXEC);          //-- Exec Program From Resource
+  RegisterFunction("run_program",   AROMA_EXEC);          //-- Run Program/Exec
+  RegisterFunction("exec",          AROMA_EXEC);          //-- Run Prohram/Exec
 
   //-- MAIN UI FUNCTIONS (With Next & Back Buttons)
-  RegisterFunction("splash",        AROMA_SPLASH);
-  RegisterFunction("checkbox",      AROMA_CHECKBOX);
-  RegisterFunction("selectbox",     AROMA_SELECTBOX);
-  RegisterFunction("textbox",       AROMA_TEXTUI);
-  RegisterFunction("viewbox",       AROMA_VIEWUI);
-  RegisterFunction("agreebox",      AROMA_TEXTUI);
-  RegisterFunction("menubox",       AROMA_MENUBOX);
+  RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
+  RegisterFunction("splash",        AROMA_SPLASH);        //-- SPLASH SCREEN
+  RegisterFunction("checkbox",      AROMA_CHECKBOX);      //-- CHECKBOX
+  RegisterFunction("selectbox",     AROMA_SELECTBOX);     //-- SELECTBOX
+  RegisterFunction("textbox",       AROMA_TEXTBOX);       //-- TEXTBOX
+  RegisterFunction("viewbox",       AROMA_VIEWBOX);       //-- VIEWBOX
+  RegisterFunction("agreebox",      AROMA_TEXTBOX);       //-- AGREEBOX
+  RegisterFunction("menubox",       AROMA_MENUBOX);       //-- MENUBOX
   
   //-- INSTALL UI
-  RegisterFunction("install",       AROMA_INSTALLUI);
+  RegisterFunction("install",       AROMA_INSTALL);       //-- START INSTALLATION PROCCESS
   
   //-- DIALOG UI FUNCTIONS
-  RegisterFunction("alert",         AROMA_ALERT);
-  RegisterFunction("textdialog",    AROMA_TEXTDIALOG);
-  RegisterFunction("confirm",       AROMA_CONFIRM);
+  RegisterFunction("alert",         AROMA_ALERT);         //-- ALERT DIALOG
+  RegisterFunction("textdialog",    AROMA_TEXTDIALOG);    //-- TEXT DIALOG
+  RegisterFunction("confirm",       AROMA_CONFIRM);       //-- CONFIRM DIALOG
   
   //-- DISK INFO FUNCTIONS
-  RegisterFunction("getdisksize", AROMA_GETPARTSIZE);
-  RegisterFunction("getdiskfree", AROMA_GETPARTSIZE);
-  RegisterFunction("getdiskusedpercent", AROMA_GETPARTSIZE);
+  RegisterFunction("getdisksize",         AROMA_GETPART); //-- GET DISK SIZE
+  RegisterFunction("getdiskfree",         AROMA_GETPART); //-- GET DISK FREE
+  RegisterFunction("getdiskusedpercent",  AROMA_GETPART); //-- GET DISKUSAGE AS PERCENTAGE
   
   //-- COMPARISON & MATH
-  RegisterFunction("cmp", AROMA_CMP);
-  RegisterFunction("cal", AROMA_MATH);  
-  RegisterFunction("iif", AROMA_IIF);
+  RegisterFunction("cmp", AROMA_CMP);                     //-- COMPARE INTEGER
+  RegisterFunction("cal", AROMA_CAL);                     //-- CALCULATE INTEGER
+  RegisterFunction("iif", AROMA_IIF);                     //-- INLINE IF
   
   //-- ETC
-  RegisterFunction("exit",          AROMA_EXIT);
-  RegisterFunction("pleasewait",    AROMA_ONPLEASEWAIT);
+  RegisterFunction("exit",          AROMA_EXIT);          //-- TERMINATE PROCCESS
+  RegisterFunction("back",          AROMA_BACK);          //-- BACK TO PREVIOUS WIZARD
+  RegisterFunction("pleasewait",    AROMA_PLEASEWAIT);    //-- SHOW WAIT SCREEN
+  RegisterFunction("reboot",        AROMA_REBOOT);        //-- REBOOT DEVICE
   
 }
-/*************
- *
- *  START UI
- *
- ************/
+
+/************************************[ START AND PARSE SCRIPT ]************************************/
+
+//* 
+//* AROMA PARSING & PROCCESSING SCRIPT
+//*
 byte aui_start(){
   //-- LOAD CONFIG SCRIPT
   AZMEM script_installer;
