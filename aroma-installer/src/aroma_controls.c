@@ -762,6 +762,22 @@ byte aw_calibdraw(CANVAS * c,
   return res;
 }
 void aw_calibtools(AWINDOWP parent){
+  int USE_HACK = aw_confirm(
+      parent,
+      "Use Alternative Touch",
+      "Do you want to use alternative touch?\n  Only if default method not works.\n\nPress the volume keys to select Yes or No.",
+      "icons/alert",
+      "No",
+      "Yes"
+    );
+  byte current_hack = atouch_gethack();
+  if (!USE_HACK){
+    atouch_sethack(1);
+  }
+  else{
+    atouch_sethack(0);
+  }
+  
   //-- Set Mask
   CANVAS * tmpc = aw_muteparent(parent);
   on_dialog_window = 1;
@@ -821,11 +837,19 @@ void aw_calibtools(AWINDOWP parent){
   }
   
   if (data_is_valid){
-    atouch_set_calibrate(cal_x,add_x,cal_y,add_y);
-    snprintf(datx,255,
-      "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
-      "<#060>calibrate(\"%01.4f\",\"%i\",\"%01.4f\",\"%i\");</#>\n\n",
-    cal_x,add_x,cal_y,add_y);
+    atouch_set_calibrate(cal_x,add_x,cal_y,add_y);    
+    if (!USE_HACK){
+      snprintf(datx,255,
+        "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
+        "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\",\"yes\"\n);</#>\n\n",
+      cal_x,add_x,cal_y,add_y);
+    }
+    else{
+      snprintf(datx,255,
+        "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
+        "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\"\n);</#>\n\n",
+      cal_x,add_x,cal_y,add_y);
+    }
     
     aw_calibdraw(&ccv,-1,xpos,ypos,xtch,ytch);
     isvalid       = 1;
@@ -859,6 +883,7 @@ doneit:
     );    
   }
   if (!dont_restore_caldata){
+    atouch_sethack(current_hack);
     atouch_restorecalibrate();
   }
 }

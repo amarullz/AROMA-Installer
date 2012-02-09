@@ -80,7 +80,7 @@ void a_splash(char * spipe){
   fprintf(apipe(),"ui_print " AROMA_COPY "\n");
   fprintf(apipe(),"ui_print\n");
   fprintf(apipe(),"ui_print\n");
-  usleep(500000);
+  usleep(1500000);
 }
 
 //* 
@@ -155,12 +155,14 @@ int main(int argc, char **argv) {
     a_release_all();
   }
   
-  //-- Cleanup All
-  fclose(acmd_pipe);
+  //-- REMOVE AROMA TEMPORARY
   remove_directory(AROMA_TMP);
   
   //-- Check Reboot
   a_check_reboot();
+  
+  //-- Cleanup PIPE
+  fclose(acmd_pipe);
   
   return retval;
 }

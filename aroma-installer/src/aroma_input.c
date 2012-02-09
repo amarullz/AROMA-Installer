@@ -158,6 +158,44 @@ void ev_post_message(int key, int value){
   pthread_mutex_unlock(&key_queue_mutex);
 }
 
+//-- TOUCH HACK
+static  byte      evtouch_thack   = 0;
+static  long      evtouch_lastick = 0;
+static void *ev_input_thack(void *cookie){
+  while(evtouch_thack){
+    if (evtouch_state!=0){
+      if (evtouch_lastick<alib_tick()-5){
+        evtouch_locked  = 1;
+        evtouch_alreadyu= 1;
+        evtouch_state   = 0;
+        evtouch_sx      = 0;
+        evtouch_sy      = 0;
+        evtouch_rx      = 0;
+        evtouch_ry      = 0;
+        ev_post_message(evtouch_code,0);
+      }
+    }
+    usleep(50);
+  }
+}
+byte atouch_gethack(){
+  return evtouch_thack;
+}
+void atouch_sethack(byte t){
+  if (t!=evtouch_thack){
+    if (t){
+      evtouch_lastick = alib_tick();
+      evtouch_thack   = t;
+      pthread_t hack_thread_t;
+      pthread_create(&hack_thread_t, NULL, ev_input_thack, NULL);
+      pthread_detach(hack_thread_t);
+      
+      printf("INIT TOUCH...\n");
+    }
+  }
+  evtouch_thack=t;
+}
+
 //-- INPUT CALLBACK
 void ev_input_callback(int fd, short revents){
   if (revents&POLLIN) {
@@ -228,6 +266,8 @@ void ev_input_callback(int fd, short revents){
         case EV_ABS:{
           if (ev.code==ABS_MT_TOUCH_MAJOR){
             if ((evtouch_rx>0)&&(evtouch_ry>0)){
+              evtouch_lastick = alib_tick();
+              
               byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
               if (tmptouch!=3){
                 atouch_translate_raw(); //-- Translate RAW
@@ -256,6 +296,8 @@ void ev_input_callback(int fd, short revents){
                     evtouch_sx = evtouch_x;
                     evtouch_sy = evtouch_y;
                     ev_post_message(evtouch_code,2);
+                    
+                    //evtouch_thack
                   }
                 }
                 //-- TOUCH UP
@@ -349,11 +391,14 @@ int ev_init(){
   pthread_t input_thread_t;
   pthread_create(&input_thread_t, NULL, ev_input_thread, NULL);
   pthread_detach(input_thread_t);
+  
+  // atouch_sethack(1);
   return 0;
 }
 
 //-- RELEASE INPUT DEVICE
 void ev_exit(void){
+  evtouch_thack   = 0;
   evthread_active = 0;
   while (ev_count > 0) {
       close(ev_fds[--ev_count].fd);

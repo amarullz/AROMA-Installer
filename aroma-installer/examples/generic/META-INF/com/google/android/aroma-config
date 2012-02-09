@@ -436,10 +436,13 @@ checkbox(
 #
 # WONT DO ANYTHING IN TEST BUILD
 #
-install(
-  "Installing",
-  "Installing AROMA INSTALLER...\nPlease Wait Until it Finished...",
-  "icons/install"
+setvar("retstatus",
+  install(
+    "Installing",
+    "Installing AROMA INSTALLER...\nPlease Wait Until it Finished...",
+    "icons/install",
+    "Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull"
+  )
 );
 
 # Set Next Text fo Finish
@@ -449,7 +452,8 @@ viewbox(
   "Installation Completed",
     "<#080>Congratulation...</#>\n\n"+
     "AROMA ROM Already Installed Into Your Phone\n"+
-    "Press Finish, and Reboot your phone.\n\nThanks",
+    "Press Finish, and Reboot your phone.\n\nThanks\n\n"+
+    "Installer Status: "+getvar("retstatus"),
   "icons/info"
 );
 

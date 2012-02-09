@@ -49,6 +49,7 @@ char      ai_progress_text[64];
 char      ai_progress_info[101];
 AWINDOWP  ai_win;
 ACONTROLP ai_buftxt;
+int       ai_return_status  = 0;
 
 void ai_rebuildtxt(int cx,int cy,int cw,int ch){
   char* buffer = NULL;
@@ -64,12 +65,12 @@ void ai_rebuildtxt(int cx,int cy,int cw,int ch){
   }
   buffer[st.st_size] = '\0';
   fclose(f);
+done:
   actext_rebuild(
     ai_buftxt,
     cx,cy,cw,ch,
-    buffer,
+    ((buffer!=NULL)?buffer:""),
     0,1);
-done:
   free(buffer);
   
 }
@@ -318,12 +319,26 @@ static void *aroma_install_package(void *cookie){
       free(bufall);
   }
   
+  fclose(from_child);
+  
+  //-- Get Return Status
+  ai_return_status=0;
+  waitpid(pid, &ai_return_status, 0);
+  if (!WIFEXITED(ai_return_status) || WEXITSTATUS(ai_return_status) != 0) {
+    snprintf(buffer,1023,"Installer Error (Status %d)",WEXITSTATUS(ai_return_status));
+  }
+  else{
+    snprintf(buffer,1023,"Installer Sucessfull (Status %d)",WEXITSTATUS(ai_return_status));
+  }
+  
+  
   time (&rawtime);
   timeinfo = localtime (&rawtime);
+  fprintf(fp,"\n\n%s\n",buffer);
   fprintf(fp,"\n\nEnd at : %s\n",asctime (timeinfo));
   fclose(fpi);
   fclose(fp);
-  fclose(from_child);
+  
   
   //-- Reopen Zip
   az_init(getArgv(1));
@@ -494,10 +509,11 @@ void aroma_init_install(
   snprintf(ai_progress_text,63,"Initializing...");
   snprintf(ai_progress_info,100,"");
 }
-void aroma_start_install(
+int aroma_start_install(
   CANVAS * bg,
   int cx, int cy, int cw, int ch,
-  int px, int py, int pw, int ph
+  int px, int py, int pw, int ph,
+  CANVAS * cvf, int imgY, int chkFY, int chkFH
 ){
   //-- Save Canvases
   ai_bg = bg;
@@ -538,10 +554,11 @@ void aroma_start_install(
           (acfg()->winroundsz*agdp())-2,0,0,1,1
         );
         
+        ag_draw_ex(bg,cvf,0,imgY,0,0,cvf->w,cvf->h);
         ag_draw(&hWin->c,bg,0,0);
         
         // Update Textbox
-        ai_rebuildtxt(cx,cy,cw,ch);
+        ai_rebuildtxt(cx,chkFY,cw,chkFH);
         
         // Show Next Button
         ACONTROLP nxtbtn=acbutton(
@@ -573,4 +590,6 @@ void aroma_start_install(
   }
   aw_set_on_dialog(0);
   aw_destroy(hWin);
+  
+  return ai_return_status;
 }

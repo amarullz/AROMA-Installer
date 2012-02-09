@@ -667,8 +667,8 @@ Value* AROMA_IIF(const char* name, State* state, int argc, Expr* argv[]) {
 //* calibrate
 //*
 Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
-  if (argc != 4) {
-    return ErrorAbort(state, "%s() expects 4 args (div-x, add-x, div-y, add-y), got %d", name, argc);
+  if ((argc != 4)&&(argc != 5)) {
+    return ErrorAbort(state, "%s() expects 4 or 5 args (div-x, add-x, div-y, add-y, usehack), got %d", name, argc);
   }
   
   //-- This is Busy Function
@@ -676,6 +676,15 @@ Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Get Arguments
   _INITARGS();
+  
+  //-- Use Touch Screen Hack, for device without touch-up event
+  if (argc==5){
+    if (strcmp(args[4],"yes")==0)
+      atouch_sethack(1);
+    else
+      atouch_sethack(0);
+  }else
+    atouch_sethack(0);
   
   //-- Set Calibration Data
   atouch_set_calibrate((float) strtof(args[0],NULL),atoi(args[1]),(float) strtof(args[2],NULL),atoi(args[3]));
@@ -1731,8 +1740,8 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
 //*
 Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
   _INITBACK();
-  if (argc!=3) {
-    return ErrorAbort(state, "%s() expects 3 args (title,desc,ico), got %d", name, argc);
+  if ((argc!=3)&&(argc!=4)) {
+    return ErrorAbort(state, "%s() expects 3 or 4 args (title,desc,ico,[finish_info]), got %d", name, argc);
   }
   
   //-- Set Busy before everythings ready
@@ -1745,8 +1754,13 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
   aui_setbg(args[0]);
   
   //-- Init Strings
-  char text[256];
+  char text[256];                   //-- Text When Installing
+  char finish_text[256];            //-- Text After Installing
   snprintf(text,255,"%s",args[1]);
+  if (argc==4)
+    snprintf(finish_text,255,"%s",args[3]);
+  else
+    snprintf(finish_text,255,"%s",args[1]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -1774,38 +1788,65 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
     tifX += imgA; 
   }
   int txtH        = ag_txtheight(chkW-((pad*2)+imgA),text,0);
+  
+  int txtFH       = ag_txtheight(chkW-((pad*2)+imgA),finish_text,0);
+  int tifFY       = tifY;
+  
   if (imgE){
     if (txtH<imgH){
       tifY+= (imgH-txtH)/2;
       txtH=imgH;
     }
+    if (txtFH<imgH){
+      tifFY+= (imgH-txtFH)/2;
+      txtFH = imgH;
+    }
     apng_draw_ex(&aui_win_bg,&ap,imgX,imgY,0,0,imgW,imgH);
     apng_close(&ap);
   }
   
+  //-- Finished Text Canvas
+  CANVAS cvf;
+  ag_canvas(&cvf,agw(),((txtFH>txtH)?txtFH:txtH));
+  ag_draw_ex(&cvf,&aui_win_bg,0,0,0,imgY,agw(),cvf.h);
+  
+  //-- Draw Finished Text
+  ag_textf(&cvf, chkW-((pad*2)+imgA), tifX+1, tifFY+1-imgY, finish_text,    acfg()->textbg,0);
+  ag_text (&cvf, chkW-((pad*2)+imgA), tifX,   tifFY-imgY,   finish_text,    acfg()->textfg,0);
+  
   //-- Draw Text
   ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_text(&aui_win_bg, chkW-((pad*2)+imgA),tifX,tifY,text,    acfg()->textfg,0);
   
   //-- Resize Checkbox Size & Pos
-  chkY+=txtH+pad;
-  chkH-=txtH+pad;
+  int chkFY  = chkY + (txtFH+pad);
+  int chkFH  = chkH - (txtFH+pad);
+  
+  chkY      += txtH+pad;
+  chkH      -= txtH+pad;
   
   //-- Release Arguments
   _FREEARGS();
   
   //-- Start Installer Proccess
-  aroma_start_install(
+  int ret_status = aroma_start_install(
     &aui_win_bg,
     pad,chkY,chkW,chkH,
-    pad,btnY,chkW,bntH
+    pad,btnY,chkW,bntH,
+    &cvf, imgY, chkFY, chkFH
   );
+  
+  //-- Release Finished Canvas
+  ag_ccanvas(&cvf);
 
   //-- Set Installer already Runned
   aparse_installpos = func_pos;
   
-  //-- Return
-  return StringValue(strdup(""));
+  //-- Installer OK
+  snprintf(text,255,"%i",ret_status);
+  
+  //-- Installer Not Return OK
+  return StringValue(strdup(text));
 }
 
 //* 

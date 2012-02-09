@@ -446,6 +446,8 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
 //         Copyright (C) 2007 The Android Open Source Project
 //         Licensed under the Apache License
 //
+byte    atouch_gethack();
+void    atouch_sethack(byte t);
 struct  input_event;
 void    atouch_set_calibrate(float dx, int ax, float dy, int ay);
 int     atouch_wait(ATEV *atev);
@@ -495,10 +497,11 @@ void        acfg_init();      // Set Default Config
 //
 // AROMA Start Main Installer
 //
-void aroma_start_install(
+int aroma_start_install(
   CANVAS * bg,
   int cx, int cy, int cw, int ch,
-  int px, int py, int pw, int ph
+  int px, int py, int pw, int ph,
+  CANVAS * cvf, int imgY, int chkFY, int chkFH
 );
 
 //
