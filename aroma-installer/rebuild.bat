@@ -17,7 +17,7 @@ echo * Copying Binary Files...
 cd ..
 del build\update-binary
 copy build\aroma build\update-binary
-copy build\aroma examples\black\META-INF\com\google\android\update-binary
+copy build\aroma examples\release\META-INF\com\google\android\update-binary
 copy build\aroma examples\generic\META-INF\com\google\android\update-binary
 echo.
 echo =============================

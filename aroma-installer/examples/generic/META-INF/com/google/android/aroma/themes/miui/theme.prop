@@ -3,8 +3,8 @@ img.titlebar          = titlebar.9
 img.navbar            = nav.9
 img.dialog            = dialog.9
 img.dialog.titlebar   = dialog_titlebar.9
-img.progress          = 
-img.prograss.fill     = 
+img.progress          = button.9
+img.prograss.fill     = button_focus.9
 img.selection         = select.9
 img.selection.push    = select_push.9
 

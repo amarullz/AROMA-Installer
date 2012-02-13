@@ -13,7 +13,7 @@ del /F /Q /S *.*
 cd ..
 
 echo * Examples
-cd examples\black\META-INF\com\google\android\
+cd examples\release\META-INF\com\google\android\
 del /F /Q update-binary
 cd ..\..\..\..\..\..
 cd examples\generic\META-INF\com\google\android\

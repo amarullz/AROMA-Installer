@@ -70,7 +70,7 @@
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
 #define AROMA_BUILD_URL   "http://www.amarullz.com/"
-#define AROMA_COPY        "(c) 2011-2012 by amarullz xda-developers"
+#define AROMA_COPY        "© 2012 by amarullz xda-developers"
 #define AROMA_TMP         "/tmp/aroma-data"
 #define AROMA_DIR         "META-INF/com/google/android/aroma"
 #define AROMA_CFG         "META-INF/com/google/android/aroma-config"
@@ -223,7 +223,12 @@ typedef struct  {
 typedef struct  {
   // Colors
   color winbg;                // Window Background
-  color winbg_g;              // Window Background Gradiend
+  color winbg_g;              // Window Background Gradient
+  color winfg;                // Window Foreground
+  color winfg_gray;           // Window Foreground
+  color dialogbg;             // Dialog Background
+  color dialogbg_g;           // Dialog Background Gradient
+  color dialogfg;             // Dialog Foreground
   color textbg;               // Text / List Background
   color textfg;               // Text / List Font Color
   color textfg_gray;          // List Grayed Font Color ( List Description )
@@ -241,6 +246,7 @@ typedef struct  {
   color scrollbar;            // Navigation Bar Background Gradient
   color border;               // Border Color
   color border_g;             // Border Color Gradient
+  color progressglow;         // Progress Bar Glow Color
   
   // Property
   byte  roundsz;              // Control Rounded Size
@@ -254,6 +260,13 @@ typedef struct  {
   char  text_ok[32];          // OK
   char  text_next[32];        // Next >
   char  text_back[32];        // < Back
+  
+  char  text_yes[32];         // Yes
+  char  text_no[32];          // No
+  char  text_about[32];       // About
+  char  text_calibrating[32]; // Calibration Tools
+  char  text_quit[32];        // Quit
+  char  text_quit_msg[64];   // Quit Message
   
   // ROM Text
   char rom_name[64];          // ROM Name
@@ -271,6 +284,7 @@ typedef struct  {
   // THEME
   PNGCANVASP theme[AROMA_THEME_CNT];
   byte       theme_9p[AROMA_THEME_CNT];
+  char themename[64];
 } AC_CONFIG;
 
 
@@ -364,7 +378,7 @@ typedef struct{
 //
 // AROMA PNG Functions
 //
-byte      apng_load(PNGCANVAS * pngcanvas,const char* imgname);         // Load PNG From Zip Item
+byte      apng_load(PNGCANVAS * pngcanvas,char* imgname);         // Load PNG From Zip Item
 void      apng_close(PNGCANVAS * pngcanvas);                            // Release PNG Memory
 byte      apng_draw(CANVAS * _b, PNGCANVAS * p, int xpos, int ypos);    // Draw PNG Into Canvas
 byte apng_stretch(
@@ -482,7 +496,8 @@ byte ag_text_ex(CANVAS *_b,int maxwidth,int x,int y,  // Draw String into Canvas
 int   ag_txtheight(int maxwidth,                      // Calculate String Height to be drawn
         const char *s, byte isbig);
 int   ag_txtwidth(const char *s, byte isbig);         // Calculate String Width to be drawn
-byte  ag_fontwidth(char c,byte isbig);                // Calculate font width for 1 character
+int  ag_tabwidth(int x, byte isbig);
+byte ag_fontwidth(char c,byte isbig);                // Calculate font width for 1 character
 byte ag_texts(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig);
 byte ag_textfs(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig);
 byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor,byte multiline);
@@ -519,9 +534,9 @@ int     atmsg();
 //
 char * ai_trim(char * chr);
 byte  ismounted(char * path);
-int   alib_disksize(const char * path);
+long  alib_disksize(const char * path);
 int   alib_diskusage(const char * path);
-int   alib_diskfree(const char * path);
+long  alib_diskfree(const char * path);
 void  alib_exec(char * cmd, char * arg);
 void  create_directory(const char *path);
 int   remove_directory(const char *path);
@@ -541,6 +556,7 @@ int   akinetic_fling_dampered(AKINETIC * p, float dampersz);
 //
 AC_CONFIG * acfg();           // Get Config Structure
 void        acfg_init();      // Set Default Config
+void acfg_init_ex(byte themeonly);
 
 //
 // AROMA Start Main Installer

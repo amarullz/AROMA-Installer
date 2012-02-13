@@ -29,13 +29,20 @@ AC_CONFIG acfg_var;
 byte      on_dialog_window = 0;
 /***************************[ CONFIG FUNCTIONS ]**************************/
 AC_CONFIG * acfg(){ return &acfg_var; }
-void acfg_init(){
+void acfg_init_ex(byte themeonly){
   acfg_var.winbg        = ag_rgb(0xf0,0xf0,0xf0);
   acfg_var.winbg_g      = ag_rgb(0xee,0xee,0xee);
+  
+  acfg_var.dialogbg     = acfg_var.winbg;
+  acfg_var.dialogbg_g   = acfg_var.winbg_g;
   
   acfg_var.textbg       = ag_rgb(0xff,0xff,0xff);
   acfg_var.textfg       = ag_rgb(0x00,0x00,0x00);
   acfg_var.textfg_gray  = ag_rgb(0x88,0x88,0x88);
+  acfg_var.winfg_gray   = acfg_var.textfg_gray;
+  
+  acfg_var.winfg        = acfg_var.textfg;
+  acfg_var.dialogfg     = acfg_var.textfg;
   
   acfg_var.controlbg    = ag_rgb(0xcc,0xcc,0xcc);
   acfg_var.controlbg_g  = ag_rgb(0xaa,0xaa,0xaa);
@@ -57,28 +64,42 @@ void acfg_init(){
   acfg_var.border       = ag_rgb(0x99,0x99,0x99);
   acfg_var.border_g     = ag_rgb(0x66,0x66,0x66);
   
+  acfg_var.progressglow = acfg_var.selectbg;
+  
   acfg_var.winroundsz   = 4;
   acfg_var.roundsz      = 3;
   acfg_var.btnroundsz   = 2;
   acfg_var.fadeframes   = 5;
   
-  snprintf(acfg_var.text_ok,31,"OK");
-  snprintf(acfg_var.text_next,31,"Next >");
-  snprintf(acfg_var.text_back,31,"< Back");
+  snprintf(acfg_var.themename,63,"");
   
-  snprintf(acfg_var.rom_name,63,AROMA_NAME);
-  snprintf(acfg_var.rom_version,63,AROMA_VERSION);
-  snprintf(acfg_var.rom_author,63,AROMA_BUILD_A);
-  snprintf(acfg_var.rom_device,63,"Not Defined");
-  
-  
-  acfg_var.ckey_up      = 0;
-  acfg_var.ckey_down    = 0;
-  acfg_var.ckey_select  = 0;
-  acfg_var.ckey_back    = 0;
-  acfg_var.ckey_menu    = 0;
+  if (themeonly==0){
+    snprintf(acfg_var.text_ok,31,"OK");
+    snprintf(acfg_var.text_next,31,"Next >");
+    snprintf(acfg_var.text_back,31,"< Back");
+    snprintf(acfg_var.text_yes,31,"Yes");
+    snprintf(acfg_var.text_no,31,"No");
+    snprintf(acfg_var.text_about,31,"About & Informations");
+    snprintf(acfg_var.text_calibrating,31,"Calibrating Tools");
+    snprintf(acfg_var.text_quit,31,"Quit Installation");
+    snprintf(acfg_var.text_quit_msg,63,"Are you sure to quit the Installer?");
+    
+    snprintf(acfg_var.rom_name,63,AROMA_NAME);
+    snprintf(acfg_var.rom_version,63,AROMA_VERSION);
+    snprintf(acfg_var.rom_author,63,AROMA_BUILD_A);
+    snprintf(acfg_var.rom_device,63,"Not Defined");
+    
+    acfg_var.ckey_up      = 0;
+    acfg_var.ckey_down    = 0;
+    acfg_var.ckey_select  = 0;
+    acfg_var.ckey_back    = 0;
+    acfg_var.ckey_menu    = 0;
+  }
   
   atheme_releaseall();
+}
+void acfg_init(){
+  acfg_init_ex(0);
 }
 
 /***************************[ THEME ]**************************/
@@ -545,7 +566,7 @@ void aw_textdialog(AWINDOWP parent,char * title,char * text,char * ok_text){
   ag_canvas(&alertbg,agw(),agh());
   ag_draw(&alertbg,agc(),0,0);
   ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.border,acfg_var.border_g,acfg_var.roundsz*agdp());
-  ag_roundgrad(&alertbg,winX+1,winY+1,winW-2,winH-2,acfg_var.winbg,acfg_var.winbg_g,(acfg_var.roundsz*agdp())-1);
+  ag_roundgrad(&alertbg,winX+1,winY+1,winW-2,winH-2,acfg_var.dialogbg,acfg_var.dialogbg_g,(acfg_var.roundsz*agdp())-1);
   ag_roundgrad_ex(&alertbg,winX+1,winY+1,winW-2,capH-1,acfg_var.titlebg,acfg_var.titlebg_g,(acfg_var.roundsz*agdp())-1,1,1,0,0);
   ag_textf(&alertbg,titW,((agw()/2)-(titW/2))+1,winY+elmP+1,title,acfg_var.titlebg_g,1);
   ag_text(&alertbg,titW,(agw()/2)-(titW/2),winY+elmP,title,acfg_var.titlefg,1);
@@ -655,7 +676,7 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   //-- Draw Window
   if (!atheme_draw("img.dialog", &alertbg, winX,winY,winW,winH)){
     ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
-    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.dialogbg,acfg_var.dialogbg_g,acfg_var.roundsz*agdp());
   }
   
   //-- Draw Title
@@ -673,8 +694,8 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   }
   
   //-- Draw Text
-  ag_textf(&alertbg,txtW,txtX+1,txtY+1,text,acfg_var.textbg,0);
-  ag_text(&alertbg,txtW,txtX,txtY,text,acfg_var.textfg,0);
+  ag_textf(&alertbg,txtW,txtX+1,txtY+1,text,acfg_var.dialogbg,0);
+  ag_text(&alertbg,txtW,txtX,txtY,text,acfg_var.dialogfg,0);
   
   AWINDOWP hWin   = aw(&alertbg);
   acbutton(hWin,btnX,btnY,btnW,btnH,(ok_text==NULL?acfg_var.text_ok:ok_text),0,5);
@@ -781,7 +802,7 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   //-- Draw Window
   if (!atheme_draw("img.dialog", &alertbg, winX-1,winY-1,winW+2,winH+2)){
     ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
-    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.dialogbg,acfg_var.dialogbg_g,acfg_var.roundsz*agdp());
   }
   
   //-- Draw Title
@@ -798,13 +819,13 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   }
   
   //-- Draw Text
-  ag_textf(&alertbg,txtW,txtX+1,txtY+1,text,acfg_var.textbg,0);
-  ag_text(&alertbg,txtW,txtX,txtY,text,acfg_var.textfg,0);
+  ag_textf(&alertbg,txtW,txtX+1,txtY+1,text,acfg_var.dialogbg,0);
+  ag_text(&alertbg,txtW,txtX,txtY,text,acfg_var.dialogfg,0);
   
   AWINDOWP hWin   = aw(&alertbg);
   
-  acbutton(hWin,btnX,btnY,btnW,btnH,(yes_text==NULL?"Yes":yes_text),0,6);
-  acbutton(hWin,btnX2,btnY,btnW,btnH,(no_text==NULL?"No":no_text),0,5);
+  acbutton(hWin,btnX,btnY,btnW,btnH,(yes_text==NULL?acfg_var.text_yes:yes_text),0,6);
+  acbutton(hWin,btnX2,btnY,btnW,btnH,(no_text==NULL?acfg_var.text_no:no_text),0,5);
       
   aw_show(hWin);
   byte ondispatch = 1;
@@ -947,9 +968,9 @@ void aw_calibtools(AWINDOWP parent){
       parent,
       "Use Alternative Touch",
       "Do you want to use alternative touch?\n  Only if default method not works.\n\nPress the volume keys to select Yes or No.",
-      "icons/alert",
-      "No",
-      "Yes"
+      "@alert",
+      acfg_var.text_no,
+      acfg_var.text_yes
     );
   byte current_hack = atouch_gethack();
   if (!USE_HACK){
@@ -1039,7 +1060,7 @@ void aw_calibtools(AWINDOWP parent){
     aw_alert(parent,
       "Calibrated Data",
       "Calibrated Data not Valid, Please Try Again...",
-      "icons/info",
+      "@info",
       NULL);
   }
 doneit:
@@ -1052,13 +1073,13 @@ doneit:
     aw_alert(parent,
       "Calibrated Data",
       datx,
-      "icons/info",
+      "@info",
       NULL);
     dont_restore_caldata = aw_confirm(
       parent,
       "Set Calibrated Data",
       "Do You Want to Use Current Calibrated Data in Current Process?\n\n<#080>NOTE:</#> It Will revert back when you restart the AROMA Installer...",
-      "icons/alert",
+      "@alert",
       NULL,
       NULL
     );    
@@ -1072,7 +1093,17 @@ void aw_about_dialog(AWINDOWP parent){
   char unchkmsg[513];
   
   snprintf(unchkmsg,512,
-    "<#247>%s %s</#>\n  %s\n\n  Build <u>%s</u> (<#950>%s</#>)\n  %s\n  %s\n  <#009><u>%s</u></#>\n\n\nROM Name: <#060>%s</#>\nROM Version: <#060>%s</#>\nROM Author: <#060>%s</#>\n\nDevice: <#060>%s</#>",
+    "<b>%s %s</b>\n"
+    "%s\n\n"
+    "  Build <u>%s</u> (<b>%s</b>)\n"
+    "  %s\n"
+    "  %s\n"
+    "  <u>%s</u>\n\n"
+    "ROM Name\t: <b>%s</b>\n"
+    "ROM Version\t: <b>%s</b>\n"
+    "ROM Author\t: <b>%s</b>\n"
+    "Device\t\t\t: <b>%s</b>"
+    ,
     AROMA_NAME,
     AROMA_VERSION,
     AROMA_COPY,
@@ -1091,7 +1122,7 @@ void aw_about_dialog(AWINDOWP parent){
   aw_alert(parent,
     AROMA_NAME " " AROMA_VERSION,
     unchkmsg,
-    "icons/install",
+    "@install",
     NULL);
 }
 byte aw_showmenu(AWINDOWP parent){
@@ -1123,10 +1154,10 @@ byte aw_showmenu(AWINDOWP parent){
   
   //-- Create Window
   AWINDOWP hWin   = aw(&alertbg);
-  acbutton(hWin,btnX,btnY,btnW,btnH,"About & Informations",0,11);
+  acbutton(hWin,btnX,btnY,btnW,btnH,acfg_var.text_about,0,11);
   //acbutton(hWin,btnX,btnY+((btnH+vpad)*1),btnW,btnH,"Help",0,12);
-  acbutton(hWin,btnX,btnY+((btnH+vpad)*1),btnW,btnH,"Calibrating Tools",0,13);
-  acbutton(hWin,btnX,btnY+((btnH+vpad)*2),btnW,btnH,"Quit Installation",0,14);
+  acbutton(hWin,btnX,btnY+((btnH+vpad)*1),btnW,btnH,acfg_var.text_calibrating,0,13);
+  acbutton(hWin,btnX,btnY+((btnH+vpad)*2),btnW,btnH,acfg_var.text_quit,0,14);
   
   aw_show(hWin);
   byte ondispatch = 1;
@@ -1156,7 +1187,7 @@ byte aw_showmenu(AWINDOWP parent){
     aw_calibtools(parent);
   }
   else if (res==4){
-    byte res = aw_confirm(parent, AROMA_NAME " " AROMA_VERSION, "Are you sure to quit the Installer?","icons/alert",NULL,NULL);
+    byte res = aw_confirm(parent, AROMA_NAME " " AROMA_VERSION, acfg_var.text_quit_msg,"@alert",NULL,NULL);
     if (res) return 2;
   }
   return 0;

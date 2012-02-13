@@ -54,17 +54,31 @@ void apng_close(PNGCANVAS * pngcanvas){
 }
 
 //-- LOAD PNG FROM ZIP
-byte apng_load(PNGCANVAS * pngcanvas,const char* imgname) {
-  memset(pngcanvas,0,sizeof(PNGCANVAS));
+byte apng_load(PNGCANVAS * pngcanvas,char* imgname) {
   
+  char zpath[256];
+  if (imgname[0]=='@'){
+    char * icotheme_name = imgname;
+    icotheme_name++;
+    if (strcmp(acfg()->themename,"")==0){
+      snprintf(zpath, 255, "%s/icons/%s.png",AROMA_DIR,icotheme_name);
+    }
+    else{
+      snprintf(zpath,255,"themes/%s/icon.%s",acfg()->themename,icotheme_name);
+      if (apng_load(pngcanvas,zpath)) return 1;
+      snprintf(zpath, 255, "%s/icons/%s.png",AROMA_DIR,icotheme_name);
+    }
+  }
+  else
+    snprintf(zpath, 255, "%s/%s.png",AROMA_DIR,imgname);
+  
+  memset(pngcanvas,0,sizeof(PNGCANVAS));
   png_structp png_ptr   = NULL;
   png_infop info_ptr    = NULL;
   byte result           = 0;
   byte header[8];
   
   //-- LOAD DATA FROM ZIP
-  char zpath[256];
-  snprintf(zpath, sizeof(zpath)-1, "%s/%s.png",AROMA_DIR,imgname);
   AZMEM data_png;
   if (!az_readmem(&data_png,zpath,1)) return 0;
   
@@ -259,7 +273,7 @@ byte apng_loadfont(PNGFONTS * pngfont,const char* imgname) {
   
   //-- LOAD DATA FROM ZIP
   char zpath[256];
-  snprintf(zpath, sizeof(zpath)-1, "%s/fonts/%s.png",AROMA_DIR,imgname);
+  snprintf(zpath, sizeof(zpath)-1, "%s/%s.png",AROMA_DIR,imgname);
   AZMEM data_png;
   if (!az_readmem(&data_png,zpath,1)) return 0;
   
@@ -535,7 +549,7 @@ byte apng9_draw(
   if (_b==NULL) _b=agc();
   if (p==NULL) return 0;
   if (p->s==0) return 0;
-  if ((dh<6)||(dw<6)) return 0;
+  if ((dh<3)||(dw<3)) return 1;
   
   APNG9 tmpv;
   if (v==NULL) v=&tmpv;

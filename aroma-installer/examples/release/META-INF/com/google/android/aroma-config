@@ -5,20 +5,20 @@
 #           amarullz - xda-developers
 #           http://www.amarullz.com/
 #
-#       Version 1.0
+#       Version 1.10
 #
 # INFO:
-#   If you want the installer working, please sign your
-#   script in http://www.amarullz.com/
-#
 #   <aroma-assets> = META-INF/com/google/android/aroma
 #   <dp>           = Device Pixelate. WVGA/QHD = 3, HVGA = 2.
+#                    dp calculated with = round(min(width,height) / 160)
+#   <aroma-tmp>    = /tmp/aroma-data/
+#
 ##
 
 
 ##
 # Calibrate Touchscreen
-#  defaut: HTC Desire Touch Screen Calibrate Data [7.60,20,7.60,20]
+#  defaut: HTC Desire Touch Screen Calibrate Data [7.90,20,7.90,20]
 #
 # For other device, run the installer, then press "menu"
 # and select Calibrating Tools. Follow Instructions, and make
@@ -27,12 +27,9 @@
 # In the end, there will be alert dialog with calibration data
 # ( green ), replace this calibrate() function with that data.
 #
-calibrate("7.60","20","7.60","20");
-#
-# Show Calibrating Tools Directly before anything
-#
-#--- Remove this calibtool if you already know the calibrate data
-calibtool();
+#-------- Uncomment This to insert calibrating data:
+# calibrate("7.90","20","7.90","20");
+
 
 ##
 # Custom Key Code - Usefull For Some Device which not used
@@ -52,7 +49,7 @@ calibtool();
 # ini_set("customkeycode_up",     "115");
 # ini_set("customkeycode_down",   "114");
 # ini_set("customkeycode_select", "116");
-# ini_set("customkeycode_menu",   "139");
+# ini_set("customkeycode_menu",   "229");
 # ini_set("customkeycode_back",   "158");
 #
 
@@ -82,25 +79,29 @@ calibtool();
 #   #469 or #46689a
 #
 #--- Uncomment to use custom color scheme: (Dark)
-setcolor("winbg",       "#444");
-setcolor("winbg_g",     "#222");
-setcolor("textbg",      "#333");
-setcolor("textfg",      "#fff");
-setcolor("textfg_gray", "#bbb");
-setcolor("controlbg",   "#444");
-setcolor("controlbg_g", "#222");
-setcolor("controlfg",   "#fff");
-setcolor("selectbg",    "#653");
-setcolor("selectbg_g",  "#542");
-setcolor("selectfg",    "#ffd");
-setcolor("titlebg",     "#333");
-setcolor("titlebg_g",   "#000");
-setcolor("titlefg",     "#fff");
-setcolor("navbg",       "#333");
-setcolor("navbg_g",     "#222");
-setcolor("border",      "#666");
-setcolor("border_g",    "#444");
+# setcolor("winbg",       "#444");
+# setcolor("winbg_g",     "#222");
+# setcolor("textbg",      "#333");
+# setcolor("textfg",      "#fff");
+# setcolor("textfg_gray", "#bbb");
+# setcolor("controlbg",   "#444");
+# setcolor("controlbg_g", "#222");
+# setcolor("controlfg",   "#fff");
+# setcolor("selectbg",    "#653");
+# setcolor("selectbg_g",  "#542");
+# setcolor("selectfg",    "#ffd");
+# setcolor("titlebg",     "#333");
+# setcolor("titlebg_g",   "#000");
+# setcolor("titlefg",     "#fff");
+# setcolor("navbg",       "#333");
+# setcolor("navbg_g",     "#222");
+# setcolor("border",      "#666");
+# setcolor("border_g",    "#444");
 
+##
+# SET THEME
+#
+theme("miui");
 
 ##
 # Initializing Rom Information
@@ -117,8 +118,31 @@ ini_set("rom_device",           "HTC Desire (bravo)");
 #
 # Image Will auto arrange into center horizontal&vertical
 #
-splash(4000, "sample");
+splash(5000, "sample");
 
+##
+# Show Animated Splash for
+#
+# Image Will auto arrange into center horizontal&vertical
+#-----
+anisplash(
+   # Number of Loop
+   8,
+   
+   # Frame 1 [ Image, duration in millisecond ]
+   "splash/a1", 30,
+   "splash/a2", 30,
+   "splash/a3", 30,
+   "splash/a4", 30,
+   "splash/a5", 30,
+   "splash/a6", 30
+);
+
+#
+# Show Calibrating Tools Directly before anything
+#
+#--- Remove this calibtool if you already know the calibrate data
+calibtool("");
 
 ##
 # View Box UI.
@@ -416,10 +440,13 @@ checkbox(
 #
 # WONT DO ANYTHING IN TEST BUILD
 #
-install(
-  "Installing",
-  "Installing AROMA INSTALLER...\nPlease Wait Until it Finished...",
-  "icons/install"
+setvar("retstatus",
+  install(
+    "Installing",
+    "Installing AROMA INSTALLER...\nPlease Wait Until it Finished...",
+    "icons/install",
+    "Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull Install Sucessfull"
+  )
 );
 
 # Set Next Text fo Finish
@@ -429,6 +456,33 @@ viewbox(
   "Installation Completed",
     "<#080>Congratulation...</#>\n\n"+
     "AROMA ROM Already Installed Into Your Phone\n"+
-    "Press Finish, and Reboot your phone.\n\nThanks",
+    "Press Finish, and Reboot your phone.\n\nThanks\n\n"+
+    "Installer Status: "+getvar("retstatus"),
   "icons/info"
 );
+
+if
+  confirm(
+    # Arg 1
+      "Reboot",
+    
+    # Arg 2
+      "Reboot Now",
+    
+    # Arg 3
+      "icons/info",
+    
+    # Arg 4 (Yes)
+      "Reboot",
+      
+    # Arg 5 (No)
+      "No"
+  )=="yes"
+then
+  #
+  # reboot("onfinish");   - Reboot if anything finished
+  # reboot("now");        - Reboot Directly
+  # reboot("disable");    - If you set reboot("now") before, use this command to revert it.
+  #
+  reboot("onfinish");
+endif;

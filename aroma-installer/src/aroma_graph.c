@@ -190,17 +190,6 @@ byte ag_init(){
       
     }
     else{
-      /*printf("INFO 32 BIT:\n");
-      printf("STRIDE: %i\n",ag_fbf.line_length);
-      printf("Width : %i - %i",(ag_fbv.xres*agclp),ag_fbv.xres);
-      /*
-      printf("INFO 32 BIT:\n");
-      printf("RED  : O=%i, L=%i, M=%i\n",ag_fbv.red.offset,ag_fbv.red.length,ag_fbv.red.msb_right);
-      printf("GREEN: O=%i, L=%i, M=%i\n",ag_fbv.green.offset,ag_fbv.green.length,ag_fbv.green.msb_right);
-      printf("BLUE : O=%i, L=%i, M=%i\n",ag_fbv.blue.offset,ag_fbv.blue.length,ag_fbv.blue.msb_right);
-      printf("TRA : O=%i, L=%i, M=%i\n",ag_fbv.blue.offset,ag_fbv.blue.length,ag_fbv.blue.msb_right);
-      */
-      
       ag_32     = 1;
       ag_fbuf32 = (byte*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
       ag_bf32   = (dword*) malloc(ag_fbsz);
@@ -1137,6 +1126,11 @@ byte ag_fontwidth(char c,byte isbig){
   if (cd>95) return 0;
   return fnt->fw[cd];
 }
+int ag_tabwidth(int x, byte isbig){
+  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
+  int spacesz = fnt->fw[0]*4;
+  return (spacesz-(x%spacesz));
+}
 byte ag_check_escape(char * soff, const char ** ssource, char * buf){
   const char * s = *ssource;
   char off = *soff;
@@ -1204,7 +1198,6 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
   byte onlongtext=0;
   while((off = *s++)){
     if (ag_check_escape(&off,&s,NULL)) continue;
-    
     if (off=='\n'){
       curx = 0;
       y+=fheight;
@@ -1217,8 +1210,11 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
         char cf;
         while ((cf=*ss++)){
           if (ag_check_escape(&cf,&ss,NULL)) continue;
-          nextspacew+=ag_fontwidth(cf,isbig);
-          if ((cf==' ')||(cf=='\n')) break;
+          if (cf=='\t')
+            nextspacew+=ag_tabwidth(curx+nextspacew,isbig);
+          else
+            nextspacew+=ag_fontwidth(cf,isbig);
+          if ((cf=='\t')||(cf==' ')||(cf=='\n')) break;
         }
       }
       if (nextspacew>maxwidth){
@@ -1231,8 +1227,12 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
         prevspace=1;
         onlongtext = 0;
       }
-      if ((prevspace==0)||(off!=' ')){
-        int fwidth = ag_fontwidth(off,isbig);
+      if ((prevspace==0)||((off!=' ')&&(off!='\t'))){
+        int fwidth = 0;
+        if (off=='\t')
+          fwidth = ag_tabwidth(curx,isbig);
+        else
+          fwidth = ag_fontwidth(off,isbig);
         curx+= fwidth;
         if (curx>maxwidth) {
           curx = 0;
@@ -1241,8 +1241,11 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
           onlongtext = 0;
         }
       }
-      else
+      else{
         prevspace=0;
+        if (off=='\t')
+          curx = ag_tabwidth(0,isbig);
+      }
     }
   }
   if (curx==0) return y;
@@ -1317,8 +1320,11 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
         char cf;
         while ((cf=*ss++)){
           if (ag_check_escape(&cf,&ss,NULL)) continue;
-          nextspacew+=ag_fontwidth(cf,isbig);
-          if ((cf==' ')||(cf=='\n')) break;
+          if (cf=='\t')
+            nextspacew+=ag_tabwidth(curx+nextspacew-x,isbig);
+          else
+            nextspacew+=ag_fontwidth(cf,isbig);
+          if ((cf=='\t')||(cf==' ')||(cf=='\n')) break;
         }
       }
       if (nextspacew>maxwidth){
@@ -1332,9 +1338,15 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
         prevspace=1;
         onlongtext = 0;
       }
-      if ((prevspace==0)||(off!=' ')){
-        int fwidth = ag_fontwidth(off,isbig);
-        ag_drawchar_ex(_b,curx,y,off,cl,isbig,is_underline,is_bold);
+      if ((prevspace==0)||((off!=' ')&&(off!='\t'))){
+        int fwidth = 0;
+        if (off=='\t'){
+          fwidth = ag_tabwidth(curx-x,isbig);
+        }
+        else{
+          fwidth = ag_fontwidth(off,isbig);
+          ag_drawchar_ex(_b,curx,y,off,cl,isbig,is_underline,is_bold);
+        }
         curx+= fwidth;
         if ((curx>_b->w)||(curx-x>maxwidth)) {
           if (!multiline) break;
@@ -1344,8 +1356,12 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
           onlongtext = 0;
         }
       }
-      else
+      else{
         prevspace=0;
+        if (off=='\t'){
+          curx = x+ag_tabwidth(0,isbig);
+        }
+      }
     }
   }
   return 1;

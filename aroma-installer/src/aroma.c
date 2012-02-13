@@ -88,10 +88,10 @@ void a_splash(char * spipe){
 //* 
 void a_init_all(){
   //-- Init
-  ui_init();                  //-- Init Event Handler
-  ag_init();                  //-- Init Graphic Framebuffer
-  ag_loadsmallfont("small");  //-- Init Small Font
-  ag_loadbigfont("big");      //-- Init Big Font
+  ui_init();                        //-- Init Event Handler
+  ag_init();                        //-- Init Graphic Framebuffer
+  ag_loadsmallfont("fonts/small");  //-- Init Small Font
+  ag_loadbigfont("fonts/big");      //-- Init Big Font
 }
 
 //* 

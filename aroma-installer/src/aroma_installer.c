@@ -32,6 +32,7 @@ float     ai_progress_pos     = 0;
 float     ai_progress_fract   = 0;
 int       ai_progress_fract_n = 0;
 int       ai_progress_fract_c = 0;
+long      ai_progress_fract_l = 0;
 int       ai_progress_w     = 0;
 int       ai_prog_x         = 0;
 int       ai_prog_y         = 0;
@@ -127,7 +128,7 @@ void ai_actionsavelog(char * name){
   fprintf(f,buffer);
   fclose(f);
 done:
-  free(buffer);
+  if (buffer!=NULL) free(buffer);
 }
 void ai_dump_logs(){
   char dumpname[256];
@@ -139,7 +140,7 @@ void ai_dump_logs(){
     ai_win,
     "Save Install Log",
     msgtext,
-    "icons/alert",
+    "@alert",
     NULL,
     NULL
   );
@@ -151,13 +152,29 @@ void ai_dump_logs(){
       ai_win,
       "Save Install Log",
       "Install Logs has been saved...",
-      "icons/alert",
+      "@info",
       NULL
     );
   }
   
 }
 static void *aroma_install_package(void *cookie){
+  /*
+   * Test Progress By Time
+  int vp=0;
+  for (vp=0;vp<=1000;vp++){
+    if (vp==50){
+      ai_progress_fract_c = 0;
+      ai_progress_fract_l = alib_tick();
+      ai_progress_fract_n = -8000;
+      ai_progress_fract   = 0.5/abs(ai_progress_fract_n);
+    }
+    snprintf(ai_progress_text,63,"Persen: %i",vp);
+    usleep(10000);
+  }
+   *
+   */
+  
   //-- Extract update-binary
   int res = az_extract(AROMA_ORIB,AROMA_TMP "/update-binary");
   if (res==0){
@@ -232,8 +249,11 @@ static void *aroma_install_package(void *cookie){
         float progsize      = strtof(fraction_s, NULL);
         ai_progress_fract_n = strtol(numfiles_s, NULL, 10);
         ai_progress_fract_c = 0;
+        ai_progress_fract_l = alib_tick();
         if (ai_progress_fract_n>0)
           ai_progress_fract = progsize/ai_progress_fract_n;
+        else if(ai_progress_fract_n<0)
+          ai_progress_fract = progsize/abs(ai_progress_fract_n);
         else{
           ai_progress_fract = 0;
           ai_progress_pos   = progsize;
@@ -254,7 +274,7 @@ static void *aroma_install_package(void *cookie){
         if (str) {
           if (str[0]=='@'){
             char tmpbuf[256];
-            snprintf(tmpbuf,255,"<#%02x%02x%02x>%s</#>",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),str+1);
+            snprintf(tmpbuf,255,"<#%02x%02x%02x><b>%s</b></#>",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),str+1);
             actext_appendtxt(ai_buftxt,tmpbuf);
             fprintf(fpi,"%s\n",tmpbuf);
             char * t_trimmed = ai_trim(str+1);
@@ -282,9 +302,11 @@ static void *aroma_install_package(void *cookie){
             snprintf(ai_progress_info,100,"<#%02x%02x%02x>Extract:</#>%s",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),filename);
           }
           fprintf(fp,"    Extract: %s\n",filename);
-          if (ai_progress_fract_c<ai_progress_fract_n){
-            ai_progress_fract_c++;
-            ai_progress_pos+=ai_progress_fract;
+          if (ai_progress_fract_n>0){
+            if (ai_progress_fract_c<ai_progress_fract_n){
+              ai_progress_fract_c++;
+              ai_progress_pos+=ai_progress_fract;
+            }
           }
         }
       }else {
@@ -322,14 +344,34 @@ static void *aroma_install_package(void *cookie){
 static void *ac_progressthread(void *cookie){
   //-- COLORS
   dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
-  byte sg_r = ag_r(acfg()->selectbg);
-  byte sg_g = ag_g(acfg()->selectbg);
-  byte sg_b = ag_b(acfg()->selectbg);
+  byte sg_r = ag_r(acfg()->progressglow);
+  byte sg_g = ag_g(acfg()->progressglow);
+  byte sg_b = ag_b(acfg()->progressglow);
   sg_r = min(sg_r*1.4,255);
   sg_g = min(sg_g*1.4,255);
   sg_b = min(sg_b*1.4,255);
   
   while(ai_run){
+    
+    //-- CALCULATE PROGRESS BY TIME
+    if(ai_progress_fract_n<0){
+      long curtick  = alib_tick();
+      int  targetc  = abs(ai_progress_fract_n);
+      long  tickdiff = curtick - ai_progress_fract_l;
+      if (tickdiff>0){
+        long diffms          = tickdiff*10;
+        ai_progress_fract_l  = curtick;
+        ai_progress_fract_n += diffms;
+        if (ai_progress_fract_n>=0){
+          diffms-=ai_progress_fract_n;
+          ai_progress_fract_n = 0;
+        }
+        float curradd        = ai_progress_fract*diffms;
+        ai_progress_pos     += curradd;
+      }
+    }
+    
+    //-- Safe Progress
     if (ai_progress_pos>1) ai_progress_pos=1.0;
     if (ai_progress_pos<0) ai_progress_pos=0.0;
     int prog_g = ai_prog_w; //-(ai_prog_r*2);
@@ -363,23 +405,22 @@ static void *ac_progressthread(void *cookie){
     }
     
     ag_draw_ex(ai_cv,ai_bg,0,ptxt_y,0,ptxt_y,agw(),agh()-ptxt_y);
-    
-    ag_roundgrad(ai_cv,ai_prog_x,ai_prog_y,ai_progress_w,ai_prog_h,acfg()->selectbg,acfg()->selectbg_g,ai_prog_r);
-    ag_roundgrad_ex(ai_cv,ai_prog_x,ai_prog_y,ai_progress_w,ceil((ai_prog_h)/2.0),LOWORD(hl1),HIWORD(hl1),ai_prog_r,2,2,0,0);
-
-    if (issmall>=0){
-      ag_draw_ex(ai_cv,ai_bg,ai_prog_x+issmall,ai_prog_oy,ai_prog_x+issmall,ai_prog_oy,(ai_prog_r*2),ai_prog_oh);
+    int curr_prog_w = round(ai_prog_ow*ai_progress_pos);
+    if (!atheme_draw("img.prograss.fill",ai_cv,ai_prog_ox,ai_prog_oy,curr_prog_w,ai_prog_oh)){
+      ag_roundgrad(ai_cv,ai_prog_x,ai_prog_y,ai_progress_w,ai_prog_h,acfg()->selectbg,acfg()->selectbg_g,ai_prog_r);
+      ag_roundgrad_ex(ai_cv,ai_prog_x,ai_prog_y,ai_progress_w,ceil((ai_prog_h)/2.0),LOWORD(hl1),HIWORD(hl1),ai_prog_r,2,2,0,0);
+      if (issmall>=0){
+        ag_draw_ex(ai_cv,ai_bg,ai_prog_x+issmall,ai_prog_oy,ai_prog_x+issmall,ai_prog_oy,(ai_prog_r*2),ai_prog_oh);
+      }
     }
     
-    
     ag_textfs(ai_cv,ptx1_w,ptx1_x+1,ptxt_y+1,ai_progress_text,acfg()->winbg,0);
-    ag_texts (ai_cv,ptx1_w,ptx1_x  ,ptxt_y  ,ai_progress_text,acfg()->textfg,0);
-    
+    ag_texts (ai_cv,ptx1_w,ptx1_x  ,ptxt_y  ,ai_progress_text,acfg()->winfg,0);
     ag_textfs(ai_cv,ai_prog_w-(ai_prog_or*2),ptx1_x+1,ptxt_y+1+ag_fontheight(0),ai_progress_info,acfg()->winbg,0);
-    ag_texts (ai_cv,ai_prog_w-(ai_prog_or*2),ptx1_x  ,ptxt_y+ag_fontheight(0)+agdp()  ,ai_progress_info,acfg()->textfg_gray,0);
+    ag_texts (ai_cv,ai_prog_w-(ai_prog_or*2),ptx1_x  ,ptxt_y+ag_fontheight(0)+agdp(),ai_progress_info,acfg()->winfg_gray,0);
 
     ag_textfs(ai_cv,ptxt_w,ptxt_x+1,ptxt_y+1,prog_percent_str,acfg()->winbg,0);
-    ag_texts (ai_cv,ptxt_w,ptxt_x,ptxt_y,prog_percent_str,acfg()->textfg,0);
+    ag_texts (ai_cv,ptxt_w,ptxt_x,ptxt_y,prog_percent_str,acfg()->winfg,0);
     
     prog_g = ai_prog_w-(ai_prog_r*2);
     
@@ -463,16 +504,16 @@ void aroma_init_install(
   ai_prog_or = ai_prog_oh/2;
 
   //-- Draw Progress Holder Into BG
-  ag_roundgrad(bg,px,ai_prog_oy,pw,ai_prog_oh,acfg()->border,acfg()->border_g,ai_prog_or);
-  ag_roundgrad(bg,px+1,ai_prog_oy+1,pw-2,ai_prog_oh-2,
-    ag_calculatealpha(acfg()->controlbg,0xffff,180),
-    ag_calculatealpha(acfg()->controlbg_g,0xffff,160),
-  ai_prog_or-1);
-  
-  ag_roundgrad(bg,px+2,ai_prog_oy+2,pw-4,ai_prog_oh-4,acfg()->controlbg,acfg()->controlbg_g,ai_prog_or-2);
-  //-- Highlight
   dword hl1 = ag_calchighlight(acfg()->controlbg,acfg()->controlbg_g);
-  ag_roundgrad_ex(bg,px+2,ai_prog_oy+2,pw-4,ceil((ai_prog_oh-4)/2.0),LOWORD(hl1),HIWORD(hl1),ai_prog_or-2,2,2,0,0);
+  
+  if (!atheme_draw("img.progress",bg,px,ai_prog_oy,pw,ai_prog_oh)){
+    ag_roundgrad(bg,px,ai_prog_oy,pw,ai_prog_oh,acfg()->border,acfg()->border_g,ai_prog_or);
+    ag_roundgrad(bg,px+1,ai_prog_oy+1,pw-2,ai_prog_oh-2,
+      ag_calculatealpha(acfg()->controlbg,0xffff,180),
+      ag_calculatealpha(acfg()->controlbg_g,0xffff,160), ai_prog_or-1);
+    ag_roundgrad(bg,px+2,ai_prog_oy+2,pw-4,ai_prog_oh-4,acfg()->controlbg,acfg()->controlbg_g,ai_prog_or-2);
+    ag_roundgrad_ex(bg,px+2,ai_prog_oy+2,pw-4,ceil((ai_prog_oh-4)/2.0),LOWORD(hl1),HIWORD(hl1),ai_prog_or-2,2,2,0,0);
+  }
   
   //-- Calculate Progress Value Locations
   int hlfdp  = ceil(((float) agdp())/2);
@@ -524,13 +565,6 @@ int aroma_start_install(
         // Draw Navigation
         int pad         = agdp() * 4;
         aui_drawnav(bg, 0, py-pad, agw(), ph+(pad*2));
-        /*
-        ag_roundgrad_ex(
-          bg, 0, py-pad, agw(), ph+(pad*2),
-          acfg()->navbg, acfg()->navbg_g,
-          (acfg()->winroundsz*agdp())-2,0,0,1,1
-        );
-        */
         
         ag_draw_ex(bg,cvf,0,imgY,0,0,cvf->w,cvf->h);
         ag_draw(&hWin->c,bg,0,0);

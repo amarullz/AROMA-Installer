@@ -333,10 +333,24 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Get Arguments
   _INITARGS();
+  
+  acfg_init_ex(1);
+  
+  if ((strcmp(args[0],"")==0)||(strcmp(args[0],"generic")==0)){
+    //-- Background Should Be Redrawed
+    aui_isbgredraw = 1;
+    
+    //-- Release Arguments
+    _FREEARGS();
+    
+    //-- Return
+    return StringValue(strdup(""));
+  }
 
   //-- Parse The Prop
   char themename[256];
   snprintf(themename,255,"%s/themes/%s/theme.prop",AROMA_DIR,args[0]);
+  snprintf(acfg()->themename,63,"%s",args[0]);
   char * propstr = aui_readfromzip(themename);
   if (propstr){
     int i=0;
@@ -351,30 +365,59 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
         free(val);
       }
     }
-    aui_setthemecolor(propstr, "winbg",             &acfg()->winbg);
-    aui_setthemecolor(propstr, "winbg_g",           &acfg()->winbg_g);
-    aui_setthemecolor(propstr, "textbg",            &acfg()->textbg);
-    aui_setthemecolor(propstr, "textfg",            &acfg()->textfg);
-    aui_setthemecolor(propstr, "textfg_gray",       &acfg()->textfg_gray);
-    aui_setthemecolor(propstr, "controlbg",         &acfg()->controlbg);
-    aui_setthemecolor(propstr, "controlbg_g",       &acfg()->controlbg_g);
-    aui_setthemecolor(propstr, "controlfg",         &acfg()->controlfg);
-    aui_setthemecolor(propstr, "selectbg",          &acfg()->selectbg);
-    aui_setthemecolor(propstr, "selectbg_g",        &acfg()->selectbg_g);
-    aui_setthemecolor(propstr, "selectfg",          &acfg()->selectfg);
-    aui_setthemecolor(propstr, "titlebg",           &acfg()->titlebg);
-    aui_setthemecolor(propstr, "titlebg_g",         &acfg()->titlebg_g);
-    aui_setthemecolor(propstr, "titlefg",           &acfg()->titlefg);
-    aui_setthemecolor(propstr, "scrollbar",         &acfg()->scrollbar);
-    aui_setthemecolor(propstr, "navbg",             &acfg()->navbg);
-    aui_setthemecolor(propstr, "navbg_g",           &acfg()->navbg_g);
-    aui_setthemecolor(propstr, "border",            &acfg()->border);
-    aui_setthemecolor(propstr, "border_g",          &acfg()->border_g);
-    aui_setthemeconfig(propstr, "roundsize",        &acfg()->roundsz);
-    aui_setthemeconfig(propstr, "button_roundsize", &acfg()->btnroundsz);
-    aui_setthemeconfig(propstr, "window_roundsize", &acfg()->winroundsz);
-    aui_setthemeconfig(propstr, "transition_frame", &acfg()->fadeframes);    
+    aui_setthemecolor(propstr,  "color.winbg",              &acfg()->winbg);
+    aui_setthemecolor(propstr,  "color.winbg_g",            &acfg()->winbg_g);
+    aui_setthemecolor(propstr,  "color.winfg",              &acfg()->winfg);
+    aui_setthemecolor(propstr,  "color.winfg_gray",         &acfg()->winfg_gray);
+    aui_setthemecolor(propstr,  "color.dialogbg",           &acfg()->dialogbg);
+    aui_setthemecolor(propstr,  "color.dialogbg_g",         &acfg()->dialogbg_g);
+    aui_setthemecolor(propstr,  "color.dialogfg",           &acfg()->dialogfg);
+    aui_setthemecolor(propstr,  "color.textbg",             &acfg()->textbg);
+    aui_setthemecolor(propstr,  "color.textfg",             &acfg()->textfg);
+    aui_setthemecolor(propstr,  "color.textfg_gray",        &acfg()->textfg_gray);
+    aui_setthemecolor(propstr,  "color.controlbg",          &acfg()->controlbg);
+    aui_setthemecolor(propstr,  "color.controlbg_g",        &acfg()->controlbg_g);
+    aui_setthemecolor(propstr,  "color.controlfg",          &acfg()->controlfg);
+    aui_setthemecolor(propstr,  "color.selectbg",           &acfg()->selectbg);
+    aui_setthemecolor(propstr,  "color.selectbg_g",         &acfg()->selectbg_g);
+    aui_setthemecolor(propstr,  "color.selectfg",           &acfg()->selectfg);
+    aui_setthemecolor(propstr,  "color.titlebg",            &acfg()->titlebg);
+    aui_setthemecolor(propstr,  "color.titlebg_g",          &acfg()->titlebg_g);
+    aui_setthemecolor(propstr,  "color.titlefg",            &acfg()->titlefg);
+    aui_setthemecolor(propstr,  "color.scrollbar",          &acfg()->scrollbar);
+    aui_setthemecolor(propstr,  "color.navbg",              &acfg()->navbg);
+    aui_setthemecolor(propstr,  "color.navbg_g",            &acfg()->navbg_g);
+    aui_setthemecolor(propstr,  "color.border",             &acfg()->border);
+    aui_setthemecolor(propstr,  "color.border_g",           &acfg()->border_g);
+    aui_setthemecolor(propstr,  "color.progressglow",       &acfg()->progressglow);
+    
+    aui_setthemeconfig(propstr, "config.roundsize",         &acfg()->roundsz);
+    aui_setthemeconfig(propstr, "config.button_roundsize",  &acfg()->btnroundsz);
+    aui_setthemeconfig(propstr, "config.window_roundsize",  &acfg()->winroundsz);
+    aui_setthemeconfig(propstr, "config.transition_frame",  &acfg()->fadeframes);
+    
+    //-- LOAD SMALL FONT
+    char * font = aui_parsepropstring(propstr,"font.small");
+    if (font!=NULL){
+      snprintf(themename,255,"themes/%s/%s",args[0],font);
+      if (!ag_loadsmallfont(themename))
+        ag_loadsmallfont("fonts/small");
+      free(font);
+    }
+    
+    //-- LOAD BIG FONT
+    font = aui_parsepropstring(propstr,"font.big");
+    if (font!=NULL){
+      snprintf(themename,255,"themes/%s/%s",args[0],font);
+      if (!ag_loadbigfont(themename))
+        ag_loadbigfont("fonts/big");
+      free(font);
+    }
+
     free(propstr);
+  }
+  else{
+    snprintf(acfg()->themename,63,"");
   }
 
   //-- Background Should Be Redrawed
@@ -674,8 +717,8 @@ Value* AROMA_CMP(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Convert Arguments
   byte ret = 0;
-  int val1 = atoi(args[0]);
-  int val2 = atoi(args[2]);
+  long val1 = atol(args[0]);
+  long val2 = atol(args[2]);
   
   //-- Compare
   if (strcmp(args[1],"==")==0){
@@ -720,9 +763,9 @@ Value* AROMA_CAL(const char* name, State* state, int argc, Expr* argv[]) {
   _INITARGS();
   
   //-- Convert Arguments
-  int ret = 0;
-  int val1 = atoi(args[0]);
-  int val2 = atoi(args[2]);
+  long ret = 0;
+  long val1 = atol(args[0]);
+  long val2 = atol(args[2]);
   
   //-- Calculating
   if (strcmp(args[1],"+")==0){
@@ -746,7 +789,7 @@ Value* AROMA_CAL(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Return
   char retstr[64];
-  snprintf(retstr,64,"%i",ret);
+  snprintf(retstr,64,"%ld",ret);
   StringValue(strdup(retstr));
 }
 
@@ -831,6 +874,11 @@ Value* AROMA_SETCOLOR(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Set Color Property
   if      (strcmp(args[0],"winbg") == 0)          acfg()->winbg=cl;
   else if (strcmp(args[0],"winbg_g") == 0)        acfg()->winbg_g=cl;
+  else if (strcmp(args[0],"winfg") == 0)          acfg()->winfg=cl;
+  else if (strcmp(args[0],"winfg_gray") == 0)     acfg()->winfg_gray=cl;
+  else if (strcmp(args[0],"dialogbg") == 0)       acfg()->dialogbg=cl;
+  else if (strcmp(args[0],"dialogbg_g") == 0)     acfg()->dialogbg_g=cl;
+  else if (strcmp(args[0],"dialogfg") == 0)       acfg()->dialogfg=cl;
   else if (strcmp(args[0],"textbg") == 0)         acfg()->textbg=cl;
   else if (strcmp(args[0],"textfg") == 0)         acfg()->textfg=cl;
   else if (strcmp(args[0],"textfg_gray") == 0)    acfg()->textfg_gray=cl;
@@ -848,6 +896,7 @@ Value* AROMA_SETCOLOR(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(args[0],"navbg_g") == 0)        acfg()->navbg_g=cl;
   else if (strcmp(args[0],"border") == 0)         acfg()->border=cl;
   else if (strcmp(args[0],"border_g") == 0)       acfg()->border_g=cl;
+  else if (strcmp(args[0],"progressglow") == 0)   acfg()->progressglow=cl;
   
   //-- Background Should Be Redrawed
   aui_isbgredraw = 1;
@@ -886,6 +935,13 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,31,args[1]);
   else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,31,args[1]);
   else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,31,args[1]);
+
+  else if (strcmp(args[0],"text_yes") == 0)           snprintf(acfg()->text_yes,31,args[1]);
+  else if (strcmp(args[0],"text_no") == 0)            snprintf(acfg()->text_no,31,args[1]);
+  else if (strcmp(args[0],"text_about") == 0)         snprintf(acfg()->text_about,31,args[1]);
+  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(acfg()->text_calibrating,31,args[1]);
+  else if (strcmp(args[0],"text_quit") == 0)          snprintf(acfg()->text_quit,31,args[1]);
+  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(acfg()->text_quit_msg,63,args[1]);
     
   else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,63,args[1]);
   else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,63,args[1]);
@@ -1125,8 +1181,8 @@ Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   chkY+=txtH+pad;
@@ -1265,8 +1321,8 @@ Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   chkY+=txtH+pad;
@@ -1317,7 +1373,7 @@ Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
       case 6:{
         if (!isplain){
           if (!accb_ischecked(agreecb)){
-            aw_alert(hWin,titletxt,unchkmsg,"icons/alert",acfg()->text_ok);
+            aw_alert(hWin,titletxt,unchkmsg,"@alert",acfg()->text_ok);
           }
           else
             ondispatch = 0;
@@ -1424,8 +1480,8 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   chkY+=txtH+pad;
@@ -1597,8 +1653,8 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   chkY+=txtH+pad;
@@ -1776,8 +1832,8 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg,chkW-((pad*2)+imgA),tifX,tifY,text,acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   chkY+=txtH+pad;
@@ -1934,12 +1990,12 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
   ag_draw_ex(&cvf,&aui_win_bg,0,0,0,imgY,agw(),cvf.h);
   
   //-- Draw Finished Text
-  ag_textf(&cvf, chkW-((pad*2)+imgA), tifX+1, tifFY+1-imgY, finish_text,    acfg()->textbg,0);
-  ag_text (&cvf, chkW-((pad*2)+imgA), tifX,   tifFY-imgY,   finish_text,    acfg()->textfg,0);
+  ag_textf(&cvf, chkW-((pad*2)+imgA), tifX+1, tifFY+1-imgY, finish_text,    acfg()->winbg,0);
+  ag_text (&cvf, chkW-((pad*2)+imgA), tifX,   tifFY-imgY,   finish_text,    acfg()->winfg,0);
   
   //-- Draw Text
-  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->textbg,0);
-  ag_text(&aui_win_bg, chkW-((pad*2)+imgA),tifX,tifY,text,    acfg()->textfg,0);
+  ag_textf(&aui_win_bg,chkW-((pad*2)+imgA),tifX+1,tifY+1,text,acfg()->winbg,0);
+  ag_text(&aui_win_bg, chkW-((pad*2)+imgA),tifX,tifY,text,    acfg()->winfg,0);
   
   //-- Resize Checkbox Size & Pos
   int chkFY  = chkY + (txtFH+pad);
@@ -2165,7 +2221,7 @@ Value* AROMA_GETPART(const char* name, State* state, int argc, Expr* argv[]) {
   _INITARGS();
   
   //-- Get & Set mounted
-  int ret = -1;
+  long ret = -1;
   byte mtd = ismounted(args[0]);
   if (!mtd){
     alib_exec("/sbin/mount",args[0]);
@@ -2199,7 +2255,7 @@ Value* AROMA_GETPART(const char* name, State* state, int argc, Expr* argv[]) {
   
 done:
   //-- Finish
-  snprintf(retstr,63,"%i",ret);  
+  snprintf(retstr,63,"%ld",ret);  
   return StringValue(strdup(retstr));
 }
 

@@ -156,12 +156,20 @@ int alib_diskusage(const char * path){
     return 100-perc;
   } 
 }
-int alib_disksize(const char * path){
+long alib_disksize(const char * path){
   struct statvfs fiData;
   if((statvfs(path,&fiData))<0) {
     return -1;
   } else {
     return (fiData.f_blocks*fiData.f_bsize);
+  }
+}
+long alib_diskfree(const char * path){
+  struct statvfs fiData;
+  if((statvfs(path,&fiData))<0) {
+    return -1;
+  } else {
+    return (fiData.f_bfree*fiData.f_bsize);
   }
 }
 void alib_exec(char * cmd, char * arg){
@@ -184,14 +192,6 @@ void alib_exec(char * cmd, char * arg){
   while (fgets(buffer, sizeof(buffer), from_child) != NULL) {}
   fclose(from_child);
   free(args2);
-}
-int alib_diskfree(const char * path){
-  struct statvfs fiData;
-  if((statvfs(path,&fiData))<0) {
-    return -1;
-  } else {
-    return (fiData.f_bfree*fiData.f_bsize);
-  }
 }
 //-- KINETIC CALCULATOR
 void akinetic_downhandler(AKINETIC * p, int mouseY){

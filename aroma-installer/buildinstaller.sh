@@ -25,7 +25,7 @@ if [ -e out/update-binary ] ; then
 fi
 
 mv out/aroma out/update-binary
-cp out/update-binary examples/black/META-INF/com/google/android/update-binary
+cp out/update-binary examples/release/META-INF/com/google/android/update-binary
 cp out/update-binary examples/generic/META-INF/com/google/android/update-binary
 
 rm -rf build
