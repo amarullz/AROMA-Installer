@@ -60,7 +60,7 @@ void acfg_init(){
   acfg_var.winroundsz   = 4;
   acfg_var.roundsz      = 3;
   acfg_var.btnroundsz   = 2;
-  acfg_var.fadeframes   = 15;
+  acfg_var.fadeframes   = 5;
   
   snprintf(acfg_var.text_ok,31,"OK");
   snprintf(acfg_var.text_next,31,"Next >");
@@ -77,7 +77,124 @@ void acfg_init(){
   acfg_var.ckey_select  = 0;
   acfg_var.ckey_back    = 0;
   acfg_var.ckey_menu    = 0;
+  
+  atheme_releaseall();
 }
+
+/***************************[ THEME ]**************************/
+static char theme_name[AROMA_THEME_CNT][27]={
+  "img.background",
+  "img.titlebar",
+  "img.navbar",
+  "img.dialog",
+  "img.dialog.titlebar",
+  "img.progress",
+  "img.prograss.fill",
+  "img.selection",
+  "img.selection.push",
+  "img.button",
+  "img.button.focus",
+  "img.button.push",
+  "img.checkbox",
+  "img.checkbox.focus",
+  "img.checkbox.push",
+  "img.checkbox.on",
+  "img.checkbox.on.focus",
+  "img.checkbox.on.push",
+  "img.radio",
+  "img.radio.focus",
+  "img.radio.push",
+  "img.radio.on",
+  "img.radio.on.focus",
+  "img.radio.on.push"
+};
+void atheme_releaseall(){
+  int i=0;
+  for (i=0;i<AROMA_THEME_CNT;i++){
+    if (acfg_var.theme[i]!=NULL){
+      apng_close(acfg_var.theme[i]);
+      free(acfg_var.theme[i]);
+    }
+    acfg_var.theme[i]=NULL;
+    acfg_var.theme_9p[i]=0;
+  }
+}
+void atheme_release(char * key){
+  int i=0;
+  for (i=0;i<AROMA_THEME_CNT;i++){
+    if (strcmp(theme_name[i],key)==0){
+      if (acfg_var.theme[i]!=NULL){
+        apng_close(acfg_var.theme[i]);
+        free(acfg_var.theme[i]);
+        acfg_var.theme[i]=NULL;
+        acfg_var.theme_9p[i]=0;
+      }
+      return;
+    }
+  }
+  return;
+}
+PNGCANVASP atheme_create(char * key, char * path){
+  int id = atheme_id(key);
+  if (id!=-1){
+    PNGCANVAS * ap = malloc(sizeof(PNGCANVAS));
+    if (apng_load(ap,path)){
+      acfg_var.theme[id]=ap;
+      int ln = strlen(path)-1;
+      acfg_var.theme_9p[id]=0;
+      if (ln>2){
+        if ((path[ln]=='9')&&(path[ln-1]=='.')){
+          acfg_var.theme_9p[id]=1;
+        }
+      }
+      return ap;
+    }
+    free(ap);
+  }
+  return NULL;
+}
+byte atheme_draw(char * key, CANVAS * _b, int x, int y, int w, int h){
+  return atheme_id_draw(atheme_id(key),_b,x,y,w,h);
+}
+byte atheme_id_draw(int id, CANVAS * _b, int x, int y, int w, int h){
+  if (id<0) return 0;
+  if (id>=AROMA_THEME_CNT) return 0;
+  if (acfg_var.theme[id]!=NULL){
+    if (acfg_var.theme_9p[id]){
+      return apng9_draw(_b,acfg_var.theme[id],x,y,w,h,NULL,1);
+    }
+    else{
+      return apng_stretch(
+        _b,
+        acfg_var.theme[id],
+        x,y,w,h,
+        0,0,acfg_var.theme[id]->w,acfg_var.theme[id]->h);
+    }
+  }
+  return 0;
+}
+PNGCANVASP atheme(char * key){
+  int i=0;
+  for (i=0;i<AROMA_THEME_CNT;i++){
+    if (strcmp(theme_name[i],key)==0)
+      return acfg_var.theme[i];
+  }
+  return NULL;
+}
+int atheme_id(char * key){
+  int i=0;
+  for (i=0;i<AROMA_THEME_CNT;i++){
+    if (strcmp(theme_name[i],key)==0)
+      return i;
+  }
+  return -1;
+}
+char * atheme_key(int id){
+  if (id<0) return NULL;
+  if (id>=AROMA_THEME_CNT) return NULL;
+  return theme_name[id];
+}
+
 
 /***************************[ WINDOW FUNCTIONS ]**************************/
 //-- CREATE WINDOW
@@ -468,6 +585,29 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   int titW  = ag_txtwidth(title,1);
   int titH  = ag_fontheight(1) + (pad*2);
   
+  PNGCANVASP winp = atheme("img.dialog");
+  PNGCANVASP titp = atheme("img.dialog.titlebar");
+  APNG9      winv;
+  APNG9      titv;
+  int vtitY = -1;
+  int vpadB = -1;
+  int vimgX = pad*2;
+  if (titp!=NULL){
+    if (apng9_calc(titp,&titv,1)){
+      int tmptitH = titH - (pad*2);
+      titH        = tmptitH + (titv.t+titv.b);
+      vtitY       = titv.t;
+    }
+  }
+  if (winp!=NULL){
+    if (apng9_calc(winp,&winv,1)){
+      txtW = winW - (winv.l+winv.r);
+      txtX = pad  + (winv.l);
+      vimgX= pad  + (winv.l);
+      vpadB= winv.b;
+    }
+  }
+  
   //-- Load Icon
   PNGCANVAS ap;
   byte imgE = 0; int imgW = 0; int imgH = 0;
@@ -485,12 +625,17 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
     
   //-- Calculate Window Size & Position
   int winH    = titH + infH + btnH + (pad*3);
+  if (vpadB!=-1){
+    winH    = titH + infH + btnH + (pad*2) + vpadB;
+  }
+  
   int winX    = pad;
   int winY    = (agh()/2) - (winH/2);
   
   //-- Calculate Title Size & Position
   int titX    = (agw()/2) - (titW/2);
   int titY    = winY + pad;
+  if (vtitY!=-1) titY = winY+vtitY;
   
   //-- Calculate Text Size & Position
   int infY    = winY + titH + pad;
@@ -508,17 +653,22 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   ag_draw(&alertbg,agc(),0,0);
   
   //-- Draw Window
-  ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
-  ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+  if (!atheme_draw("img.dialog", &alertbg, winX,winY,winW,winH)){
+    ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
+    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+  }
   
   //-- Draw Title
-  ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+  if (!atheme_draw("img.dialog.titlebar", &alertbg, winX,winY,winW,titH)){
+    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+  }
+  
   ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.titlebg_g,1);
   ag_text(&alertbg,titW,titX,titY,title,acfg_var.titlefg,1);
   
   //-- Draw Image
   if (imgE){
-    apng_draw_ex(&alertbg,&ap,pad*2,imgY,0,0,imgW,imgH);
+    apng_draw_ex(&alertbg,&ap,vimgX,imgY,0,0,imgW,imgH);
     apng_close(&ap);
   }
   
@@ -561,6 +711,29 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   int titW  = ag_txtwidth(title,1);
   int titH  = ag_fontheight(1) + (pad*2);
   
+  PNGCANVASP winp = atheme("img.dialog");
+  PNGCANVASP titp = atheme("img.dialog.titlebar");
+  APNG9      winv;
+  APNG9      titv;
+  int vtitY = -1;
+  int vpadB = -1;
+  int vimgX = pad*2;
+  if (titp!=NULL){
+    if (apng9_calc(titp,&titv,1)){
+      int tmptitH = titH - (pad*2);
+      titH        = tmptitH + (titv.t+titv.b);
+      vtitY       = titv.t;
+    }
+  }
+  if (winp!=NULL){
+    if (apng9_calc(winp,&winv,1)){
+      txtW = winW - (winv.l+winv.r);
+      txtX = pad  + (winv.l);
+      vimgX= pad  + (winv.l);
+      vpadB= winv.b;
+    }
+  }
+  
   //-- Load Icon
   PNGCANVAS ap;
   byte imgE = 0; int imgW = 0; int imgH = 0;
@@ -578,13 +751,17 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
     
   //-- Calculate Window Size & Position
   int winH    = titH + infH + btnH + (pad*3);
+  if (vpadB!=-1){
+    winH    = titH + infH + btnH + (pad*2) + vpadB;
+  }
   int winX    = pad;
   int winY    = (agh()/2) - (winH/2);
   
   //-- Calculate Title Size & Position
   int titX    = (agw()/2) - (titW/2);
   int titY    = winY + pad;
-  
+  if (vtitY!=-1) titY = winY+vtitY;
+
   //-- Calculate Text Size & Position
   int infY    = winY + titH + pad;
   int txtY    = infY + ((infH - txtH) / 2);
@@ -602,17 +779,21 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   ag_draw(&alertbg,agc(),0,0);
   
   //-- Draw Window
-  ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
-  ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+  if (!atheme_draw("img.dialog", &alertbg, winX-1,winY-1,winW+2,winH+2)){
+    ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
+    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.winbg,acfg_var.winbg_g,acfg_var.roundsz*agdp());
+  }
   
   //-- Draw Title
-  ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+  if (!atheme_draw("img.dialog.titlebar", &alertbg, winX,winY,winW,titH)){
+    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+  }
   ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.titlebg_g,1);
   ag_text(&alertbg,titW,titX,titY,title,acfg_var.titlefg,1);
   
   //-- Draw Image
   if (imgE){
-    apng_draw_ex(&alertbg,&ap,pad*2,imgY,0,0,imgW,imgH);
+    apng_draw_ex(&alertbg,&ap,vimgX,imgY,0,0,imgW,imgH);
     apng_close(&ap);
   }
   

@@ -32,6 +32,31 @@ long alib_tick(){
   struct tms tm;
   return times(&tm);
 }
+char * ai_trim(char * chr){
+  char * res = chr;
+  char   off = 0;
+  while ((off=*res)){
+    byte nobreak = 0;
+    switch (off){
+      case ' ':
+      case '\t':
+      case '\n':
+      case '\r':
+        nobreak = 1;
+      break;
+    }
+    if (!nobreak) break;
+    res++;
+  }
+  int i;
+  for (i=strlen(res)-1;i>=0;i--){
+    if ((res[i]==' ')||(res[i]=='\n')||(res[i]=='\r')||(res[i]=='\t')){
+      res[i]=0;
+    }
+    else break;
+  }
+  return res;
+}
 byte ismounted(char * path){
   byte res=0;
   FILE* fp = fopen("/proc/mounts", "rb");

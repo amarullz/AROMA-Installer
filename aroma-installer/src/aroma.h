@@ -64,9 +64,9 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "1.10"
-#define AROMA_BUILD       "120208-013"
-#define AROMA_BUILD_CN    "Bougenville"
+#define AROMA_VERSION     "1.50"
+#define AROMA_BUILD       "120213-018"
+#define AROMA_BUILD_CN    "Cempaka"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
 #define AROMA_BUILD_URL   "http://www.amarullz.com/"
@@ -79,7 +79,7 @@
 #define AROMA_FRAMEBUFFER "/dev/graphics/fb0"
 #define AROMA_INSTALL_LOG (AROMA_TMP "/.install.log")
 #define AROMA_INSTALL_TXT (AROMA_TMP "/.install.txt")
-
+#define AROMA_THEME_CNT   24
 
 //
 // AROMA Canvas Structure
@@ -104,7 +104,7 @@ typedef struct {
   byte *  g;       // Green Channel
   byte *  b;       // Blue Channel
   byte *  a;       // Alpha Channel
-} PNGCANVAS;
+} PNGCANVAS, * PNGCANVASP;
 
 
 //
@@ -248,7 +248,7 @@ typedef struct  {
   byte  winroundsz;           // Window Rounded Size
   
   // Transition
-  int   fadeframes;           // Number of Frame used for Fade Transition
+  byte  fadeframes;           // Number of Frame used for Fade Transition
   
   // Common Text
   char  text_ok[32];          // OK
@@ -267,7 +267,12 @@ typedef struct  {
   int ckey_select;
   int ckey_back;
   int ckey_menu;
+  
+  // THEME
+  PNGCANVASP theme[AROMA_THEME_CNT];
+  byte       theme_9p[AROMA_THEME_CNT];
 } AC_CONFIG;
+
 
 
 //
@@ -338,19 +343,61 @@ byte      az_readmem(AZMEM * out,const char * zpath, byte bytesafe);    // Read 
 byte      az_extract(const char * zpath, const char * dest);            // Extract Zip Item into Filesystem
 
 
+//-- UI Functions
+char * aui_parsepropstring(char * buffer,char *key);
+char * aui_readfromzip(char * name);
+void aui_drawnav(CANVAS * bg,int x, int y, int w, int h);
+
+//-- .9.png struct
+typedef struct{
+  int x;  //-- Strect X
+  int y;  //-- Strect Y
+  int w;  //-- Strect Width  
+  int h;  //-- Strect Height
+  
+  int t;  //-- Padding Top
+  int l;  //-- Padding Left
+  int b;  //-- Padding Bottom
+  int r;  //-- Padding Right
+} APNG9, *APNG9P;
+
 //
 // AROMA PNG Functions
 //
 byte      apng_load(PNGCANVAS * pngcanvas,const char* imgname);         // Load PNG From Zip Item
 void      apng_close(PNGCANVAS * pngcanvas);                            // Release PNG Memory
 byte      apng_draw(CANVAS * _b, PNGCANVAS * p, int xpos, int ypos);    // Draw PNG Into Canvas
+byte apng_stretch(
+  CANVAS * _b,
+  PNGCANVAS * p,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  
+  int sx,
+  int sy,
+  int sw,
+  int sh  
+);
+byte apng9_calc(PNGCANVAS * p, APNG9P v,byte with_pad);
+byte apng9_draw(
+  CANVAS * _b,
+  PNGCANVAS * p,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  APNG9P v,
+  byte with_pad
+);
 
 //
 // AROMA PNG Font Functions
 //
 byte      apng_loadfont(PNGFONTS * pngfont,const char* imgname);        // Load PNG Font From Zip Item
 byte      apng_drawfont(CANVAS * _b, PNGFONTS * p, byte fpos,           // Draw PNG Font Into Canvas
-            int xpos, int ypos, color cl, byte underline);
+            int xpos, int ypos, color cl, byte underline, byte bold);
 byte      apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos,            // Draw PNG Font Into Canvas
             int ypos, int sxpos, int sypos,int sw, int sh);             // With Extra Arguments
 
@@ -423,7 +470,7 @@ byte  ag_loadbigfont(char * fontname);                // Load Big Font From Zip
 void  ag_closefonts();                                // Release Big & Small Fonts
 byte  ag_drawchar(CANVAS *_b,int x, int y, char c,    // Draw Character into Canvas
         color cl, byte isbig);
-byte ag_drawchar_ex(CANVAS *_b,int x, int y, char c, color cl, byte isbig,byte underline);
+byte ag_drawchar_ex(CANVAS *_b,int x, int y, char c, color cl, byte isbig,byte underline,byte bold);
 byte  ag_text(CANVAS *_b,int maxwidth,int x,int y,    // Draw String into Canvas
         const char *s, color cl,byte isbig);
 byte  ag_textf(CANVAS *_b,int maxwidth,int x,int y,    // Draw String into Canvas
@@ -470,6 +517,7 @@ int     atmsg();
 //
 // AROMA System Library Functions
 //
+char * ai_trim(char * chr);
 byte  ismounted(char * path);
 int   alib_disksize(const char * path);
 int   alib_diskusage(const char * path);
@@ -505,6 +553,18 @@ int aroma_start_install(
 );
 
 //
+// AROMA THEME MANAGER
+//
+void        atheme_releaseall();
+void        atheme_release(char * key);
+PNGCANVASP  atheme_create(char * key, char * path);
+PNGCANVASP  atheme(char * key);
+int         atheme_id(char * key);
+char *      atheme_key(int id);
+byte        atheme_id_draw(int id, CANVAS * _b, int x, int y, int w, int h);
+byte        atheme_draw(char * key, CANVAS * _b, int x, int y, int w, int h);
+
+//
 // AROMA Window Management System Functions
 //
 AWINDOWP  aw(CANVAS * bg);                                  // Create New Window
@@ -517,9 +577,9 @@ dword     aw_dispatch(AWINDOWP win);                        // Dispatch Event, M
 byte      aw_touchoncontrol(ACONTROLP ctl, int x, int y);   // Calculate Touch Position
 byte      aw_setfocus(AWINDOWP win,ACONTROLP ctl);          // Set Focus into Control
 void      aw_set_on_dialog(byte d);
-void atouch_plaincalibrate();
-void atouch_restorecalibrate();
-void aw_calibtools(AWINDOWP parent);
+void      atouch_plaincalibrate();
+void      atouch_restorecalibrate();
+void      aw_calibtools(AWINDOWP parent);
 //
 // AROMA Window Dialog Controls
 //

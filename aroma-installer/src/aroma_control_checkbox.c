@@ -137,18 +137,22 @@ void accheck_redrawitem(ACONTROLP ctl, int index){
     color graycolor= acfg()->textfg_gray;
     byte isselectcolor=0;
     if (index==d->touchedItem){
-      color pshad = ag_calpushad(acfg()->selectbg_g);
-      dword hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
-      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,pshad,(agdp()*acfg()->roundsz));
-      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      if (!atheme_draw("img.selection.push", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+        color pshad = ag_calpushad(acfg()->selectbg_g);
+        dword hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,pshad,(agdp()*acfg()->roundsz));
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      }
       
       graycolor = txtcolor = acfg()->selectfg;
       isselectcolor=1;
     }
     else if ((index==d->focusedItem)&&(d->focused)){
-      dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
-      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
-      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      if (!atheme_draw("img.selection", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+        dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      }
       graycolor = txtcolor = acfg()->selectfg;
       isselectcolor=1;
     }
@@ -170,34 +174,55 @@ void accheck_redrawitem(ACONTROLP ctl, int index){
     int halfdp   = ceil(((float) agdp())/2);
     int halfdp2  = halfdp*2;
     int chkbox_s = (agdp()*10);
-    int chkbox_x = round((d->clientTextX/2)- (chkbox_s/2));
+    int chkbox_x = round((d->clientTextX/2)- ((chkbox_s+2)/2));
     int chkbox_y = p->y + round((p->h/2) - (chkbox_s/2));
-    ag_roundgrad(c,
-      chkbox_x,
-      chkbox_y,
-      chkbox_s,
-      chkbox_s,
-      acfg()->controlbg_g,
-      acfg()->controlbg,
-      0);
-    ag_roundgrad(c,
-      chkbox_x+halfdp,
-      chkbox_y+halfdp,
-      chkbox_s-halfdp2,
-      chkbox_s-halfdp2,
-      acfg()->textbg,
-      acfg()->textbg,
-      0);
     
+    byte drawed = 0;
+    int minpad = 3*agdp();
+    int addpad = 6*agdp();
     if (p->checked){
+      if (index==d->touchedItem)
+        drawed=atheme_draw("img.checkbox.on.push", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+      else if ((index==d->focusedItem)&&(d->focused))
+        drawed=atheme_draw("img.checkbox.on.focus", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+      else
+        drawed=atheme_draw("img.checkbox.on", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+    }
+    else{
+      if (index==d->touchedItem)
+        drawed=atheme_draw("img.checkbox.push", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+      else if ((index==d->focusedItem)&&(d->focused))
+        drawed=atheme_draw("img.checkbox.focus", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+      else
+        drawed=atheme_draw("img.checkbox", c,chkbox_x-minpad,chkbox_y-minpad,chkbox_s+addpad,chkbox_s+addpad);
+    }
+    if (!drawed){
       ag_roundgrad(c,
-        chkbox_x+halfdp2,
-        chkbox_y+halfdp2,
-        chkbox_s-(halfdp2*2),
-        chkbox_s-(halfdp2*2),
-        acfg()->selectbg,
-        acfg()->selectbg_g,
+        chkbox_x,
+        chkbox_y,
+        chkbox_s,
+        chkbox_s,
+        acfg()->controlbg_g,
+        acfg()->controlbg,
         0);
+      ag_roundgrad(c,
+        chkbox_x+halfdp,
+        chkbox_y+halfdp,
+        chkbox_s-halfdp2,
+        chkbox_s-halfdp2,
+        acfg()->textbg,
+        acfg()->textbg,
+        0);
+      if (p->checked){
+        ag_roundgrad(c,
+          chkbox_x+halfdp2,
+          chkbox_y+halfdp2,
+          chkbox_s-(halfdp2*2),
+          chkbox_s-(halfdp2*2),
+          acfg()->selectbg,
+          acfg()->selectbg_g,
+          0);
+      }
     }
   }
 }
@@ -207,11 +232,11 @@ void accheck_redraw(ACONTROLP ctl){
   if ((d->itemn>0)&&(d->draweditemn<d->itemn)) {
     ag_ccanvas(&d->client);
     ag_canvas(&d->client,d->clientWidth,d->nextY);
-    ag_rect(&d->client,0,0,d->clientWidth,agdp()*acfg()->btnroundsz,acfg()->textbg);
+    ag_rect(&d->client,0,0,d->clientWidth,agdp()*max(acfg()->roundsz,4),acfg()->textbg);
     
     //-- Set Values
     d->scrollY     = 0;
-    d->maxScrollY  = d->nextY-(ctl->h-(agdp()*acfg()->roundsz));
+    d->maxScrollY  = d->nextY-(ctl->h-(agdp()*max(acfg()->roundsz,4)));
     if (d->maxScrollY<0) d->maxScrollY=0;
     
     //-- Draw Items
@@ -316,8 +341,9 @@ void accheck_ondraw(void * x){
   }
   
   //-- Init Device Pixel Size
-  int agdp3 = (agdp()*acfg()->roundsz);
-  int agdp6 = (agdp()*(acfg()->roundsz*2));
+  int minpadding = max(acfg()->roundsz,4);
+  int agdp3 = (agdp()* minpadding);
+  int agdp6 = (agdp()*(minpadding*2));
   int agdpX = agdp6;
   
   if (d->focused){
@@ -623,10 +649,12 @@ ACONTROLP accheck(
   ag_canvas(&d->control,w,h);
   ag_canvas(&d->control_focused,w,h);
   
+  int minpadding = max(acfg()->roundsz,4);
+  
   //-- Initializing Client Size
-  d->clientWidth  = w - (agdp()*acfg()->roundsz*2);
-  d->clientTextW  = d->clientWidth - (agdp()*14) - (agdp()*acfg()->btnroundsz*2);
-  d->clientTextX  = (agdp()*14) + (agdp()*acfg()->btnroundsz*2);
+  d->clientWidth  = w - (agdp()*minpadding*2);
+  d->clientTextW  = d->clientWidth - (agdp()*18) - (agdp()*acfg()->btnroundsz*2);
+  d->clientTextX  = (agdp()*18) + (agdp()*acfg()->btnroundsz*2);
   
   d->client.data=NULL;
   
@@ -650,7 +678,7 @@ ACONTROLP accheck(
   d->itemn       = 0;
   d->touchedItem = -1;
   d->focusedItem = -1;
-  d->nextY       = agdp()*acfg()->btnroundsz;
+  d->nextY       = agdp()*minpadding;
   d->draweditemn = 0;
   
   d->groupCounts   = 0;

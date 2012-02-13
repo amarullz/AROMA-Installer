@@ -146,13 +146,17 @@ ACONTROLP acbutton(
   //-- Draw Rest Control
   dword hl1 = ag_calchighlight(acfg()->controlbg,acfg()->controlbg_g);
   ag_draw_ex(&d->control,&win->c,0,0,x,y,w,h);
-  ag_roundgrad(&d->control,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
-  ag_roundgrad(&d->control,1,1,w-2,h-2,
+  
+  if (!atheme_draw("img.button", &d->control,0,0,w,h)){
+    ag_roundgrad(&d->control,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
+    ag_roundgrad(&d->control,1,1,w-2,h-2,
     ag_calculatealpha(acfg()->controlbg,acfg()->winbg,180),
     ag_calculatealpha(acfg()->controlbg_g,acfg()->winbg,160),
-  (agdp()*acfg()->btnroundsz)-1);
-  ag_roundgrad(&d->control,2,2,w-4,h-4,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-2);
-  ag_roundgrad_ex(&d->control,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+    (agdp()*acfg()->btnroundsz)-1);
+    ag_roundgrad(&d->control,2,2,w-4,h-4,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-2);
+    ag_roundgrad_ex(&d->control,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+ }   
+  
   ag_textf(&d->control,txtw,txtx+1,txty+1,text,acfg()->controlbg,isbig);
   ag_text(&d->control,txtw,txtx,txty,text,acfg()->controlfg,isbig);
   
@@ -161,20 +165,26 @@ ACONTROLP acbutton(
   color pshad = ag_calpushad(acfg()->selectbg_g);
   hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
   ag_draw_ex(&d->control_pushed,&win->c,0,0,x,y,w,h);
-  ag_roundgrad(&d->control_pushed,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
-  ag_roundgrad(&d->control_pushed,1,1,w-2,h-2,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-1);
-  ag_roundgrad(&d->control_pushed,2,2,w-4,h-4,acfg()->selectbg,pshad,(agdp()*acfg()->btnroundsz)-2);
-  ag_roundgrad_ex(&d->control_pushed,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+  
+  if (!atheme_draw("img.button.push", &d->control_pushed,0,0,w,h)){
+    ag_roundgrad(&d->control_pushed,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
+    ag_roundgrad(&d->control_pushed,1,1,w-2,h-2,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-1);
+    ag_roundgrad(&d->control_pushed,2,2,w-4,h-4,acfg()->selectbg,pshad,(agdp()*acfg()->btnroundsz)-2);
+    ag_roundgrad_ex(&d->control_pushed,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+  }
   ag_textf(&d->control_pushed,txtw,txtx+1,txty+1,text,acfg()->selectbg_g,isbig);
   ag_text(&d->control_pushed,txtw,txtx,txty,text,acfg()->selectfg,isbig);
   
   //-- Draw Focused Control
   hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
   ag_draw_ex(&d->control_focused,&win->c,0,0,x,y,w,h);
-  ag_roundgrad(&d->control_focused,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
-  ag_roundgrad(&d->control_focused,1,1,w-2,h-2,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-1);
-  ag_roundgrad(&d->control_focused,2,2,w-4,h-4,acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->btnroundsz)-2);
-  ag_roundgrad_ex(&d->control_focused,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+  
+  if (!atheme_draw("img.button.focus", &d->control_focused,0,0,w,h)){
+    ag_roundgrad(&d->control_focused,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->btnroundsz));
+    ag_roundgrad(&d->control_focused,1,1,w-2,h-2,acfg()->controlbg,acfg()->controlbg_g,(agdp()*acfg()->btnroundsz)-1);
+    ag_roundgrad(&d->control_focused,2,2,w-4,h-4,acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->btnroundsz)-2);
+    ag_roundgrad_ex(&d->control_focused,2,2,w-4,(h-4)/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->btnroundsz)-2,1,1,0,0);
+  }
   ag_textf(&d->control_focused,txtw,txtx+1,txty+1,text,acfg()->selectbg_g,isbig);
   ag_text(&d->control_focused,txtw,txtx,txty,text,acfg()->selectfg,isbig);
   

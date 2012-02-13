@@ -1,8 +1,8 @@
 <#446699>SAMPLE TEXT FILE</#>
 
-This text readed from text file located in META-INF/com/android/aroma/sample.txt
+<b>This text readed from text</b> file located in META-INF/com/android/aroma/sample.txt
 
-The text in AROMA Installer currently supported 2 formats, <u>Underline</u>, and <#090>Custom Color</#>.
+The text in <b>AROMA <u>Installer</u></b> currently supported 2 formats, <u>Underline</u>, and <#090>Custom Color</#>.
 
 To make the text underlined, use \<u>The Text tobe underlined\</u> just like HTML.
 

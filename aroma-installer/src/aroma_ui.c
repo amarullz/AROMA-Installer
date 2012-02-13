@@ -76,8 +76,19 @@ void aui_redraw(){
   int elmP  = agdp()*4;
   int capH  = ag_fontheight(1) + (elmP*2);
   aui_minY  = capH;
-  ag_roundgrad(&aui_bg,0,0,agw(),agh(),acfg()->winbg,acfg()->winbg_g,acfg()->winroundsz*agdp()+2);
-  ag_roundgrad_ex(&aui_bg,0,0,agw(),capH,acfg()->titlebg,acfg()->titlebg_g,(acfg()->winroundsz*agdp())-2,1,1,0,0);
+  
+  ag_rect(&aui_bg,0,0,agw(),agh(),0x0000);
+  
+  //-- Background
+  if (!atheme_id_draw(0, &aui_bg, 0, 0, agw(),agh())){
+    ag_roundgrad(&aui_bg,0,0,agw(),agh(),acfg()->winbg,acfg()->winbg_g,acfg()->winroundsz*agdp()+2);
+  }
+  
+  //-- Titlebar
+  if (!atheme_id_draw(1, &aui_bg, 0, 0, agw(),capH)){
+    ag_roundgrad_ex(&aui_bg,0,0,agw(),capH,acfg()->titlebg,acfg()->titlebg_g,(acfg()->winroundsz*agdp())-2,1,1,0,0);
+  }
+  
   aui_isbgredraw = 0;
 }
 
@@ -93,6 +104,20 @@ void aui_setbg(char * titlev){
   ag_draw(&aui_win_bg,&aui_bg,0,0);
   ag_textf(&aui_win_bg,titW,((agw()/2)-(titW/2))+1,elmP+1,title,acfg()->titlebg_g,1);
   ag_text(&aui_win_bg,titW,(agw()/2)-(titW/2),elmP,title,acfg()->titlefg,1);
+}
+
+//* 
+//* Draw Navigation Bar
+//*
+void aui_drawnav(CANVAS * bg,int x, int y, int w, int h){
+  if (!atheme_id_draw(2, bg, x, y, w, h)){
+    ag_roundgrad_ex(
+      bg,x,y,w,h,
+      acfg()->navbg,
+      acfg()->navbg_g,
+      (acfg()->winroundsz*agdp())-2,0,0,1,1
+    );
+  }
 }
 
 //* 
@@ -160,9 +185,10 @@ char * aui_readfromzip(char * name){
 //* 
 //* Parse PROP String
 //* 
-char * aui_parsepropstring(char * buffer,char *key){
+char * aui_parsepropstring(char * bf,char *key){
   char* result = NULL;  
-  if (buffer==NULL) return result;
+  if (bf==NULL) return result;
+  char* buffer=strdup(bf);
   char* line = strtok(buffer, "\n");
   do {
       while (*line && isspace(*line)) ++line;
@@ -186,6 +212,7 @@ char * aui_parsepropstring(char * buffer,char *key){
       result = strdup(val_start);
       break;
   } while ((line = strtok(NULL, "\n")));
+  free(buffer);
 done:
   
   return result;
@@ -271,7 +298,95 @@ void aui_prependvar(char * name, char * value){
   }
 }
 
+//* 
+//* Set Colorset From Prop String
+//* 
+void aui_setthemecolor(char * prop, char * key, color * cl){
+  char * val = aui_parsepropstring(prop,key);
+  if (val!=NULL){
+    cl[0] = strtocolor(val);
+    free(val);
+  }
+}
+//* 
+//* Set Drawing Config From Prop String
+//* 
+void aui_setthemeconfig(char * prop, char * key, byte * b){
+  char * val = aui_parsepropstring(prop,key);
+  if (val!=NULL){
+    b[0] = (byte) min(atoi(val),255);
+    free(val);
+  }
+}
+
 /************************************[ AROMA EDIFY HANDLERS ]************************************/
+//* 
+//* set_theme
+//* 
+Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=1) {
+    return ErrorAbort(state, "%s() expects 1 args (themename), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+
+  //-- Parse The Prop
+  char themename[256];
+  snprintf(themename,255,"%s/themes/%s/theme.prop",AROMA_DIR,args[0]);
+  char * propstr = aui_readfromzip(themename);
+  if (propstr){
+    int i=0;
+    for (i=0;i<AROMA_THEME_CNT;i++){
+      char * key = atheme_key(i);
+      char * val = aui_parsepropstring(propstr,key);
+      if (val!=NULL){
+        if (strcmp(val,"")!=0){
+          snprintf(themename,255,"themes/%s/%s",args[0],val);
+          atheme_create(key,themename);
+        }
+        free(val);
+      }
+    }
+    aui_setthemecolor(propstr, "winbg",             &acfg()->winbg);
+    aui_setthemecolor(propstr, "winbg_g",           &acfg()->winbg_g);
+    aui_setthemecolor(propstr, "textbg",            &acfg()->textbg);
+    aui_setthemecolor(propstr, "textfg",            &acfg()->textfg);
+    aui_setthemecolor(propstr, "textfg_gray",       &acfg()->textfg_gray);
+    aui_setthemecolor(propstr, "controlbg",         &acfg()->controlbg);
+    aui_setthemecolor(propstr, "controlbg_g",       &acfg()->controlbg_g);
+    aui_setthemecolor(propstr, "controlfg",         &acfg()->controlfg);
+    aui_setthemecolor(propstr, "selectbg",          &acfg()->selectbg);
+    aui_setthemecolor(propstr, "selectbg_g",        &acfg()->selectbg_g);
+    aui_setthemecolor(propstr, "selectfg",          &acfg()->selectfg);
+    aui_setthemecolor(propstr, "titlebg",           &acfg()->titlebg);
+    aui_setthemecolor(propstr, "titlebg_g",         &acfg()->titlebg_g);
+    aui_setthemecolor(propstr, "titlefg",           &acfg()->titlefg);
+    aui_setthemecolor(propstr, "scrollbar",         &acfg()->scrollbar);
+    aui_setthemecolor(propstr, "navbg",             &acfg()->navbg);
+    aui_setthemecolor(propstr, "navbg_g",           &acfg()->navbg_g);
+    aui_setthemecolor(propstr, "border",            &acfg()->border);
+    aui_setthemecolor(propstr, "border_g",          &acfg()->border_g);
+    aui_setthemeconfig(propstr, "roundsize",        &acfg()->roundsz);
+    aui_setthemeconfig(propstr, "button_roundsize", &acfg()->btnroundsz);
+    aui_setthemeconfig(propstr, "window_roundsize", &acfg()->winroundsz);
+    aui_setthemeconfig(propstr, "transition_frame", &acfg()->fadeframes);    
+    free(propstr);
+  }
+
+  //-- Background Should Be Redrawed
+  aui_isbgredraw = 1;
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  return StringValue(strdup(""));
+}
+
 
 //* 
 //* file_getprop, prop
@@ -845,6 +960,7 @@ Value* AROMA_ANISPLASH(const char* name, State* state, int argc, Expr* argv[]) {
       au[frame] = 0;
   }
   
+  byte firstime = 1;
   while (loop_n-->0){
     //-- Load PNG
     for (frame=0;frame<frame_n;frame++){
@@ -857,7 +973,14 @@ Value* AROMA_ANISPLASH(const char* name, State* state, int argc, Expr* argv[]) {
         apng_draw(NULL,p,(agw()/2)-(p->w/2),(agh()/2)-(p->h/2));
       }
       
-      ag_sync();
+      //-- Wait The Fade Transition
+      if (firstime){
+        ag_sync_fade(acfg()->fadeframes);
+        firstime=0;
+      }
+      else
+        ag_sync();
+
       usleep(1000*ad[frame]);
     }
   }
@@ -972,7 +1095,7 @@ Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
   int btnY        = chkY + chkH + (pad*2);
   
   //-- Draw Navigation Bar
-  ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
+  aui_drawnav(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2));
     
   //-- Load Icon
   PNGCANVAS ap;
@@ -1112,7 +1235,7 @@ Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   int btnY        = chkY + chkH + (pad*2);
   
   //-- Draw Navigation Bar
-  ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
+  aui_drawnav(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2));
     
   //-- Load Icon
   PNGCANVAS ap;
@@ -1161,9 +1284,9 @@ Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   else{
     //-- Check Box
     int chkaH         = agdp()*20;
-    int textBoxH      = chkH-(chkaH+pad);
+    int textBoxH      = chkH-(chkaH);
     txtbox            = actext(hWin,pad,chkY,chkW,textBoxH,args[3],0);
-    agreecb           = accb(hWin,pad*2,chkY+textBoxH+pad,chkW-(pad*2),chkaH,args[4],0);
+    agreecb           = accb(hWin,pad,chkY+textBoxH,chkW,chkaH+pad,args[4],0);
   }
 
   //-- BACK BUTTON
@@ -1271,7 +1394,7 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
   int btnY        = chkY + chkH + (pad*2);
   
   //-- Draw Navigation Bar
-  ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
+  aui_drawnav(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2));
     
   //-- Load Icon
   PNGCANVAS ap;
@@ -1444,7 +1567,7 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   int btnY        = chkY + chkH + (pad*2);
   
   //-- Draw Navigation Bar
-  ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
+  aui_drawnav(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2));
     
   //-- Load Icon
   PNGCANVAS ap;
@@ -1623,7 +1746,7 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   int btnY        = chkY + chkH + (pad*2);
   
   //-- Draw Navigation Bar
-  ag_roundgrad_ex(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2),acfg()->navbg,acfg()->navbg_g,(acfg()->winroundsz*agdp())-2,0,0,1,1);
+  aui_drawnav(&aui_win_bg,0,btnY-pad,agw(),bntH+(pad*2));
     
   //-- Load Icon
   PNGCANVAS ap;
@@ -2086,11 +2209,13 @@ done:
 Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc < 1) {
     return ErrorAbort(state, "%s() expects at least 1 arg", name);
-  }
-  char * buffer = NULL;
-  
+  }  
   //-- Set Busy before everythings ready
   ag_setbusy();
+  
+  int exec_status=-1;
+  char status_str[16];
+  snprintf(status_str,15,"-1");
   
   //-- Get Arguments
   _INITARGS();
@@ -2143,24 +2268,25 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   close(pipefd[1]);
   
   //-- BUFFER INTO VAR
-  aui_setvar(".exec.var","");
+  aui_setvar("exec_buffer","");
   char  buf[1024];
   FILE* fc = fdopen(pipefd[0], "r");
   while (fgets(buf,sizeof(buf),fc)!=NULL){
-    aui_appendvar(".exec.var",buf);
+    aui_appendvar("exec_buffer",buf);
   }
   fclose(fc);
+  
+  //-- Get Return Status
+  waitpid(pid, &exec_status, 0);
+  snprintf(status_str,15,"%i",exec_status);
   free(args2);
-  buffer = aui_getvar(".exec.var");
-  aui_delvar(".exec.var");
   
   //-- Release Arguments
   _FREEARGS();
   
 done:
   //-- Return
-  if (buffer==NULL) return StringValue(strdup("-1"));
-  return StringValue(buffer);
+  return StringValue(strdup(status_str));
 }
 
 /************************************[ AROMA EDIFY REGISTER ]************************************/
@@ -2174,6 +2300,10 @@ void RegisterAroma() {
   RegisterFunction("ini_set",       AROMA_INI_SET);       //-- SET INI CONFIGURATION
   RegisterFunction("calibrate",     AROMA_CALIBRATE);     //-- SET CALIBRATION DATA
   RegisterFunction("calibtool",     AROMA_CALIBTOOL);     //-- SHOW CALIBRATING TOOL
+  
+  //-- SET THEME
+  RegisterFunction("theme",         AROMA_THEME);         //-- SHOW CALIBRATING TOOL
+  
   
   //-- VARIABLE FUNCTIONS
   RegisterFunction("getvar",        AROMA_GETVAR);        //-- GET VARIABLE
@@ -2255,6 +2385,13 @@ byte aui_start(){
   if (!az_readmem(&script_installer,AROMA_CFG,0)) return 0;
   char * script_data = script_installer.data;
   
+  //-- CLEANUP THEME:
+  int i=0;
+  for (i=0;i<AROMA_THEME_CNT;i++){
+    acfg()->theme[i]=NULL;
+    acfg()->theme_9p[i]=0;
+  }
+  
   //-- EDIFY REGISTRATION:
   RegisterBuiltins();
   RegisterAroma();
@@ -2321,5 +2458,7 @@ byte aui_start(){
     free(script_installer.data);
     free(result);
   }
+  
+  atheme_releaseall();
   return 1;
 }

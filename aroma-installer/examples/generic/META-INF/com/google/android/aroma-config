@@ -98,6 +98,10 @@
 # setcolor("border",      "#666");
 # setcolor("border_g",    "#444");
 
+##
+# SET THEME
+#
+theme("miui");
 
 ##
 # Initializing Rom Information
@@ -114,24 +118,24 @@ ini_set("rom_device",           "HTC Desire (bravo)");
 #
 # Image Will auto arrange into center horizontal&vertical
 #
-#splash(4000, "sample");
+splash(5000, "sample");
 
 ##
 # Show Animated Splash for
 #
 # Image Will auto arrange into center horizontal&vertical
-#
+#-----
 anisplash(
-  # Number of Loop
-  10,
-  
-  # Frame 1 [ Image, duration in millisecond ]
-  "splash/ani4", 10,
-  "splash/ani3", 10,
-  "splash/ani2", 10,
-  "splash/ani1", 10,
-  "splash/ani2", 10,
-  "splash/ani3", 10
+   # Number of Loop
+   8,
+   
+   # Frame 1 [ Image, duration in millisecond ]
+   "splash/a1", 30,
+   "splash/a2", 30,
+   "splash/a3", 30,
+   "splash/a4", 30,
+   "splash/a5", 30,
+   "splash/a6", 30
 );
 
 #

@@ -81,16 +81,40 @@ void accb_ondraw(void * x){
   int halfdp2  = halfdp*2;
   int chkY = ((ctl->h-d->chkS) / 2);
   
-    //-- Draw Check UI
-  if (d->pushed)
-    ag_roundgrad(pc, ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->selectbg_g,  acfg()->selectbg, 0);
-  else if(d->focused)
-    ag_roundgrad(pc, ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->selectbg,  acfg()->selectbg_g, 0);
-  else
-    ag_roundgrad(pc, ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->controlbg_g,  acfg()->controlbg, 0);
-  ag_roundgrad(pc, ctl->x+halfdp2, ctl->y+chkY+halfdp,  d->chkS-halfdp2,  d->chkS-halfdp2,  acfg()->textbg,       acfg()->textbg,    0);
-  if (d->checked){
-    ag_roundgrad(pc, ctl->x+halfdp+halfdp2, ctl->y+chkY+halfdp2,  d->chkS-(halfdp2*2),  d->chkS-(halfdp2*2),  acfg()->selectbg,   acfg()->selectbg_g,0);
+  byte drawed = 0;
+  
+  //-- Draw Check UI
+  int minpad = 3*agdp();
+  int addpad = 6*agdp();
+  if (!d->checked){
+    if (d->pushed)
+      drawed=atheme_draw("img.checkbox.push", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+    else if (d->focused)
+      drawed=atheme_draw("img.checkbox.focus", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+    else
+      drawed=atheme_draw("img.checkbox", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+  }
+  else{
+    if (d->pushed)
+      drawed=atheme_draw("img.checkbox.on.push", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+    else if (d->focused)
+      drawed=atheme_draw("img.checkbox.on.focus", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+    else
+      drawed=atheme_draw("img.checkbox.on", pc,ctl->x+halfdp,ctl->y+chkY-minpad,d->chkS+addpad,d->chkS+addpad);
+  }
+  
+  //-- Generic Draw
+  if (!drawed){
+    if (d->pushed)
+      ag_roundgrad(pc, minpad+ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->selectbg_g,  acfg()->selectbg, 0);
+    else if(d->focused)
+      ag_roundgrad(pc, minpad+ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->selectbg,  acfg()->selectbg_g, 0);
+    else
+      ag_roundgrad(pc, minpad+ctl->x+halfdp,  ctl->y+chkY,         d->chkS,          d->chkS,          acfg()->controlbg_g,  acfg()->controlbg, 0);
+    ag_roundgrad(pc, minpad+ctl->x+halfdp2, ctl->y+chkY+halfdp,  d->chkS-halfdp2,  d->chkS-halfdp2,  acfg()->textbg,       acfg()->textbg,    0);
+    if (d->checked){
+      ag_roundgrad(pc, minpad+ctl->x+halfdp+halfdp2, ctl->y+chkY+halfdp2,  d->chkS-(halfdp2*2),  d->chkS-(halfdp2*2),  acfg()->selectbg,   acfg()->selectbg_g,0);
+    }
   }
 }
 byte accb_ischecked(ACONTROLP ctl){
@@ -151,14 +175,15 @@ ACONTROLP accb(
   ag_draw_ex(&d->control,&win->c,0,0,x,y,w,h);
   
   //-- Calculate Position & Size
+  int minpad    = 5*agdp();
   d->chkS       = (agdp()*10);
-  int txtW      = w - (d->chkS+(agdp()*4));
+  int txtW      = w - ((d->chkS+6)+(agdp()*4));
   int txtX      = (d->chkS+(agdp()*4));
   int txtH      = ag_txtheight(txtW,title,0);
   int txtY      = ((h-txtH) / 2);
   if (txtY<1) txtY = 1;
-  ag_textf(&d->control,txtW,txtX,txtY,title,acfg()->textbg,0);
-  ag_text(&d->control,txtW,txtX-1,txtY-1,title,acfg()->textfg,0);
+  ag_textf(&d->control,txtW,minpad+txtX,txtY,title,acfg()->textbg,0);
+  ag_text(&d->control,txtW,minpad+txtX-1,txtY-1,title,acfg()->textfg,0);
   
   //-- Initializing Control
   ACONTROLP ctl  = malloc(sizeof(ACONTROL));

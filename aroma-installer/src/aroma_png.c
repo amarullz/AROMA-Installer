@@ -106,14 +106,24 @@ byte apng_load(PNGCANVAS * pngcanvas,const char* imgname) {
   png_read_info(png_ptr, info_ptr);
   
   //-- Check Color Mode
-  if (!(info_ptr->bit_depth == 8 &&
-        ((info_ptr->channels == 3 && info_ptr->color_type == PNG_COLOR_TYPE_RGB) ||
-         (info_ptr->channels == 4 && info_ptr->color_type == PNG_COLOR_TYPE_RGBA)))) {
-      LOGE("PNG(%s): Not Supported. Only 8 Bit Depth with 3/4 Channel.\n",zpath);
+  if (!(
+      (info_ptr->bit_depth == 8 &&
+        (
+          (info_ptr->channels == 3 && info_ptr->color_type == PNG_COLOR_TYPE_RGB) ||
+          (info_ptr->channels == 4 && info_ptr->color_type == PNG_COLOR_TYPE_RGBA)
+        )
+      )||(info_ptr->channels == 1 && info_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
+     )) {
+      LOGE("PNG(%s): Not Supported. Only 8 Bit Depth with 3/4 Channel or Pallete.\n",zpath);
       goto exit;
   }
   LOGI("PNG(%s): %ix%ix%i\n",zpath,info_ptr->width,info_ptr->height,info_ptr->channels);
   
+  if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+    png_set_palette_to_rgb(png_ptr);
+    png_read_update_info(png_ptr, info_ptr);
+  }
+    
   //-- Initializing Canvas
   pngcanvas->w    = info_ptr->width;
   pngcanvas->h    = info_ptr->height;
@@ -175,8 +185,8 @@ byte apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos, int ypos, int sxpos, int
   
   //-- Drawing
   int x,y;
-  for (y=sypos;(y<sh) && (y<p->h) && (y+ypos<_b->h);y++){
-    for (x=sxpos;(x<sw) && (x<p->w) && (x+xpos<_b->w);x++){
+  for (y=sypos;(y<sypos+sh) && (y<p->h) && ((y-sypos)+ypos<_b->h);y++){
+    for (x=sxpos;(x<sxpos+sw) && (x<p->w) && ((x-sxpos)+xpos<_b->w);x++){
       int sx = y * p->w + x;
       int qx = sx * 3;
       byte dr,dg,db;
@@ -198,7 +208,7 @@ byte apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos, int ypos, int sxpos, int
         }
         else{        
           //-- WITH ALPHA CHANNEL
-          color * dstp = agxy(_b, x+xpos, y+ypos);
+          color * dstp = agxy(_b, (x-sxpos)+xpos, (y-sypos)+ypos);
           if (dstp==NULL) continue;
           
           color dcolor = dstp[0]; //-- Destination Color
@@ -231,10 +241,10 @@ byte apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos, int ypos, int sxpos, int
         // Save Blue QE
         if (x<p->w-1) qe[qx+5] += err_b; 
       }
-      ag_setpixel(_b,x+xpos,y+ypos, ag_rgb(new_r,new_g,new_b));      
+      ag_setpixel(_b,(x-sxpos)+xpos,(y-sypos)+ypos, ag_rgb(new_r,new_g,new_b));      
     }
   }
-  
+  //printf("PNGDRAW: %ix%i on %ix%i\n",p->w,p->h,xpos,ypos);
   //LOGI("PNGDRAW: %ix%i on %ix%i\n",p->w,p->h,xpos,ypos);
   free(qe);
   return 1;
@@ -355,7 +365,7 @@ void apng_closefont(PNGFONTS * p){
 }
 
 //-- DRAW PNG FONT INTO CANVAS
-byte apng_drawfont(CANVAS * _b, PNGFONTS * p, byte fpos, int xpos, int ypos, color cl,byte underline){
+byte apng_drawfont(CANVAS * _b, PNGFONTS * p, byte fpos, int xpos, int ypos, color cl,byte underline,byte bold){
   if (_b==NULL) _b=agc();
   if (p==NULL) return 0;
   if (p->loaded==0) return 0;
@@ -423,7 +433,21 @@ byte apng_drawfont(CANVAS * _b, PNGFONTS * p, byte fpos, int xpos, int ypos, col
         // Save Blue QE
         if (x<fw-1) qe[qx+5] += err_b; 
       }
-      ag_setpixel(_b,x+xpos,y+ypos,ag_rgb(new_r,new_g,new_b));  
+      ag_setpixel(_b,x+xpos,y+ypos,ag_rgb(new_r,new_g,new_b));
+      if (bold){
+        int bx    = x+xpos;
+        int by    = y+ypos;
+        ag_subpixel(_b,bx-1,by-1,cl,a/4);
+        ag_subpixel(_b,bx,  by-1,cl,a/2);
+        ag_subpixel(_b,bx+1,by-1,cl,a/4);
+        
+        ag_subpixel(_b,bx-1,by,cl,a/2);
+        ag_subpixel(_b,bx,by,cl,a);
+        
+        //ag_subpixel(_b,bx-1,by+1,bc,64);
+        //ag_subpixel(_b,bx,  by+1,bc,127);
+        //ag_subpixel(_b,bx+1,by+1,bc,64);
+      }
       if (underline){
         if (y==(p->fh-1)){
           ag_setpixel(_b,x+xpos,y+ypos,cl); 
@@ -432,5 +456,268 @@ byte apng_drawfont(CANVAS * _b, PNGFONTS * p, byte fpos, int xpos, int ypos, col
     }
   }
   free(qe);
+  return 1;
+}
+
+//-- .9.png calculating
+byte apng9_calc(PNGCANVAS * p, APNG9P v,byte with_pad){
+  if (p==NULL) return 0;
+  if (p->s==0) return 0;
+  int ts = p->w;  //-- Top Start
+  int te = 0;     //-- Top End
+  int ls = p->h;  //-- Left Start
+  int le = 0;     //-- Left End
+  int bs = p->w;  //-- Bottom Start
+  int be = 0;     //-- Bottom End
+  int rs = p->h;  //-- Right Start
+  int re = 0;     //-- Right End
+  int x, y;
+  int bottompos = (p->h-1) * p->w;
+  
+  //-- Get Horizontal Strecth
+  for (x=1;x<p->w;x++){
+    if (p->a[x]==255){
+      if (x<ts) ts = x;
+      if (x>te) te = x;
+    }
+    if (with_pad){
+      if (p->a[x+bottompos]==255){
+        if (x<bs) bs = x;
+        if (x>be) be = x;
+      }
+    }
+  }
+  for (y=1;y<p->h;y++){
+    int ypos = (y * p->w);
+    if (p->a[ypos]==255){
+      if (y<ls) ls = y;
+      if (y>le) le = y;
+    }
+    if (with_pad){
+      if (p->a[ypos+(p->w-1)]==255){
+        if (y<rs) rs = y;
+        if (y>re) re = y;
+      }
+    }
+  }
+  le-=ls-1;
+  te-=ts-1;
+  if (with_pad){
+    re-=rs-1;
+    be-=bs-1;
+  }
+  v->x = ts;
+  v->y = ls;
+  v->w = te;
+  v->h = le;
+  if (with_pad){
+    v->t = rs;
+    v->b = (p->h - 1) - (rs+re);
+    v->l = bs;
+    v->r = (p->w - 1) - (bs+be);
+  }
+  else{
+    v->t = v->b = v->l = v->r = 0;
+  }
+  return 1;
+}
+
+byte apng9_draw(
+  CANVAS * _b,
+  PNGCANVAS * p,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  APNG9P v,
+  byte with_pad
+){
+  if (_b==NULL) _b=agc();
+  if (p==NULL) return 0;
+  if (p->s==0) return 0;
+  if ((dh<6)||(dw<6)) return 0;
+  
+  APNG9 tmpv;
+  if (v==NULL) v=&tmpv;
+
+  apng9_calc(p,v,with_pad);
+  
+  int minW  = floor((dw-2)/2);
+  int minH  = floor((dh-2)/2);
+  
+  int rx = v->x + v->w;
+  int ry = v->y + v->h;
+  
+  int lw = v->x-1;
+  int lh = v->y-1;
+  int rw = (p->w-(with_pad?1:0)) - rx;
+  int rh = (p->h-(with_pad?1:0)) - ry;
+  
+  int dlw = min(lw,minW);
+  int dlh = min(lh,minH);
+  int drw = min(rw,minW);
+  int drh = min(rh,minH);
+  
+  //-- Top Left
+  apng_stretch(
+    _b,p, dx, dy, dlw, dlh, 1, 1, lw, lh
+  );
+  
+  //-- Top Right
+  apng_stretch(
+    _b, p, (dx+dw) - drw, dy, drw, dlh, rx, 1,rw, lh
+  );
+  
+  //-- Bottom Left
+  apng_stretch(
+    _b,p, dx, (dy+dh) - drh, dlw, drh, 1, ry, lw, rh
+  );
+  
+  //-- Bottom Right
+  apng_stretch(
+    _b,p, (dx+dw) - drw, (dy+dh) - drh, drw, drh, rx, ry, rw, rh
+  );
+  
+  //-- Top
+  apng_stretch(_b, p, 
+    dx+dlw,        dy,
+    dw-(dlw+drw),   dlh,
+    v->x,         1,
+    v->w,         lh
+  );
+  
+  //-- left
+  apng_stretch(_b, p, 
+    dx,           dy+dlh,
+    dlw,           dh-(dlh+drh),
+    1,            v->y,
+    lw,           v->h
+  );
+  
+  //-- Bottom
+  apng_stretch(_b, p, 
+    dx+dlw,        (dy+dh)-drh,
+    dw-(dlw+drw),   drh,
+    v->x,         v->y+v->h,
+    v->w,         rh
+  );
+  
+  //-- Right
+  apng_stretch(_b, p, 
+    (dx+dw)-drw,   dy+dlh,
+    drw,           dh-(dlh+drh),
+    v->x+v->w,    v->y,
+    rw,           v->h
+  );
+  
+  //-- Center
+  apng_stretch(_b, p, 
+    dx+dlw,        dy+dlh,
+    dw-(dlw+drw),   dh-(dlh+drh),
+    v->x,         v->y,
+    v->w,         v->h
+  );
+
+  return 1;
+}
+
+//-- STRETCH
+byte apng_stretch(
+  CANVAS * _b,
+  PNGCANVAS * p,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  
+  int sx,
+  int sy,
+  int sw,
+  int sh  
+){
+  if (_b==NULL) _b=agc();
+  if (p==NULL) return 0;
+  if (p->s==0) return 0;
+  if ((dh<1)||(dw<1)||(sh<1)||(sw<1)) return 0;
+    
+  //-- Quantizer Error Dithering Data Termporary
+  int    ds  = dw*dh;
+  int    qz  = ds * 3;  
+  byte * qe  = malloc(qz);
+  memset(qe,0,qz);
+  
+  //-- Different Scale
+  float xscale = ((float) sw)/((float) dw);
+  float yscale = ((float) sh)/((float) dh);
+  
+  int x,y;
+  for (y=0;y<dh;y++){
+    for (x=0;x<dw;x++){
+      int xpos = round(x * xscale);
+      int ypos = round(y * yscale);
+      if ((xpos+sx<p->w)&&(ypos+sy<p->h)&&(x+dx<_b->w)&&(y+dy<_b->h)){
+        byte  dr,dg,db;
+        int   spos = ((ypos+sy) * p->w) + (xpos + sx);
+        int   dpx  = x+dx;
+        int   dpy  = y+dy;
+        int   sx = y * p->w + x;
+        int   qx = ((y * dw) + x) * 3;
+        
+        //-- Get Destination Color
+        if (p->c==3){
+          //-- NO ALPHA CHANNEL
+          dr = p->r[spos];
+          dg = p->g[spos];
+          db = p->b[spos];
+        }
+        else{
+          //-- Leave The Transparent
+          if (p->a[spos]==0) continue;
+          if (p->a[spos]==255){
+            dr = p->r[spos];
+            dg = p->g[spos];
+            db = p->b[spos];
+          }
+          else{        
+            //-- WITH ALPHA CHANNEL
+            color * dstp = agxy(_b,dpx,dpy);
+            if (dstp==NULL) continue;
+
+            //-- Destination Color
+            color dcolor = dstp[0]; 
+            byte  falpha = p->a[spos];
+            byte  ralpha = 255 - falpha;
+            dr = (byte) (((((int) ag_r(dcolor)) * ralpha) + (((int) p->r[spos]) * falpha)) >> 8);
+            dg = (byte) (((((int) ag_g(dcolor)) * ralpha) + (((int) p->g[spos]) * falpha)) >> 8);
+            db = (byte) (((((int) ag_b(dcolor)) * ralpha) + (((int) p->b[spos]) * falpha)) >> 8);
+          }
+        }
+        
+        //-- Dithering
+        byte old_r = (byte) min(((int) dr) + ((int) qe[qx]),  255);
+        byte old_g = (byte) min(((int) dg) + ((int) qe[qx+1]),255);
+        byte old_b = (byte) min(((int) db) + ((int) qe[qx+2]),255);
+        byte new_r = ag_close_r(old_r);
+        byte new_g = ag_close_g(old_g);
+        byte new_b = ag_close_b(old_b);
+        byte err_r = old_r - new_r;
+        byte err_g = old_g - new_g;
+        byte err_b = old_b - new_b;
+        
+        // Save Green QE
+        if ((dpx<_b->w-1)&&(x<dw-1)) qe[qx+4] += err_g;
+        if ((dpy<_b->h-1)&&(y<dh-1)){
+          qx = (((y+1) * dw) + x) * 3;
+          
+          // Save Red QE
+          qe[qx] += err_r; 
+          
+          // Save Blue QE
+          if ((dpx<_b->w-1)&&(x<dw-1)) qe[qx+5] += err_b; 
+        }
+        ag_setpixel(_b,dpx,dpy, ag_rgb(new_r,new_g,new_b));    
+      }
+    }
+  }
   return 1;
 }

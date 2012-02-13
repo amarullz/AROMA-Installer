@@ -106,31 +106,6 @@ char * ai_fixlen(char * str,char * addstr){
   }while(clen>=maxw);
   return strdup(allstr);
 }
-char * ai_trim(char * chr){
-  char * res = chr;
-  char   off = 0;
-  while ((off=*res)){
-    byte nobreak = 0;
-    switch (off){
-      case ' ':
-      case '\t':
-      case '\n':
-      case '\r':
-        nobreak = 1;
-      break;
-    }
-    if (!nobreak) break;
-    res++;
-  }
-  int i;
-  for (i=strlen(res)-1;i>=0;i--){
-    if ((res[i]==' ')||(res[i]=='\n')||(res[i]=='\r')||(res[i]=='\t')){
-      res[i]=0;
-    }
-    else break;
-  }
-  return res;
-}
 void ai_actionsavelog(char * name){
   char* buffer = NULL;
   struct stat st;
@@ -548,11 +523,14 @@ int aroma_start_install(
         
         // Draw Navigation
         int pad         = agdp() * 4;
+        aui_drawnav(bg, 0, py-pad, agw(), ph+(pad*2));
+        /*
         ag_roundgrad_ex(
           bg, 0, py-pad, agw(), ph+(pad*2),
           acfg()->navbg, acfg()->navbg_g,
           (acfg()->winroundsz*agdp())-2,0,0,1,1
         );
+        */
         
         ag_draw_ex(bg,cvf,0,imgY,0,0,cvf->w,cvf->h);
         ag_draw(&hWin->c,bg,0,0);

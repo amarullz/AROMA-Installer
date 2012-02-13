@@ -127,8 +127,9 @@ void actext_ondraw(void * x){
   CANVAS *  pc = &ctl->win->c;
   
   //-- Init Device Pixel Size
-  int agdp3 = (agdp()*acfg()->roundsz);
-  int agdp6 = (agdp()*(acfg()->roundsz*2));
+  int minpadding = max(acfg()->roundsz,4);
+  int agdp3 = (agdp()*minpadding);
+  int agdp6 = (agdp()*(minpadding*2));
   int agdpX = agdp6;
   
   if ((d->focused)&&(!d->isFixedText)){
@@ -206,9 +207,9 @@ void actext_onblur(void * x){
 }
 void actext_appendtxt(ACONTROLP ctl,char * txt){
   ACTEXTDP   d  = (ACTEXTDP) ctl->d;
-  
+  int minpadding = max(acfg()->roundsz,4);
   int ch        = ag_txtheight(d->client.w,txt,d->isbigtxt);
-  int my        = d->client.h-(agdp()*acfg()->roundsz);
+  int my        = d->client.h-(agdp()*minpadding);
   if ((d->appendPos+ch)>=my){
     if (d->appendPos<my){
       ch-=(my-d->appendPos);
@@ -253,7 +254,7 @@ void actext_rebuild(
   byte toBottom
 ){
   ACTEXTDP  d  = (ACTEXTDP) ctl->d;
-  
+  int minpadding = max(acfg()->roundsz,4);
   //-- Cleanup
   ag_ccanvas(&d->control);
   ag_ccanvas(&d->control_focused);
@@ -266,10 +267,10 @@ void actext_rebuild(
   if (w<agdp()*16) w=agdp()*16;
     
   //-- Initializing Client Area
-  int cw            = w-(agdp()*(acfg()->roundsz*2));
+  int cw            = w-(agdp()*(minpadding*2));
   int ch            = 0;
   if (text!=NULL)
-    ch = ag_txtheight(cw,text,isbig)+(agdp()*(acfg()->roundsz*2));
+    ch = ag_txtheight(cw,text,isbig)+(agdp()*(minpadding*2));
   else
     ch = h-(agdp()*2);
 
@@ -291,17 +292,17 @@ void actext_rebuild(
   //-- Draw Client
   ag_rect(&d->client,0,0,cw,ch,acfg()->textbg);
   if (text!=NULL)
-    ag_text(&d->client,cw,0,agdp()*acfg()->roundsz,text,acfg()->textfg,isbig);
+    ag_text(&d->client,cw,0,agdp()*minpadding,text,acfg()->textfg,isbig);
   
   d->isbigtxt    = isbig;
   d->targetY     = 0;
   d->focused     = 0;
   d->scrollY     = 0;
-  d->appendPos   = agdp()*acfg()->roundsz;
+  d->appendPos   = agdp()*minpadding;
   d->forceGlowTop= 0;
   d->isFixedText = 0;
   if (text!=NULL)
-    d->maxScrollY  = ch-(h-(agdp()*acfg()->roundsz));
+    d->maxScrollY  = ch-(h-(agdp()*minpadding));
   else{
     d->maxScrollY  = 0;
     d->isFixedText = 1;
@@ -334,10 +335,11 @@ ACONTROLP actext(
   if (w<agdp()*16) w=agdp()*16;
     
   //-- Initializing Client Area
-  int cw            = w-(agdp()*(acfg()->roundsz*2));
+  int minpadding = max(acfg()->roundsz,4);
+  int cw            = w-(agdp()*(minpadding*2));
   int ch            = 0;
   if (text!=NULL)
-    ch = ag_txtheight(cw,text,isbig)+(agdp()*(acfg()->roundsz*2));
+    ch = ag_txtheight(cw,text,isbig)+(agdp()*(minpadding*2));
   else
     ch = h-(agdp()*2);
   
@@ -364,17 +366,17 @@ ACONTROLP actext(
   //-- Draw Client
   ag_rect(&d->client,0,0,cw,ch,acfg()->textbg);
   if (text!=NULL)
-    ag_text(&d->client,cw,0,agdp()*acfg()->roundsz,text,acfg()->textfg,isbig);
+    ag_text(&d->client,cw,0,agdp()*minpadding,text,acfg()->textfg,isbig);
   
   d->isbigtxt    = isbig;
   d->targetY     = 0;
   d->focused     = 0;
   d->scrollY     = 0;
-  d->appendPos   = agdp()*acfg()->roundsz;
+  d->appendPos   = agdp()*minpadding;
   d->forceGlowTop= 0;
   d->isFixedText = 0;
   if (text!=NULL)
-    d->maxScrollY  = ch-(h-(agdp()*acfg()->roundsz));
+    d->maxScrollY  = ch-(h-(agdp()*minpadding));
   else{
     d->maxScrollY  = 0;
     d->isFixedText = 1;

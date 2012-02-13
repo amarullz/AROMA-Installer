@@ -29,14 +29,14 @@
 #include "aroma.h"
 
 /*****************************[ GLOBAL VARIABLES ]*****************************/
-int                             ag_fb=0;        //-- FrameBuffer Handler
-dword                           ag_fbsz;
-word*                           ag_fbuf;        //-- FrameBuffer Direct Memory
-byte*                           ag_fbuf32;
-word*                           ag_b;           //-- FrameBuffer Cache Memory
-dword*                          ag_bf32;
-word*                           ag_bz;           //-- FrameBuffer Cache Memory
-dword*                          ag_bz32;
+int                             ag_fb   = 0;       //-- FrameBuffer Handler
+dword                           ag_fbsz = 0;
+word*                           ag_fbuf = NULL;    //-- FrameBuffer Direct Memory
+byte*                           ag_fbuf32 = NULL;
+word*                           ag_b = NULL;       //-- FrameBuffer Cache Memory
+dword*                          ag_bf32 = NULL;
+word*                           ag_bz = NULL;      //-- FrameBuffer Cache Memory
+dword*                          ag_bz32 = NULL;
 CANVAS                          ag_c;           //-- FrameBuffer Main Canvas
 struct fb_fix_screeninfo        ag_fbf;         //-- FrameBuffer Info
 struct fb_var_screeninfo        ag_fbv;
@@ -238,15 +238,18 @@ void ag_close(){
   ag_isrun=0;
   pthread_join(ag_pthread,NULL);
   pthread_detach(ag_pthread);
-  if (ag_32){
-    free(ag_bf32);
-    free(ag_bz32);
-    munmap(ag_fbuf32,ag_fbsz);
+  
+  if (ag_fbv.bits_per_pixel!=16){
+    /*
+    if (ag_bf32!=NULL) free(ag_bf32);
+    if (ag_bz32!=NULL) free(ag_bz32);
+    if (ag_fbuf32!=NULL) munmap(ag_fbuf32,ag_fbsz);
+    */
   }
-  else{
-    free(ag_b);
-    free(ag_bz);
-    munmap(ag_fbuf,ag_fbsz);
+  else if (ag_fbv.bits_per_pixel==16){
+    if (ag_b!=NULL) free(ag_b);
+    if (ag_bz!=NULL) free(ag_bz);
+    if (ag_fbuf!=NULL) munmap(ag_fbuf,ag_fbsz);
   }
   
   //-- Cleanup Canvas & FrameBuffer
@@ -267,10 +270,12 @@ static void *ag_thread(void *cookie){
   while(ag_isrun){
     if(ag_isbusy!=2){
       usleep(166000);
+      if (!ag_isrun) break;
       if (!ag_refreshlock) ag_refreshrate();
     }
     else{
       usleep(16600);
+      if (!ag_isrun) break;
       ag_refreshrate();
     }
   }
@@ -346,7 +351,7 @@ void ag_busyprogress(){
   int bs_w = ag_busywinW;
   int bs_w2= bs_w/2;
   int x,y;
-  if (ag_32){
+  if (ag_32==1){
     for (x=bs_x;x<bs_x+bs_w;x++){
       if ((x+ag_busypos)%(bs_h*2)<bs_h){
         int i=x-bs_x;
@@ -421,7 +426,7 @@ void ag_refreshrate(){
   fsync(ag_fb);
   
   //-- Copy Data
-  if (ag_32){
+  if (ag_32==1){
     if (ag_isbusy==0){
       ag32fbufcopy(ag_bf32);
       //memcpy(ag_fbuf32,ag_bf32,ag_fbsz);
@@ -1109,7 +1114,7 @@ void ag_closefonts(){
   apng_closefont(&AG_SMALL_FONT);
 }
 //-- Draw Character
-byte ag_drawchar_ex(CANVAS *_b,int x, int y, char c, color cl, byte isbig,byte underline){
+byte ag_drawchar_ex(CANVAS *_b,int x, int y, char c, color cl, byte isbig, byte underline, byte bold){
   if (_b==NULL) _b=&ag_c;
   int yy,xx;
   y++;
@@ -1118,10 +1123,10 @@ byte ag_drawchar_ex(CANVAS *_b,int x, int y, char c, color cl, byte isbig,byte u
   if (cd==137) cd = 95;  
   if (cd>95) return 0;
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
-  return apng_drawfont(_b,fnt,cd,x,y,cl,underline);
+  return apng_drawfont(_b,fnt,cd,x,y,cl,underline,bold);
 }
 byte ag_drawchar(CANVAS *_b,int x, int y, char c, color cl, byte isbig){
-  return ag_drawchar_ex(_b,x, y, c, cl, isbig,0);
+  return ag_drawchar_ex(_b,x, y, c, cl, isbig,0,0);
 }
 //-- Calculate Font Width
 byte ag_fontwidth(char c,byte isbig){
@@ -1139,7 +1144,7 @@ byte ag_check_escape(char * soff, const char ** ssource, char * buf){
   char tb[8];
   
   if ((off=='\\')&&(*s=='<')){ *soff = *s++; *ssource=s; }
-  else if ((off=='<')&&((*s=='u')||(*s=='#')||(*s=='/'))){
+  else if ((off=='<')&&((*s=='u')||(*s=='b')||(*s=='#')||(*s=='/'))){
     const char * sv = s;
     memset(tb,0,8);
     byte foundlt = 0;
@@ -1156,6 +1161,8 @@ byte ag_check_escape(char * soff, const char ** ssource, char * buf){
       if (
           (strcmp(tb,"u")==0)||
           (strcmp(tb,"/u")==0)||
+          (strcmp(tb,"b")==0)||
+          (strcmp(tb,"/b")==0)||
           (strcmp(tb,"/#")==0)||
           (strlen(tb)==4)||
           (strlen(tb)==7)
@@ -1270,8 +1277,10 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
   int  i=0;
   char tb[8];
   color cl            = cl_def;
-  byte is_underline  = 0;
-  byte onlongtext = 0;
+  byte  is_underline  = 0;
+  byte  is_bold       = 0;
+  byte  onlongtext    = 0;
+  
   while((off = *s++)){
     if (ag_check_escape(&off,&s,tb)){
       if (strcmp(tb,"/#")==0){
@@ -1282,6 +1291,12 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
       }
       else if (strcmp(tb,"u")==0){
         is_underline=1;
+      }
+      else if (strcmp(tb,"/b")==0){
+        is_bold=0;
+      }
+      else if (strcmp(tb,"b")==0){
+        is_bold=1;
       }
       else if ((tb[0]=='#')&&((strlen(tb)==4)||(strlen(tb)==7))){
         if (!forcecolor) cl=strtocolor(tb);
@@ -1319,7 +1334,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
       }
       if ((prevspace==0)||(off!=' ')){
         int fwidth = ag_fontwidth(off,isbig);
-        ag_drawchar_ex(_b,curx,y,off,cl,isbig,is_underline);
+        ag_drawchar_ex(_b,curx,y,off,cl,isbig,is_underline,is_bold);
         curx+= fwidth;
         if ((curx>_b->w)||(curx-x>maxwidth)) {
           if (!multiline) break;

@@ -164,7 +164,7 @@ static  long      evtouch_lastick = 0;
 static void *ev_input_thack(void *cookie){
   while(evtouch_thack){
     if (evtouch_state!=0){
-      if (evtouch_lastick<alib_tick()-5){
+      if (evtouch_lastick<alib_tick()-10){
         evtouch_locked  = 1;
         evtouch_alreadyu= 1;
         evtouch_state   = 0;
@@ -175,7 +175,7 @@ static void *ev_input_thack(void *cookie){
         ev_post_message(evtouch_code,0);
       }
     }
-    usleep(50);
+    usleep(20);
   }
 }
 byte atouch_gethack(){
@@ -189,8 +189,6 @@ void atouch_sethack(byte t){
       pthread_t hack_thread_t;
       pthread_create(&hack_thread_t, NULL, ev_input_thack, NULL);
       pthread_detach(hack_thread_t);
-      
-      printf("INIT TOUCH...\n");
     }
   }
   evtouch_thack=t;
@@ -208,14 +206,16 @@ void ev_input_callback(int fd, short revents){
         //-- Real Key Input Event
         case EV_KEY:{
           if ((ev.code==330)&&(evtouch_alreadyu==0)&&(ev.value==0)){
-            evtouch_alreadyu=1;
-            evtouch_locked=1;
-            evtouch_state=0;
-            evtouch_sx = 0;
-            evtouch_sy = 0;
-            evtouch_rx = 0;
-            evtouch_ry = 0;
-            ev_post_message(evtouch_code,0);
+            if (!evtouch_thack){
+              evtouch_alreadyu=1;
+              evtouch_locked=1;
+              evtouch_state=0;
+              evtouch_sx = 0;
+              evtouch_sy = 0;
+              evtouch_rx = 0;
+              evtouch_ry = 0;
+              ev_post_message(evtouch_code,0);
+            }
           }
           else
             ev_post_message(ev.code,ev.value);
@@ -264,15 +264,15 @@ void ev_input_callback(int fd, short revents){
         
         //-- Touch Input Event
         case EV_ABS:{
+          evtouch_lastick = alib_tick();
+          
           if (ev.code==ABS_MT_TOUCH_MAJOR){
-            if ((evtouch_rx>0)&&(evtouch_ry>0)){
-              evtouch_lastick = alib_tick();
-              
+            if ((evtouch_rx>0)&&(evtouch_ry>0)){              
               byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
               if (tmptouch!=3){
                 atouch_translate_raw(); //-- Translate RAW
                 
-                //-- TOUCH UP
+                //-- TOUCH DOWN
                 if (tmptouch==1){
                   evtouch_locked=1;
                   evtouch_alreadyu=0;
@@ -302,6 +302,7 @@ void ev_input_callback(int fd, short revents){
                 }
                 //-- TOUCH UP
                 else if ((tmptouch==0)&&(evtouch_alreadyu==0)){
+                  if (!evtouch_thack){
                     evtouch_locked=1;
                     evtouch_alreadyu=1;
                     evtouch_state = 0;
@@ -310,6 +311,7 @@ void ev_input_callback(int fd, short revents){
                     evtouch_rx = 0;
                     evtouch_ry = 0;
                     ev_post_message(evtouch_code,0);
+                  }
                 }
               }
             }

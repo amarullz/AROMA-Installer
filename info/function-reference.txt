@@ -1,0 +1,599 @@
+[B]CONFIGURATION FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]setcolor[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Set AROMA Installer Color Scheme. It can also defined in themes with theme.prop file
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]setcolor[/B](colorname, hexcolor);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]colorname[/B] - Name of color to be set. colorname with "_g" for gradient color.
+            [LIST]
+              [*][B]winbg[/B], [B]winbg_g[/B] : Main/Top Most Window Backgroud
+              [*][B]textbg[/B], [B]textbg_g[/B] : Textbox, Checkbox, and any scrollable UI Background
+              [*][B]textfg[/B] : Textbox, Checkbox, and any scrollable UI Text Foreground
+              [*][B]textfg_gray[/B] : Gray Text ( on Optionbox/Checkbox Item Description )
+              [*][B]controlbg[/B], [B]controlbg_g[/B] : Control / Button / Checkbox border - Background Color
+              [*][B]controlfg[/B] : Button Text Color
+              [*][B]selectbg[/B], [B]selectbg_g[/B] : Selected Element Background ( Pushed/focused Button/items, etc )
+              [*][B]selectfg[/B] : Selected Element Text/Foreground Color
+              [*][B]titlebg[/B], [B]titlebg_g[/B] : Window Title Background
+              [*][B]titlefg[/B] : Window Title Text Foreground Color
+              [*][B]navbg[/B], [B]navbg_g[/B] : Bottom Bar (Navigation Bar) Background. Next-Previous Area
+              [*][B]border[/B], [B]border_g[/B] : Common Border Color
+            [/LIST]
+          [*][B]hexcolor[/B] - Hexadecimal Color in RGB. it support 3 and 6 characters hexadecimal started with #. example: "#a8e" or "#ff5599".
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Set Color with 3 chars hexcolor
+setcolor("winbg",       "#444");
+setcolor("winbg_g",     "#222");
+setcolor("textbg",      "#333");
+setcolor("textfg",      "#fff");
+
+# Set Color with 6 chars hexcolor
+setcolor("textfg_gray", "#bbbbbb");
+setcolor("controlbg",   "#446699");
+setcolor("controlbg_g", "#223355");[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]ini_set[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Sets the value of a AROMA Installer configuration option
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]setcolor[/B](configname, newvalue);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]configname[/B] - Configuration name to be set.
+            [LIST]
+              [*][B]roundsize[/B] : Set Corner size of rounded rectangle for common controls (default:"3")
+              [*][B]button_roundsize[/B]: Set Corner size of rounded rectangle for button controls (default:"2")
+              [*][B]window_roundsize[/B] : Set Corner size of rounded rectangle for main window (default:"4")
+              [*][B]transition_frame[/B] : Set number of frames for transition (default:"5")
+              [*][B]text_ok[/B] : Set text for common OK text  (default:"OK")
+              [*][B]text_next[/B] : Set text for wizard next button (default:"Next >")
+              [*][B]text_back[/B] : Set text for wizard back button (default:"< Back")
+              [*][B]rom_name[/B] : Set ROM Name Information
+              [*][B]rom_version[/B] : Set ROM Version Information
+              [*][B]rom_author[/B] : Set ROM Author Information
+              [*][B]rom_device[/B] : Set ROM Device Information
+              [*][B]customkeycode_up[/B] : Set Alternative keycode for up key (navigate up)
+              [*][B]customkeycode_down[/B] : Set Alternative keycode for down key (navigate down)
+              [*][B]customkeycode_select[/B] : Set Alternative keycode for select key (select an item)
+              [*][B]customkeycode_back[/B] : Set Alternative keycode for back key
+              [*][B]customkeycode_menu[/B] : Set Alternative keycode for menu key
+            [/LIST]
+          [*][B]newvalue[/B] - New value to be set for configname
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Set ROM Informations
+ini_set("rom_name",             "AROMA ROM");
+ini_set("rom_version",          "1.0");
+ini_set("rom_author",           "amarullz");
+ini_set("rom_device",           "HTC Desire (bravo)");
+
+# Set Custom Text
+ini_set("text_ok",              "OK Man");
+ini_set("text_next",            ">>");
+ini_set("text_back",            "<<");
+
+# Set Alternative Key Code - You can use keycapture tool
+# to capture your device keycode
+ini_set("customkeycode_up",     "115");
+ini_set("customkeycode_down",   "114");
+ini_set("customkeycode_select", "116");
+ini_set("customkeycode_menu",   "229");
+ini_set("customkeycode_back",   "158");[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]calibrate[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Set Touch Screen Calibration Data. Different device may had different touch screen calibration data. To get calibration data, press menu, select calibration tools then follow the intructions.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]calibrate[/B](divx, addx, divy, addy [, alternative_method]);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]divx[/B] - Division value for horizontal touchscreen to display resolution.
+          [*][B]addx[/B] - Add value for horizontal alignment.
+          [*][B]divy[/B] - Division value for vertical touchscreen to display resolution.
+          [*][B]addy[/B] - Add value for vertical alignment.
+          [*][B]alternative_method[/B] [Optional] - Use alternative method for touch screen handling if normal method not works in your device (default:"no")
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# HTC Desire Calibrated Data
+calibrate("7.90","20","7.90","20");
+
+# SGS Calibrated Data
+calibration("1.8447", "37", "1.2158", "27", "yes");[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]calibtool[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Start calibration tool.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]calibtool[/B](dummy_arguments);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]dummy_arguments[/B] - Edify should pass at least 1 arguments. Just Pass "" for it
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Start Calibrating Tools
+calibtool("");[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]theme[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Set AROMA Installer Theme will be used in next display.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]theme[/B](theme_name);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]theme_name[/B] - Theme Name will be used. It was theme directory name located in "META-INF/com/google/android/aroma/themes"
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Use ICS Theme located at:
+# META-INF/com/google/android/aroma/themes/ics
+theme("ics");[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]VARIABLE FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]getvar[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Get Variable
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]variable_value[/SIZE] [B]getvar[/B](varname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]varname[/B] - Variable Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Variable Value
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Show "testvar" value in alert
+alert(
+  "Value of testvar",
+  getvar("testvar")
+);[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]setvar[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Set Variable
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]setvar[/B](varname, value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]varname[/B] - Variable Name to be set
+          [*][B]value[/B] - New Value for Variable
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Set new value for "testvar"
+setvar("testvar", "This is only test!!");
+
+# Now Show the "testvar" value in alert
+alert(
+  "Value of testvar",
+  getvar("testvar")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]appendvar[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Append new value after previous value, it's like concating strings ( previous_value + newvalue )
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]appendvar[/B](varname, value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]varname[/B] - Variable Name to be set
+          [*][B]value[/B] - New Value to be appended in variable
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Set new value for "testvar"
+setvar("testvar", "This is only test!!");
+
+# Append new value
+appendvar("testvar", "Add String");
+
+# "testvar" now will contain "This is only test!!Add String"
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]prependvar[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Prepend new value before previous value, it's like concating strings ( newvalue + previous_value )
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]prependvar[/B](varname, value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]varname[/B] - Variable Name to be set
+          [*][B]value[/B] - New Value to be prepended in variable
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Set new value for "testvar"
+setvar("testvar", "This is only test!!");
+
+# Prepend new value
+prependvar("testvar", "Add String!! ");
+
+# "testvar" now will contain "Add String!! This is only test!!"
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]PROP FILE HANDLER FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]file_getprop[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read prop file value for given keyname
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]prop_value[/SIZE] [B]file_getprop[/B](filename, keyname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - Absolute path of prop file in filesystem
+          [*][B]keyname[/B] - Prop Key Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Value of prop for given keyname
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get value of "item.1.1" from /tmp/aroma-data/custom.prop
+alert(
+  "Value of Prop",
+  file_getprop("/tmp/aroma-data/custom.prop", "item.1.1")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]prop[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Same with [B]file_getprop[/B], but will read relatively from AROMA Temporary Directory "/tmp/aroma-data/"
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]prop_value[/SIZE] [B]prop[/B](filename, keyname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - Relative path of prop file in AROMA Temporary Directory "/tmp/aroma-data/"
+          [*][B]keyname[/B] - Prop Key Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Value of prop for given keyname
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get value of "item.1.1" from /tmp/aroma-data/custom.prop
+alert(
+  "Value of Prop",
+  prop("custom.prop", "item.1.1")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]zipprop[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Same with [B]file_getprop[/B], but will read the prop file from Zip
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]prop_value[/SIZE] [B]zipprop[/B](zip_path, keyname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Absolute path of prop file in Zip ( don't add "/" in first character )
+          [*][B]keyname[/B] - Prop Key Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Value of prop for given keyname
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get value of "item.1.1" from META-INF/com/google/android/aroma/custom.prop
+alert(
+  "Value of Prop",
+  zipprop("META-INF/com/google/android/aroma/custom.prop", "item.1.1")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]resprop[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Same with [B]zipprop[/B], but will read the prop file from Zip relatively from AROMA Resource Directory "META-INF/com/google/android/aroma/"
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]prop_value[/SIZE] [B]resprop[/B](zip_path, keyname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Relative path of prop file in Zip from AROMA Resource Directory "META-INF/com/google/android/aroma/"
+          [*][B]keyname[/B] - Prop Key Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Value of prop for given keyname
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get value of "item.1.1" from META-INF/com/google/android/aroma/custom.prop
+alert(
+  "Value of Prop",
+  resprop("custom.prop", "item.1.1")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]sysprop[/B], [B]property_get[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read system property value for given keyname
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]prop_value[/SIZE] [B]sysprop[/B](keyname);
+        
+        [SIZE="2"]sysprop[/SIZE] [B]sysprop[/B](keyname);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]keyname[/B] - Prop Key Name
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Value of prop for given keyname
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get Device Board Name
+alert(
+  "Device Board Name",
+  sysprop("ro.product.board")
+);
+
+# Get Board Platform
+alert(
+  "Device Board Name",
+  property_get("ro.board.platform")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+
+  //-- FILE FUNCTIONS
+  RegisterFunction("writetmpfile",  AROMA_WRITEFILE);     //-- WRITE STRING INTO TEMPORARY FILE
+  RegisterFunction("write",         AROMA_WRITEFILE);     //-- WRITE STRING INTO FILESYSTEM
+  RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRINF
+  RegisterFunction("read",          AROMA_GETFILE);       //-- READ FILESYSTEM AS STRING
+  
+  
+  //-- ZIP CONTENT FUNCTIONS
+  RegisterFunction("readfile",      AROMA_ZIPREAD);       //-- [Deprecated] - Renamed to zipread
+  RegisterFunction("readfile_aroma",AROMA_RESREAD);       //-- [Deprecated] - Renamed to resread
+  RegisterFunction("zipread",       AROMA_ZIPREAD);       //-- Read String From Zip
+  RegisterFunction("resread",       AROMA_RESREAD);       //-- Read Strinf From Resource
+  
+  //-- EXEC
+  RegisterFunction("zipexec",       AROMA_EXEC);          //-- Exec Program From Zip
+  RegisterFunction("resexec",       AROMA_EXEC);          //-- Exec Program From Resource
+  RegisterFunction("run_program",   AROMA_EXEC);          //-- Run Program/Exec
+  RegisterFunction("exec",          AROMA_EXEC);          //-- Run Prohram/Exec
+
+  //-- MAIN UI FUNCTIONS (With Next & Back Buttons)
+  RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
+  RegisterFunction("splash",        AROMA_SPLASH);        //-- SPLASH SCREEN
+  RegisterFunction("checkbox",      AROMA_CHECKBOX);      //-- CHECKBOX
+  RegisterFunction("selectbox",     AROMA_SELECTBOX);     //-- SELECTBOX
+  RegisterFunction("textbox",       AROMA_TEXTBOX);       //-- TEXTBOX
+  RegisterFunction("viewbox",       AROMA_VIEWBOX);       //-- VIEWBOX
+  RegisterFunction("agreebox",      AROMA_TEXTBOX);       //-- AGREEBOX
+  RegisterFunction("menubox",       AROMA_MENUBOX);       //-- MENUBOX
+  
+  //-- INSTALL UI
+  RegisterFunction("install",       AROMA_INSTALL);       //-- START INSTALLATION PROCCESS
+  
+  //-- DIALOG UI FUNCTIONS
+  RegisterFunction("alert",         AROMA_ALERT);         //-- ALERT DIALOG
+  RegisterFunction("textdialog",    AROMA_TEXTDIALOG);    //-- TEXT DIALOG
+  RegisterFunction("confirm",       AROMA_CONFIRM);       //-- CONFIRM DIALOG
+  
+  //-- DISK INFO FUNCTIONS
+  RegisterFunction("getdisksize",         AROMA_GETPART); //-- GET DISK SIZE
+  RegisterFunction("getdiskfree",         AROMA_GETPART); //-- GET DISK FREE
+  RegisterFunction("getdiskusedpercent",  AROMA_GETPART); //-- GET DISKUSAGE AS PERCENTAGE
+  
+  //-- COMPARISON & MATH
+  RegisterFunction("cmp", AROMA_CMP);                     //-- COMPARE INTEGER
+  RegisterFunction("cal", AROMA_CAL);                     //-- CALCULATE INTEGER
+  RegisterFunction("iif", AROMA_IIF);                     //-- INLINE IF
+  
+  //-- ETC
+  RegisterFunction("exit",          AROMA_EXIT);          //-- TERMINATE PROCCESS
+  RegisterFunction("back",          AROMA_BACK);          //-- BACK TO PREVIOUS WIZARD
+  RegisterFunction("pleasewait",    AROMA_PLEASEWAIT);    //-- SHOW WAIT SCREEN
+  RegisterFunction("reboot",        AROMA_REBOOT);        //-- REBOOT DEVICE
+  
+  
+  
+  
+  
+    if      (strcmp(args[0],"roundsize") == 0)          acfg()->roundsz=valint;
+  else if (strcmp(args[0],"button_roundsize") == 0)   acfg()->btnroundsz=valint;
+  else if (strcmp(args[0],"window_roundsize") == 0)   acfg()->winroundsz=valint;
+  else if (strcmp(args[0],"transition_frame") == 0)   acfg()->fadeframes=valint;
+
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,31,args[1]);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,31,args[1]);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,31,args[1]);
+    
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,63,args[1]);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,63,args[1]);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,63,args[1]);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,63,args[1]);
+  
+  else if (strcmp(args[0],"customkeycode_up")==0)     acfg()->ckey_up=valkey;
+  else if (strcmp(args[0],"customkeycode_down")==0)   acfg()->ckey_down=valkey;
+  else if (strcmp(args[0],"customkeycode_select")==0) acfg()->ckey_select=valkey;
+  else if (strcmp(args[0],"customkeycode_back") == 0) acfg()->ckey_back=valkey;
+  else if (strcmp(args[0],"customkeycode_menu") == 0) acfg()->ckey_menu=valkey;

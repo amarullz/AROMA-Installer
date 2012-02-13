@@ -99,18 +99,23 @@ void acmenu_redrawitem(ACONTROLP ctl, int index){
   color txtcolor = acfg()->textfg;
   color graycolor= acfg()->textfg_gray;
   byte isselectcolor=0;
+  
   if (index==d->touchedItem){
-    color pshad = ag_calpushad(acfg()->selectbg_g);
-    dword hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
-    ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,pshad,(agdp()*acfg()->roundsz));
-    ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+    if (!atheme_draw("img.selection.push", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+      color pshad = ag_calpushad(acfg()->selectbg_g);
+      dword hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
+      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,pshad,(agdp()*acfg()->roundsz));
+      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+    }
     graycolor = txtcolor = acfg()->selectfg;
     isselectcolor=1;
   }
   else if ((index==d->focusedItem)&&(d->focused)){
-    dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
-    ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
-    ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+    if (!atheme_draw("img.selection", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+      dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
+      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
+      ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+    }
     graycolor = txtcolor = acfg()->selectfg;
     isselectcolor=1;
   }
@@ -152,11 +157,11 @@ void acmenu_redraw(ACONTROLP ctl){
   if ((d->itemn>0)&&(d->draweditemn<d->itemn)) {
     ag_ccanvas(&d->client);
     ag_canvas(&d->client,d->clientWidth,d->nextY);
-    ag_rect(&d->client,0,0,d->clientWidth,agdp()*acfg()->btnroundsz,acfg()->textbg);
+    ag_rect(&d->client,0,0,d->clientWidth,agdp()*max(acfg()->roundsz,4),acfg()->textbg);
     
     //-- Set Values
     d->scrollY     = 0;
-    d->maxScrollY  = d->nextY-(ctl->h-(agdp()*acfg()->roundsz));
+    d->maxScrollY  = d->nextY-(ctl->h-(agdp()*max(acfg()->roundsz,4)));
     if (d->maxScrollY<0) d->maxScrollY=0;
     
     //-- Draw Items
@@ -229,8 +234,9 @@ void acmenu_ondraw(void * x){
   }
   
   //-- Init Device Pixel Size
-  int agdp3 = (agdp()*acfg()->roundsz);
-  int agdp6 = (agdp()*(acfg()->roundsz*2));
+  int minpadding = max(acfg()->roundsz,4);
+  int agdp3 = (agdp()*minpadding);
+  int agdp6 = (agdp()*(minpadding*2));
   int agdpX = agdp6;
   
   if (d->focused){
@@ -533,8 +539,10 @@ ACONTROLP acmenu(
   ag_canvas(&d->control,w,h);
   ag_canvas(&d->control_focused,w,h);
   
+  int minpadding = max(acfg()->roundsz,4);
+  
   //-- Initializing Client Size
-  d->clientWidth  = w - (agdp()*acfg()->roundsz*2);
+  d->clientWidth  = w - (agdp()*minpadding*2);
   d->clientTextW  = d->clientWidth - ((agdp()*34) + (agdp()*acfg()->btnroundsz*2));
   d->clientTextX  = (agdp()*31) + (agdp()*acfg()->btnroundsz*2);
   
@@ -560,7 +568,7 @@ ACONTROLP acmenu(
   d->itemn       = 0;
   d->touchedItem = -1;
   d->focusedItem = -1;
-  d->nextY       = agdp()*acfg()->btnroundsz;
+  d->nextY       = agdp()*minpadding;
   d->draweditemn = 0;
   d->selectedIndex = -1;
   d->touchmsg    = touchmsg;
