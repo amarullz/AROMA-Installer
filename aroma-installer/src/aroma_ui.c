@@ -430,6 +430,39 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
   return StringValue(strdup(""));
 }
 
+//* 
+//* package_extract
+//* 
+Value* AROMA_EXTRACT(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc!=2) {
+    return ErrorAbort(state, "%s() expects 2 args (zip_path, destination), got %d", name, argc);
+  }
+  
+  //-- This is Busy Function
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  byte res=0;
+  char dpath[256];
+  snprintf(dpath,255,"%s/%s",AROMA_TMP,args[1]);
+  if (strcmp("ziptotmp",name)==0){
+    res=az_extract(args[0], dpath);
+  }
+  else if (strcmp("restotmp",name)==0){
+    char zpath[256];
+    snprintf(zpath,255,"%s/%s",AROMA_DIR,args[0]);
+    res=az_extract(zpath, dpath);
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  
+  //-- Return
+  if (res) return StringValue(strdup("1"));
+  return StringValue(strdup(""));
+}
 
 //* 
 //* file_getprop, prop
@@ -2381,6 +2414,9 @@ void RegisterAroma() {
   RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRINF
   RegisterFunction("read",          AROMA_GETFILE);       //-- READ FILESYSTEM AS STRING
   
+  //-- ZIP HANDLING
+  RegisterFunction("ziptotmp",      AROMA_EXTRACT);       //-- READ FILESYSTEM AS STRING
+  RegisterFunction("restotmp",      AROMA_EXTRACT);       //-- READ FILESYSTEM AS STRING
   
   //-- ZIP CONTENT FUNCTIONS
   RegisterFunction("readfile",      AROMA_ZIPREAD);       //-- [Deprecated] - Renamed to zipread

@@ -195,6 +195,7 @@ void atouch_sethack(byte t){
 }
 
 //-- INPUT CALLBACK
+byte evtouch_mt_syn = 0;
 void ev_input_callback(int fd, short revents){
   if (revents&POLLIN) {
     struct input_event ev;
@@ -214,6 +215,7 @@ void ev_input_callback(int fd, short revents){
               evtouch_sy = 0;
               evtouch_rx = 0;
               evtouch_ry = 0;
+              evtouch_mt_syn=0;
               ev_post_message(evtouch_code,0);
             }
           }
@@ -262,16 +264,41 @@ void ev_input_callback(int fd, short revents){
         }
         break;
         
+        case EV_SYN:{
+          if (ev.code==SYN_MT_REPORT){
+            if (evtouch_state>0){
+              if (evtouch_mt_syn==2){
+                evtouch_mt_syn=1;
+              }
+              else if(evtouch_mt_syn==1){
+                evtouch_mt_syn=0;
+                if (evtouch_alreadyu==0){
+                  if (!evtouch_thack){
+                    evtouch_locked=1;
+                    evtouch_alreadyu=1;
+                    evtouch_state = 0;
+                    evtouch_sx = 0;
+                    evtouch_sy = 0;
+                    evtouch_rx = 0;
+                    evtouch_ry = 0;
+                    ev_post_message(evtouch_code,0);
+                  }
+                }
+              }
+            }
+          }
+        }break;
+        
         //-- Touch Input Event
         case EV_ABS:{
           evtouch_lastick = alib_tick();
           
           if (ev.code==ABS_MT_TOUCH_MAJOR){
+            evtouch_mt_syn = 2;
             if ((evtouch_rx>0)&&(evtouch_ry>0)){              
-              byte tmptouch = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
+              byte tmptouch  = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);              
               if (tmptouch!=3){
                 atouch_translate_raw(); //-- Translate RAW
-                
                 //-- TOUCH DOWN
                 if (tmptouch==1){
                   evtouch_locked=1;
@@ -310,6 +337,7 @@ void ev_input_callback(int fd, short revents){
                     evtouch_sy = 0;
                     evtouch_rx = 0;
                     evtouch_ry = 0;
+                    evtouch_mt_syn=0;
                     ev_post_message(evtouch_code,0);
                   }
                 }
@@ -375,7 +403,7 @@ int ev_init(){
       }
 
       /* ABS, KEY & REL */
-      if (!test_bit(EV_ABS, ev_bits) && !test_bit(EV_KEY, ev_bits) && !test_bit(EV_REL, ev_bits)) {
+      if (!test_bit(EV_ABS, ev_bits) && !test_bit(EV_SYN, ev_bits) && !test_bit(EV_KEY, ev_bits) && !test_bit(EV_REL, ev_bits)) {
           close(fd);
           continue;
       }

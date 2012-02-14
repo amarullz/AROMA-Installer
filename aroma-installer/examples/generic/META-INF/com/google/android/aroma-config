@@ -118,7 +118,7 @@ ini_set("rom_device",           "HTC Desire (bravo)");
 #
 # Image Will auto arrange into center horizontal&vertical
 #
-splash(5000, "sample");
+splash(2000, "sample");
 
 ##
 # Show Animated Splash for
@@ -130,13 +130,16 @@ anisplash(
    8,
    
    # Frame 1 [ Image, duration in millisecond ]
-   "splash/a1", 30,
+   "splash/a1", 500,
    "splash/a2", 30,
    "splash/a3", 30,
    "splash/a4", 30,
    "splash/a5", 30,
    "splash/a6", 30
 );
+
+##-- EXTRACT TEST
+restotmp("sample.png","sample.png");
 
 #
 # Show Calibrating Tools Directly before anything
