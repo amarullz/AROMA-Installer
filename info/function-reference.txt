@@ -16,6 +16,10 @@
           [*][B]colorname[/B] - Name of color to be set. colorname with "_g" for gradient color.
             [LIST]
               [*][B]winbg[/B], [B]winbg_g[/B] : Main/Top Most Window Backgroud
+              [*][B]winfg[/B] : Main/Top Most Window Text Foreground
+              [*][B]winfg_gray[/B] : Main/Top Most Window Gray Text Foreground
+              [*][B]dialogbg[/B], [B]dialogbg_g[/B] : Popup Window Backgroud (Alert, Confirm, About)
+              [*][B]dialogfg[/B] : Popup Window Text Foreground
               [*][B]textbg[/B], [B]textbg_g[/B] : Textbox, Checkbox, and any scrollable UI Background
               [*][B]textfg[/B] : Textbox, Checkbox, and any scrollable UI Text Foreground
               [*][B]textfg_gray[/B] : Gray Text ( on Optionbox/Checkbox Item Description )
@@ -26,7 +30,9 @@
               [*][B]titlebg[/B], [B]titlebg_g[/B] : Window Title Background
               [*][B]titlefg[/B] : Window Title Text Foreground Color
               [*][B]navbg[/B], [B]navbg_g[/B] : Bottom Bar (Navigation Bar) Background. Next-Previous Area
+              [*][B]scrollbar[/B] : Scrollbar indicator color
               [*][B]border[/B], [B]border_g[/B] : Common Border Color
+              [*][B]progressglow[/B] : Progress Animation Color
             [/LIST]
           [*][B]hexcolor[/B] - Hexadecimal Color in RGB. it support 3 and 6 characters hexadecimal started with #. example: "#a8e" or "#ff5599".
         [/LIST]
@@ -73,6 +79,12 @@ setcolor("controlbg_g", "#223355");[/CODE]
               [*][B]text_ok[/B] : Set text for common OK text  (default:"OK")
               [*][B]text_next[/B] : Set text for wizard next button (default:"Next >")
               [*][B]text_back[/B] : Set text for wizard back button (default:"< Back")
+              [*][B]text_yes[/B] : Set text for default yes button (default:"Yes")
+              [*][B]text_no[/B] : Set text for default no button (default:"No")
+              [*][B]text_about[/B] : Set text for About menu (default:"About & Informations")
+              [*][B]text_calibrating[/B] : Set text for Calibration Menu (default:"Calibrating Tools")
+              [*][B]text_quit[/B] : Set text for Quit Menu (default:"Quit Installation")
+              [*][B]text_quit_msg[/B] : Set text for Quit Confirmation Message (default:"Are you sure to quit the Installer?")
               [*][B]rom_name[/B] : Set ROM Name Information
               [*][B]rom_version[/B] : Set ROM Version Information
               [*][B]rom_author[/B] : Set ROM Author Information
@@ -143,7 +155,7 @@ ini_set("customkeycode_back",   "158");[/CODE]
         [CODE]# HTC Desire Calibrated Data
 calibrate("7.90","20","7.90","20");
 
-# SGS Calibrated Data
+# Alternative method Calibrated Data
 calibration("1.8447", "37", "1.2158", "27", "yes");[/CODE]
       [/INDENT]
   [/INDENT]
@@ -488,9 +500,9 @@ alert(
       [/INDENT]
     [B]Sintax:[/B]
       [INDENT][SIZE="4"]
-        [SIZE="2"]prop_value[/SIZE] [B]sysprop[/B](keyname);
+        [SIZE="2"]prop_value[/SIZE] [B]property_get[/B](keyname);
         
-        [SIZE="2"]sysprop[/SIZE] [B]sysprop[/B](keyname);
+        [SIZE="2"]prop_value[/SIZE] [B]sysprop[/B](keyname);
       [/SIZE][/INDENT]
     [B]Parameters:[/B]
       [INDENT]
@@ -520,25 +532,475 @@ alert(
   [/INDENT]
 [/INDENT]
 
+[B]FILESYSTEM FUNCTIONS[/B]
 
-  //-- FILE FUNCTIONS
-  RegisterFunction("writetmpfile",  AROMA_WRITEFILE);     //-- WRITE STRING INTO TEMPORARY FILE
-  RegisterFunction("write",         AROMA_WRITEFILE);     //-- WRITE STRING INTO FILESYSTEM
-  RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRINF
-  RegisterFunction("read",          AROMA_GETFILE);       //-- READ FILESYSTEM AS STRING
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]writetmpfile[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Write string into file in AROMA temporary
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]writetmpfile[/B](filename, value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - Destination file in AROMA temporary directory
+          [*][B]value[/B] - String that will be write into the file
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will saved in from /tmp/aroma-data/test.txt
+writetmpfile("test.txt", "This is test text");
+
+# Show the content in alert with readtmpfile
+alert(
+  "Value of test.txt",
+  readtmpfile("test.txt")
+);
+
+# Show the content in alert with read
+alert(
+  "Value of test.txt",
+  read("/tmp/aroma-data/test.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]write[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Write string into file in filesystem
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]write[/B](filename, value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - Absolute path to Destination file
+          [*][B]value[/B] - String that will be write into the file
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will saved in from /sdcard/test.txt
+writetmpfile("/sdcard/test.txt", "This is test text");
+
+# Show the content in alert with read
+alert(
+  "Value of test.txt",
+  read("/sdcard/test.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]readtmpfile[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read string from file in AROMA temporary directory
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]content_of_file[/SIZE] [B]readtmpfile[/B](filename);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - File in AROMA temporary directory that will be readed
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Content of file in String
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will read data from /tmp/aroma-data/test.txt
+# then save it in variable
+setvar(
+  "testvar",
+  readtmpfile("test.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]read[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read string from file in filesysten
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]content_of_file[/SIZE] [B]read[/B](filename);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]filename[/B] - Absolute path to Destination file that will be readed
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Content of file in String
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will read data from /sdcard/test.txt
+# then save it in variable
+setvar(
+  "testvar",
+  read("/sdcard/test.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]ZIP CONTENT HANDLING FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]readfile[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    DEPRECATED!!! - Identical with [B]zipread[/B]. Will be deleted soon.
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]readfile_aroma[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    DEPRECATED!!! - Identical with [B]resread[/B]. Will be deleted soon.
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]zipread[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read string from file in zip
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]content_of_file[/SIZE] [B]zipread[/B](zip_path);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Absolute path to Destination file in zip that will be readed
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Content of file in String
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will read data from zip content "META-INF/com/google/android/aroma/text.txt"
+# then save it in variable
+setvar(
+  "testvar",
+  zipread("META-INF/com/google/android/aroma/text.txt")
+);
+
+# It will read data from zip content "tmp/text.txt"
+# then save it in variable
+setvar(
+  "testvar2",
+  zipread("tmp/text.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
   
-  
-  //-- ZIP CONTENT FUNCTIONS
-  RegisterFunction("readfile",      AROMA_ZIPREAD);       //-- [Deprecated] - Renamed to zipread
-  RegisterFunction("readfile_aroma",AROMA_RESREAD);       //-- [Deprecated] - Renamed to resread
-  RegisterFunction("zipread",       AROMA_ZIPREAD);       //-- Read String From Zip
-  RegisterFunction("resread",       AROMA_RESREAD);       //-- Read Strinf From Resource
-  
-  //-- EXEC
-  RegisterFunction("zipexec",       AROMA_EXEC);          //-- Exec Program From Zip
-  RegisterFunction("resexec",       AROMA_EXEC);          //-- Exec Program From Resource
-  RegisterFunction("run_program",   AROMA_EXEC);          //-- Run Program/Exec
-  RegisterFunction("exec",          AROMA_EXEC);          //-- Run Prohram/Exec
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]resread[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Read string from file in zip relatively from AROMA Resource Directory "META-INF/com/google/android/aroma/"
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]content_of_file[/SIZE] [B]resread[/B](zip_path);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Relative path of file in Zip from AROMA Resource Directory "META-INF/com/google/android/aroma/" that will be readed
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Content of file in String
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will read data from zip content "META-INF/com/google/android/aroma/text.txt"
+# then save it in variable
+setvar(
+  "testvar",
+  resread("text.txt")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+
+[B]ZIP EXTRACT FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]ziptotmp[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Extract file from zip content into AROMA Temporary directory, and automatically chmod it for executable.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]ziptotmp[/B](zip_path, destination_name);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Absolute path to Destination file in zip that will be extracted
+          [*][B]destination_name[/B] - Extracted target filename
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will extract "tmp/busybox" into "/tmp/aroma-data/busybox"
+ziptotmp("tmp/busybox", "busybox");
+
+# Now we can execute it
+exec("/tmp/aroma-data/busybox","ls","-l");
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]restotmp[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Extract file from zip content in AROMA Resource Directory "META-INF/com/google/android/aroma/" into AROMA Temporary directory, and automatically chmod it for executable.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]restotmp[/B](zip_path, destination_name);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Relative path of file in Zip from AROMA Resource Directory "META-INF/com/google/android/aroma/" that will be extracted
+          [*][B]destination_name[/B] - Extracted target filename
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will extract "META-INF/com/google/android/aroma/busybox" into "/tmp/aroma-data/busybox"
+restotmp("busybox", "busybox");
+
+# Now we can execute it
+exec("/tmp/aroma-data/busybox","ls","-l");
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]EXEC FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]zipexec[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Extract file from zip into AROMA temporary, chmod it, and execute it.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]exit_status[/SIZE] [B]zipexec[/B](zip_path [, argument1, argument2, ... ]);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Absolute path of zip content that will be executed
+          [*][B]arguments[/B] [Optional] - Command line Arguments
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return exit status. "0" for common success status
+        The output buffer/stdout will be automatically saved into "exec_buffer"
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will extract and run "META-INF/com/google/android/aroma/test.sh"
+zipexec("META-INF/com/google/android/aroma/test.sh");
+
+# With Arguments
+zipexec("META-INF/com/google/android/aroma/test.sh", "argument1", "argument2");
+
+# Get Return Status
+if
+  zipexec("META-INF/com/google/android/aroma/test.sh") == "0"
+then
+  alert(
+    "Exec Status",
+    "Shell was executed successfully"
+  );
+endif;
+
+# Get STDOUT
+zipexec("META-INF/com/google/android/aroma/test.sh");
+alert(
+    "Exec STDOUT",
+    getvar("exec_buffer")
+  );
+
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]resexec[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Same as zipexec, but it will extract and run the file from zip relatively from AROMA Resource Directory "META-INF/com/google/android/aroma"
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]exit_status[/SIZE] [B]resexec[/B](zip_path [, argument1, argument2, ... ]);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Relative path of zip content from AROMA Resource Directory "META-INF/com/google/android/aroma/" that will be executed 
+          [*][B]arguments[/B] [Optional] - Command line Arguments
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return exit status. "0" for common success status
+        The output buffer/stdout will be automatically saved into "exec_buffer"
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will extract and run "META-INF/com/google/android/aroma/test.sh"
+resexec("test.sh");
+
+# With Arguments
+resexec("test.sh", "argument1", "argument2");
+
+# Get Return Status
+if
+  resexec("test.sh") == "0"
+then
+  alert(
+    "Exec Status",
+    "Shell was executed successfully"
+  );
+endif;
+
+# Get STDOUT
+resexec("test.sh");
+alert(
+    "Exec STDOUT",
+    getvar("exec_buffer")
+  );
+
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]run_program[/B], [B]exec[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Run executable from filesystem
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]exit_status[/SIZE] [B]run_program[/B](path [, argument1, argument2, ... ]);
+        [SIZE="2"]exit_status[/SIZE] [B]exec[/B](path [, argument1, argument2, ... ]);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]zip_path[/B] - Absolute path to executable
+          [*][B]arguments[/B] [Optional] - Command line Arguments
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return exit status. "0" for common success status
+        The output buffer/stdout will be automatically saved into "exec_buffer"
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# It will run "ls" command
+run_program("/sbin/ls");
+
+# or
+exec("/sbin/ls");
+
+# With some Arguments
+run_program("/sbin/ls", "-l", "/sdcard");
+
+# Mounting Device
+exec("/sbin/mount", "-t", "auto", "/system");
+
+# Get Return Status
+if
+  exec("/sbin/mount", "-t", "auto", "/system") == "0"
+then
+  alert(
+    "Exec Status",
+    "Mount was executed successfully"
+  );
+endif;
+
+# Get STDOUT
+exec("/sbin/ls", "-l", "/sdcard/*.zip");
+alert(
+    "List of Zip in SDCARD",
+    getvar("exec_buffer")
+  );
+
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+########################### NEXT THREAD ###########################
 
   //-- MAIN UI FUNCTIONS (With Next & Back Buttons)
   RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
@@ -573,27 +1035,3 @@ alert(
   RegisterFunction("back",          AROMA_BACK);          //-- BACK TO PREVIOUS WIZARD
   RegisterFunction("pleasewait",    AROMA_PLEASEWAIT);    //-- SHOW WAIT SCREEN
   RegisterFunction("reboot",        AROMA_REBOOT);        //-- REBOOT DEVICE
-  
-  
-  
-  
-  
-    if      (strcmp(args[0],"roundsize") == 0)          acfg()->roundsz=valint;
-  else if (strcmp(args[0],"button_roundsize") == 0)   acfg()->btnroundsz=valint;
-  else if (strcmp(args[0],"window_roundsize") == 0)   acfg()->winroundsz=valint;
-  else if (strcmp(args[0],"transition_frame") == 0)   acfg()->fadeframes=valint;
-
-  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,31,args[1]);
-  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,31,args[1]);
-  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,31,args[1]);
-    
-  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,63,args[1]);
-  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,63,args[1]);
-  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,63,args[1]);
-  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,63,args[1]);
-  
-  else if (strcmp(args[0],"customkeycode_up")==0)     acfg()->ckey_up=valkey;
-  else if (strcmp(args[0],"customkeycode_down")==0)   acfg()->ckey_down=valkey;
-  else if (strcmp(args[0],"customkeycode_select")==0) acfg()->ckey_select=valkey;
-  else if (strcmp(args[0],"customkeycode_back") == 0) acfg()->ckey_back=valkey;
-  else if (strcmp(args[0],"customkeycode_menu") == 0) acfg()->ckey_menu=valkey;

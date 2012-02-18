@@ -374,7 +374,8 @@ exit:
 }
 //-- CLOSE
 void apng_closefont(PNGFONTS * p){
-  if (p->d) free(p->d);
+  if (p->d!=NULL) free(p->d);
+  p->d=NULL;
   p->loaded=0;
 }
 

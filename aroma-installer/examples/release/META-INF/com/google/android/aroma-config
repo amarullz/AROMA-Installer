@@ -101,7 +101,7 @@
 ##
 # SET THEME
 #
-theme("miui");
+theme("ics");
 
 ##
 # Initializing Rom Information
@@ -127,7 +127,7 @@ splash(5000, "sample");
 #-----
 anisplash(
    # Number of Loop
-   8,
+   4,
    
    # Frame 1 [ Image, duration in millisecond ]
    "splash/a1", 500,

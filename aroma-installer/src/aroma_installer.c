@@ -603,5 +603,5 @@ int aroma_start_install(
   aw_set_on_dialog(0);
   aw_destroy(hWin);
   
-  return ai_return_status;
+  return WEXITSTATUS(ai_return_status);
 }

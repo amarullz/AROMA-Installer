@@ -365,6 +365,7 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
         free(val);
       }
     }
+    //printf("PASS THEME\n");
     aui_setthemecolor(propstr,  "color.winbg",              &acfg()->winbg);
     aui_setthemecolor(propstr,  "color.winbg_g",            &acfg()->winbg_g);
     aui_setthemecolor(propstr,  "color.winfg",              &acfg()->winfg);
@@ -395,6 +396,8 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
     aui_setthemeconfig(propstr, "config.button_roundsize",  &acfg()->btnroundsz);
     aui_setthemeconfig(propstr, "config.window_roundsize",  &acfg()->winroundsz);
     aui_setthemeconfig(propstr, "config.transition_frame",  &acfg()->fadeframes);
+    
+    //printf("PASS THEME V\n");
     
     //-- LOAD SMALL FONT
     char * font = aui_parsepropstring(propstr,"font.small");
@@ -2367,7 +2370,7 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Get Return Status
   waitpid(pid, &exec_status, 0);
-  snprintf(status_str,15,"%i",exec_status);
+  snprintf(status_str,15,"%i",WEXITSTATUS(exec_status));
   free(args2);
   
   //-- Release Arguments
@@ -2411,12 +2414,12 @@ void RegisterAroma() {
   //-- FILE FUNCTIONS
   RegisterFunction("writetmpfile",  AROMA_WRITEFILE);     //-- WRITE STRING INTO TEMPORARY FILE
   RegisterFunction("write",         AROMA_WRITEFILE);     //-- WRITE STRING INTO FILESYSTEM
-  RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRINF
+  RegisterFunction("readtmpfile",   AROMA_GETFILE);       //-- READ TEMPORARY FILE AS STRING
   RegisterFunction("read",          AROMA_GETFILE);       //-- READ FILESYSTEM AS STRING
   
   //-- ZIP HANDLING
-  RegisterFunction("ziptotmp",      AROMA_EXTRACT);       //-- READ FILESYSTEM AS STRING
-  RegisterFunction("restotmp",      AROMA_EXTRACT);       //-- READ FILESYSTEM AS STRING
+  RegisterFunction("ziptotmp",      AROMA_EXTRACT);       //-- EXTRACT ZIP CONTENT INTO TMP
+  RegisterFunction("restotmp",      AROMA_EXTRACT);       //-- EXTRACT RES CONTENT INTO TMP
   
   //-- ZIP CONTENT FUNCTIONS
   RegisterFunction("readfile",      AROMA_ZIPREAD);       //-- [Deprecated] - Renamed to zipread
