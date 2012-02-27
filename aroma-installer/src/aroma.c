@@ -47,6 +47,7 @@ void a_check_reboot(){
     fprintf(apipe(),"ui_print\n");
     fprintf(apipe(),"ui_print Rebooting...\n");
     fprintf(apipe(),"ui_print\n");
+    usleep(2000000);
     reboot(RB_AUTOBOOT);
   }
 }
@@ -90,8 +91,6 @@ void a_init_all(){
   //-- Init
   ui_init();                        //-- Init Event Handler
   ag_init();                        //-- Init Graphic Framebuffer
-  ag_loadsmallfont("fonts/small");  //-- Init Small Font
-  ag_loadbigfont("fonts/big");      //-- Init Big Font
 }
 
 //* 
@@ -100,10 +99,13 @@ void a_init_all(){
 void a_release_all(){
   //-- Release All
   ag_closefonts();  //-- Release Fonts
+  LOGS("Font Released\n");
   ev_exit();        //-- Release Input Engine
+  LOGS("Input Released\n");
   az_close();       //-- Release Zip Handler
+  LOGS("Archive Released\n");
   ag_close();       //-- Release Graph Engine
-  
+  LOGS("Graph Released\n");
 }
 
 //* 
@@ -113,12 +115,17 @@ int main(int argc, char **argv) {
   int retval = 1;
   parent_pid = getppid();
   
+  LOGS("Initializing\n");
+  
   //-- Normal Updater Sequences
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
   
+  //-- Init Temporaty
   remove_directory(AROMA_TMP);
+  unlink(AROMA_TMP_S);
   create_directory(AROMA_TMP);
+  symlink(AROMA_TMP,AROMA_TMP_S);
 
   //-- Initializing Header
   printf("Starting " AROMA_NAME " version " AROMA_VERSION "\n"
@@ -137,32 +144,73 @@ int main(int argc, char **argv) {
   }
   
   //-- Save to Argument
+  LOGS("Saving Arguments\n");
   snprintf(currArgv[0],255,"%s",argv[1]);
   snprintf(currArgv[1],255,"%s",argv[3]);
   
   //-- Init Pipe & Show Splash Info
   a_splash(argv[2]);
+  
+  //-- Init Zip
+  LOGS("Open Archive\n");
   if (az_init(argv[3])){
+    
+    //-- Initializing All Resources
+    LOGS("Initializing Resource\n");
     a_init_all();
-    if (parent_pid) kill(parent_pid,19);
+    
+    //-- Mute Parent Thread
+    if (parent_pid){
+      LOGS("Mute Parent\n");
+      kill(parent_pid,19);
+    }
+    
+    //-- Starting AROMA Installer UI
+    LOGS("Starting Interface\n");
     if (aui_start()){
       fprintf(apipe(),"ui_print\n");
       fprintf(apipe(),"ui_print " AROMA_NAME " Finished...\n");
       fprintf(apipe(),"ui_print\n");
       retval = 0;
     }
-    if (parent_pid) kill(parent_pid,18);
+    
+    //-- Close Graph Thread
+    LOGS("Close Graph Thread\n");
+    ag_close_thread();
+    
+    //-- Wait Thread Exit
+    usleep(300000);
+    
+    //-- Unmute Parent
+    if (parent_pid){
+      LOGS("Unmute Parent\n");
+      kill(parent_pid,18);
+    }
+    
+    //-- Wait Until Clean Up
+    usleep(200000);
+    
+    //-- Release All Resource
+    LOGS("Starting Release\n");
     a_release_all();
   }
+  else
+    LOGE("Cannot Open Archive\n");
   
   //-- REMOVE AROMA TEMPORARY
+  LOGS("Cleanup Temporary\n");
+  usleep(500000);
+  unlink(AROMA_TMP_S);
   remove_directory(AROMA_TMP);
   
-  //-- Check Reboot
+  //-- Check Reboot Request
+  LOGS("Check For Reboot\n");
   a_check_reboot();
   
   //-- Cleanup PIPE
+  LOGS("Closing Recovery Pipe\n");
   fclose(acmd_pipe);
   
+  //-- Return Exit Status
   return retval;
 }

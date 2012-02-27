@@ -56,6 +56,10 @@ void acfg_init_ex(byte themeonly){
   acfg_var.titlebg_g    = ag_rgb(0x11,0x11,0x11);
   acfg_var.titlefg      = ag_rgb(0xff,0xff,0xff);
   
+  acfg_var.dlgtitlebg   = acfg_var.titlebg;
+  acfg_var.dlgtitlebg_g = acfg_var.titlebg_g;
+  acfg_var.dlgtitlefg   = acfg_var.titlefg;
+  
   acfg_var.navbg        = ag_rgb(0x66,0x66,0x66);
   acfg_var.navbg_g      = ag_rgb(0x33,0x33,0x33);
   
@@ -79,15 +83,17 @@ void acfg_init_ex(byte themeonly){
     snprintf(acfg_var.text_back,31,"< Back");
     snprintf(acfg_var.text_yes,31,"Yes");
     snprintf(acfg_var.text_no,31,"No");
-    snprintf(acfg_var.text_about,31,"About & Informations");
+    snprintf(acfg_var.text_about,31,"About");
     snprintf(acfg_var.text_calibrating,31,"Calibrating Tools");
     snprintf(acfg_var.text_quit,31,"Quit Installation");
-    snprintf(acfg_var.text_quit_msg,63,"Are you sure to quit the Installer?");
+    snprintf(acfg_var.text_quit_msg,63,"Are you sure to quit the installer?");
     
     snprintf(acfg_var.rom_name,63,AROMA_NAME);
     snprintf(acfg_var.rom_version,63,AROMA_VERSION);
     snprintf(acfg_var.rom_author,63,AROMA_BUILD_A);
     snprintf(acfg_var.rom_device,63,"Not Defined");
+    snprintf(acfg_var.rom_date,63,AROMA_BUILD);
+    
     
     acfg_var.ckey_up      = 0;
     acfg_var.ckey_down    = 0;
@@ -541,39 +547,98 @@ void aw_unmuteparent(AWINDOWP win,CANVAS * p){
     ag_sync_fade(acfg_var.fadeframes);
   }
 }
-void aw_textdialog(AWINDOWP parent,char * title,char * text,char * ok_text){
+void aw_textdialog(AWINDOWP parent,char * titlev,char * text,char * ok_text){
+  
+  // actext(hWin,txtX,txtY,txtW,txtH,text,0);
   CANVAS * tmpc = aw_muteparent(parent);
+  //-- Set Mask
   on_dialog_window = 1;
   ag_rectopa(agc(),0,0,agw(),agh(),0x0000,180);
   ag_sync();
-  int elmP  = agdp()*4;
-  int winP  = agdp()*4;
-  int winW  = agw() - (winP*2);
-  int winH  = (agh() / 2) + (winP*4);
-  int winX  = winP;
-  int winY  = (agh() / 2) - (winH/2);
-  int titW  = ag_txtwidth(title,1);
-  int capH  = ag_fontheight(1) + (elmP*2);
+  
+  char title[32];
+  snprintf(title,31,"%s",titlev);
+  
+  int pad   = agdp()*4;
+  int winW  = agw()-(pad*2);
+  int txtW  = winW-(pad*2);
+  int txtX  = pad*2;
   int btnH  = agdp()*20;
-  int txtH  = winH - (btnH + capH + (elmP*3));
-  int txtY  = winY + capH + elmP;
-  int btnY  = txtY + txtH + elmP;
-  int btnW  = (winW/2) - elmP;
-  int btnX  = winX + ((winW/2) - (btnW/2));
-  int txtX  = winX + elmP;
-  int txtW  = winW - (elmP*2);
+  int titW  = ag_txtwidth(title,1);
+  int titH  = ag_fontheight(1) + (pad*2);
+  
+  PNGCANVASP winp = atheme("img.dialog");
+  PNGCANVASP titp = atheme("img.dialog.titlebar");
+  APNG9      winv;
+  APNG9      titv;
+  int vtitY = -1;
+  int vpadB = pad;
+  int vimgX = pad*2;
+  if (titp!=NULL){
+    if (apng9_calc(titp,&titv,1)){
+      int tmptitH = titH - (pad*2);
+      titH        = tmptitH + (titv.t+titv.b);
+      vtitY       = titv.t;
+    }
+  }
+  if (winp!=NULL){
+    if (apng9_calc(winp,&winv,1)){
+      txtW = winW - (winv.l+winv.r);
+      txtX = pad  + (winv.l);
+      vimgX= pad  + (winv.l);
+      vpadB= winv.b;
+    }
+  }
+  
+  byte imgE = 0; int imgW = 0; int imgH = 0;
+  int txtH    = agh()/2;
+  int infH    = txtH;
+  
+  //-- Calculate Window Size & Position
+  int winH    = titH + infH + btnH + (pad*2) + vpadB;
+  
+  int winX    = pad;
+  int winY    = (agh()/2) - (winH/2);
+  
+  //-- Calculate Title Size & Position
+  int titX    = (agw()/2) - (titW/2);
+  int titY    = winY + pad;
+  if (vtitY!=-1) titY = winY+vtitY;
+  
+  //-- Calculate Text Size & Position
+  int infY    = winY + titH + pad;
+  int txtY    = infY;
+  
+  //-- Calculate Button Size & Position
+  int btnW    = winW / 2;
+  int btnY    = infY+infH+pad;
+  int btnX    = (agw()/2) - (btnW/2);
+  
+  //-- Initializing Canvas
   CANVAS alertbg;
   ag_canvas(&alertbg,agw(),agh());
   ag_draw(&alertbg,agc(),0,0);
-  ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.border,acfg_var.border_g,acfg_var.roundsz*agdp());
-  ag_roundgrad(&alertbg,winX+1,winY+1,winW-2,winH-2,acfg_var.dialogbg,acfg_var.dialogbg_g,(acfg_var.roundsz*agdp())-1);
-  ag_roundgrad_ex(&alertbg,winX+1,winY+1,winW-2,capH-1,acfg_var.titlebg,acfg_var.titlebg_g,(acfg_var.roundsz*agdp())-1,1,1,0,0);
-  ag_textf(&alertbg,titW,((agw()/2)-(titW/2))+1,winY+elmP+1,title,acfg_var.titlebg_g,1);
-  ag_text(&alertbg,titW,(agw()/2)-(titW/2),winY+elmP,title,acfg_var.titlefg,1);
+  
+  //-- Draw Window
+  if (!atheme_draw("img.dialog", &alertbg, winX,winY,winW,winH)){
+    ag_roundgrad(&alertbg,winX-1,winY-1,winW+2,winH+2,acfg_var.border,acfg_var.border_g,(acfg_var.roundsz*agdp())+1);
+    ag_roundgrad(&alertbg,winX,winY,winW,winH,acfg_var.dialogbg,acfg_var.dialogbg_g,acfg_var.roundsz*agdp());
+  }
+  
+  //-- Draw Title
+  if (!atheme_draw("img.dialog.titlebar", &alertbg, winX,winY,winW,titH)){
+    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.dlgtitlebg,acfg_var.dlgtitlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+  }
+  
+  ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.dlgtitlebg_g,1);
+  ag_text(&alertbg,titW,titX,titY,title,acfg_var.dlgtitlefg,1);
+  
   AWINDOWP hWin   = aw(&alertbg);
   actext(hWin,txtX,txtY,txtW,txtH,text,0);
-  acbutton(hWin,btnX,btnY,btnW,btnH,(ok_text==NULL?acfg_var.text_ok:ok_text),0,5);
+  ACONTROLP okbtn=acbutton(hWin,btnX,btnY,btnW,btnH,(ok_text==NULL?acfg_var.text_ok:ok_text),0,5);
+    
   aw_show(hWin);
+  aw_setfocus(hWin,okbtn);
   byte ondispatch = 1;
   while(ondispatch){
     dword msg=aw_dispatch(hWin);
@@ -681,11 +746,11 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   
   //-- Draw Title
   if (!atheme_draw("img.dialog.titlebar", &alertbg, winX,winY,winW,titH)){
-    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.dlgtitlebg,acfg_var.dlgtitlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
   }
   
-  ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.titlebg_g,1);
-  ag_text(&alertbg,titW,titX,titY,title,acfg_var.titlefg,1);
+  ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.dlgtitlebg_g,1);
+  ag_text(&alertbg,titW,titX,titY,title,acfg_var.dlgtitlefg,1);
   
   //-- Draw Image
   if (imgE){
@@ -807,10 +872,10 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   
   //-- Draw Title
   if (!atheme_draw("img.dialog.titlebar", &alertbg, winX,winY,winW,titH)){
-    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.titlebg,acfg_var.titlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
+    ag_roundgrad_ex(&alertbg,winX,winY,winW,titH,acfg_var.dlgtitlebg,acfg_var.dlgtitlebg_g,acfg_var.roundsz*agdp(),1,1,0,0);
   }
-  ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.titlebg_g,1);
-  ag_text(&alertbg,titW,titX,titY,title,acfg_var.titlefg,1);
+  ag_textf(&alertbg,titW,titX+1,titY+1,title,acfg_var.dlgtitlebg_g,1);
+  ag_text(&alertbg,titW,titX,titY,title,acfg_var.dlgtitlefg,1);
   
   //-- Draw Image
   if (imgE){
@@ -966,8 +1031,8 @@ byte aw_calibdraw(CANVAS * c,
 void aw_calibtools(AWINDOWP parent){
   int USE_HACK = aw_confirm(
       parent,
-      "Use Alternative Touch",
-      "Do you want to use alternative touch?\n  Only if default method not works.\n\nPress the volume keys to select Yes or No.",
+      "Use alternative touch",
+      "Do you want to use alternative touch?\n  Only use if the default method does not work.\n\nPress the volume keys to select Yes or No.",
       "@alert",
       acfg_var.text_no,
       acfg_var.text_yes
@@ -1042,13 +1107,13 @@ void aw_calibtools(AWINDOWP parent){
     atouch_set_calibrate(cal_x,add_x,cal_y,add_y);    
     if (!USE_HACK){
       snprintf(datx,255,
-        "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
+        "Use/Replace this command in <#009>aroma-config</#>:\n\n"
         "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\",\"yes\"\n);</#>\n\n",
       cal_x,add_x,cal_y,add_y);
     }
     else{
       snprintf(datx,255,
-        "Use/Replace this command in top of <#009>aroma-config</#>:\n\n"
+        "Use/Replace this command in <#009>aroma-config</#>:\n\n"
         "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\"\n);</#>\n\n",
       cal_x,add_x,cal_y,add_y);
     }
@@ -1059,7 +1124,7 @@ void aw_calibtools(AWINDOWP parent){
   else{
     aw_alert(parent,
       "Calibrated Data",
-      "Calibrated Data not Valid, Please Try Again...",
+      "Calibrated data not valid, please try again...",
       "@info",
       NULL);
   }
@@ -1078,7 +1143,7 @@ doneit:
     dont_restore_caldata = aw_confirm(
       parent,
       "Set Calibrated Data",
-      "Do You Want to Use Current Calibrated Data in Current Process?\n\n<#080>NOTE:</#> It Will revert back when you restart the AROMA Installer...",
+      "Do you want to use the current calibrated data in the current process?\n\n<#080>NOTE:</#> It will revert back when you restart the AROMA Installer...",
       "@alert",
       NULL,
       NULL
@@ -1095,14 +1160,15 @@ void aw_about_dialog(AWINDOWP parent){
   snprintf(unchkmsg,512,
     "<b>%s %s</b>\n"
     "%s\n\n"
-    "  Build <u>%s</u> (<b>%s</b>)\n"
+    "  <#selectbg_g>Build <u>%s</u></#> (<b>%s</b>)\n"
     "  %s\n"
     "  %s\n"
     "  <u>%s</u>\n\n"
-    "ROM Name\t: <b>%s</b>\n"
-    "ROM Version\t: <b>%s</b>\n"
-    "ROM Author\t: <b>%s</b>\n"
-    "Device\t\t\t: <b>%s</b>"
+    "ROM Name:\n  <b><#selectbg_g>%s</#></b>\n"
+    "ROM Version:\n  <b><#selectbg_g>%s</#></b>\n"
+    "ROM Author:\n  <b><#selectbg_g>%s</#></b>\n"
+    "Device:\n  <b><#selectbg_g>%s</#></b>\n"
+    "Update:\n  <b><#selectbg_g>%s</#></b>"
     ,
     AROMA_NAME,
     AROMA_VERSION,
@@ -1117,7 +1183,8 @@ void aw_about_dialog(AWINDOWP parent){
     acfg()->rom_name,
     acfg()->rom_version,
     acfg()->rom_author,
-    acfg()->rom_device
+    acfg()->rom_device,
+    acfg()->rom_date
   );
   aw_alert(parent,
     AROMA_NAME " " AROMA_VERSION,

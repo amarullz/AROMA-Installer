@@ -207,9 +207,34 @@ void actext_onblur(void * x){
 }
 void actext_appendtxt(ACONTROLP ctl,char * txt){
   ACTEXTDP   d  = (ACTEXTDP) ctl->d;
+  int ch          = ag_txtheight(d->client.w,txt,d->isbigtxt);
+  int canvas_h    = d->client.h;
+  
+  if ((d->appendPos+ch)>=canvas_h){
+    int step_up = (d->appendPos+ch) - canvas_h;
+    int y; int ynew=0;
+    for (y=step_up; y<canvas_h; y++){
+      color * rowdest = agxy(&d->client,0,ynew++);
+      color * rowsrc  = agxy(&d->client,0,y);
+      memcpy(rowdest,rowsrc,sizeof(color)*d->client.w);
+    }
+    d->appendPos -= step_up;
+  }
+  
+  ag_rect(&d->client,0,d->appendPos,d->client.w,ch,acfg()->textbg);
+  ag_text(&d->client,
+    d->client.w,
+    0,d->appendPos,
+    txt,
+    acfg()->textfg,
+    d->isbigtxt);
+
+  d->appendPos+=ch;
+  
+  /*
   int minpadding = max(acfg()->roundsz,4);
   int ch        = ag_txtheight(d->client.w,txt,d->isbigtxt);
-  int my        = d->client.h-(agdp()*minpadding);
+  int my        = d->client.h-(agdp()*2); // -(agdp()*(minpadding*2));
   if ((d->appendPos+ch)>=my){
     if (d->appendPos<my){
       ch-=(my-d->appendPos);
@@ -220,7 +245,7 @@ void actext_appendtxt(ACONTROLP ctl,char * txt){
       color * rowsrc  = agxy(&d->client,0,y);
       memcpy(rowdest,rowsrc,sizeof(color)*d->client.w);
     }
-    int ypos = d->client.h-ch;
+    int ypos = my-ch;
     ag_rect(&d->client,0,ypos,d->client.w,ch,acfg()->textbg);
     ag_text(&d->client,
       d->client.w,
@@ -229,7 +254,7 @@ void actext_appendtxt(ACONTROLP ctl,char * txt){
       acfg()->textfg,
       d->isbigtxt);
     d->forceGlowTop=1;
-    d->appendPos   =my;
+    d->appendPos=my;
   }
   else{
     ag_text(&d->client,
@@ -240,6 +265,7 @@ void actext_appendtxt(ACONTROLP ctl,char * txt){
       d->isbigtxt);
     d->appendPos+=ch;
   }
+  */
   ctl->ondraw(ctl);
   aw_draw(ctl->win);
 }

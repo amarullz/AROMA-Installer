@@ -1,0 +1,67 @@
+img.background=bg
+img.titlebar=titlebar
+img.navbar=navbar
+img.dialog=dialog.9
+img.dialog.titlebar=dialog_titlebar.9
+img.progress=button.9
+img.prograss.fill=button_press.9
+img.selection=list.9
+img.selection.push=list.9
+img.button=button.9
+img.button.focus=button_focus.9
+img.button.push=button_press.9
+img.checkbox=cb
+img.checkbox.focus=cb_focus
+img.checkbox.push=cb_press
+img.checkbox.on=cb_on
+img.checkbox.on.focus=cb_on_focus
+img.checkbox.on.push=cb_on_press
+img.radio=radio
+img.radio.focus=radio_focus
+img.radio.push=radio_press
+img.radio.on=radio_on
+img.radio.on.focus=radio_on_focus
+img.radio.on.push=radio_on_press
+
+
+color.winbg           = #ffffff
+color.winbg_g         = #eeeeee
+color.winfg           = #000000
+color.winfg_gray      = #666666
+color.dialogbg        = #ffffff
+color.dialogbg_g      = #eeeeee
+color.dialogfg        = #000000
+color.textbg          = #ffffff
+color.textfg          = #000000
+color.textfg_gray     = #666666
+color.controlbg       = #dddddd
+color.controlbg_g     = #cccccc
+color.controlfg       = #000000
+color.selectbg        = #ff7e00
+color.selectbg_g      = #ff7e00
+color.selectfg        = #ffffff
+color.titlebg         = #ff7e00
+color.titlebg_g       = #ff7e00
+color.titlefg         = #ffffff
+color.dlgtitlebg      = #ffffff
+color.dlgtitlebg_g    = #ffffff
+color.dlgtitlefg      = #444444
+color.scrollbar       = #ff7e00
+color.navbg           = #ffffff
+color.navbg_g         = #eeeeee
+color.border          = #666666
+color.border_g        = #666666
+color.progressglow    = #ff7e00
+
+config.roundsize             = 1
+config.button_roundsize      = 1
+config.window_roundsize      = 1
+config.transition_frame      = 5
+
+font.small                   = font.roboto.small
+font.big                     = font.roboto.big
+
+
+info.themename        = MIUI v4 ICS
+info.description      = MIUI v4 ICS Theme for AROMA Installer
+info.author           = DemonWav & amarullz & Lennox

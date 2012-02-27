@@ -33,7 +33,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "libs/amath.h"
-//#include <sys/wait.h>
+#include <sys/wait.h>
 
 //
 // ARM NEON - Testing Only
@@ -65,14 +65,20 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "1.50"
-#define AROMA_BUILD       "120213-018"
+#define AROMA_VERSION     "1.60"
+#define AROMA_BUILD       "120227-026"
 #define AROMA_BUILD_CN    "Cempaka"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
 #define AROMA_BUILD_URL   "http://www.amarullz.com/"
-#define AROMA_COPY        "© 2012 by amarullz xda-developers"
-#define AROMA_TMP         "/tmp/aroma-data"
+#define AROMA_COPY        "(c) 2012 by amarullz xda-developers"
+
+//-- Temporary Dir - Move from /tmp/aroma-data to /tmp/aroma symlink to /tmp/aroma-data for backward compatibility
+//#define AROMA_SYSTMP      "/tmp"
+#define AROMA_SYSTMP      "/data"
+#define AROMA_TMP         AROMA_SYSTMP "/aroma"
+#define AROMA_TMP_S       AROMA_SYSTMP "/aroma-data"
+
 #define AROMA_DIR         "META-INF/com/google/android/aroma"
 #define AROMA_CFG         "META-INF/com/google/android/aroma-config"
 #define AROMA_UPDATESCRPT "META-INF/com/google/android/updater-script"
@@ -242,6 +248,9 @@ typedef struct  {
   color titlebg;              // Title Background
   color titlebg_g;            // Title Background Gradient
   color titlefg;              // Title Font Color
+  color dlgtitlebg;           // Dialog Title Background
+  color dlgtitlebg_g;         // Dialog Title Background Gradient
+  color dlgtitlefg;           // Dialog Title Font Color
   color navbg;                // Scrollbar Color
   color navbg_g;              // Navigation Bar Background
   color scrollbar;            // Navigation Bar Background Gradient
@@ -274,6 +283,7 @@ typedef struct  {
   char rom_version[64];       // ROM Version
   char rom_author[64];        // ROM Author
   char rom_device[64];        // ROM Device Name
+  char rom_date[64];          // ROM Date
   
   // CUSTOM KEY
   int ckey_up;
@@ -421,6 +431,7 @@ byte      apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos,            // Draw 
 //
 CANVAS *  agc();          // Get Main AROMA Graph Canvas
 byte      ag_init();      // Init AROMA Graph and Framebuffers
+void      ag_close_thread(); // Close Graph Thread
 void      ag_close();     // Close AROMA Graph and Framebuffers
 
 void      ag_sync();                        // Sync Main Canvas with Framebuffer
@@ -533,11 +544,12 @@ int     atmsg();
 //
 // AROMA System Library Functions
 //
+char * ai_rtrim(char * chr);
 char * ai_trim(char * chr);
 byte  ismounted(char * path);
-long  alib_disksize(const char * path);
+byte alib_disksize(const char * path, unsigned long * ret, int division);
 int   alib_diskusage(const char * path);
-long  alib_diskfree(const char * path);
+byte alib_diskfree(const char * path, unsigned long * ret, int division);
 void  alib_exec(char * cmd, char * arg);
 void  create_directory(const char *path);
 int   remove_directory(const char *path);
@@ -706,14 +718,17 @@ byte acmenu_add(ACONTROLP ctl,char * title, char * desc, char * img);
 int acmenu_getselectedindex(ACONTROLP ctl);
 
 //**********[ AROMA LOGGING ]**********//
+#define _AROMA_DEBUG_TAG "aroma"
 #ifndef _AROMA_NODEBUG
-#define LOGE(...) fprintf(stdout, "AROMA[E] " __VA_ARGS__)
-#define LOGW(...) fprintf(stdout, "AROMA[W] " __VA_ARGS__)
-#define LOGI(...) fprintf(stdout, "AROMA[I] " __VA_ARGS__)
-#define LOGV(...) fprintf(stdout, "AROMA[V] " __VA_ARGS__)
-#define LOGD(...) fprintf(stdout, "AROMA[D] " __VA_ARGS__)
+#define LOGS(...) fprintf(stdout, _AROMA_DEBUG_TAG "/s: " __VA_ARGS__)
+#define LOGE(...) fprintf(stdout, _AROMA_DEBUG_TAG "/e: " __VA_ARGS__)
+#define LOGW(...) fprintf(stdout, _AROMA_DEBUG_TAG "/w: " __VA_ARGS__)
+#define LOGI(...) fprintf(stdout, _AROMA_DEBUG_TAG "/i: " __VA_ARGS__)
+#define LOGV(...) fprintf(stdout, _AROMA_DEBUG_TAG "/v: " __VA_ARGS__)
+#define LOGD(...) fprintf(stdout, _AROMA_DEBUG_TAG "/d: " __VA_ARGS__)
 #else
-#define LOGE(...) /**/
+#define LOGS(...) fprintf(stdout, _AROMA_DEBUG_TAG "/s: " __VA_ARGS__)
+#define LOGE(...) fprintf(stdout, _AROMA_DEBUG_TAG "/e: " __VA_ARGS__)
 #define LOGW(...) /**/
 #define LOGI(...) /**/
 #define LOGV(...) /**/

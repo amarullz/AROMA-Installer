@@ -1002,6 +1002,363 @@ alert(
 
 ########################### NEXT THREAD ###########################
 
+[B]PARTITION INFORMATION FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]getdisksize[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Get partition size for given path.
+        [B]NOTE:[/B] This Function May not Supported with all Recovery, because it use mount command to mount the partition
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]partition_size[/SIZE] [B]getdisksize[/B](path, unit);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]path[/B] - Mount Point of Partition
+          [*][B]unit[/B] - Return as Unit ( "m"=MB, "k"=KB, "b"=bytes )
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return partition size in unit size.
+        1024 = 1KB, 1024KB = 1MB
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get System Partition Size in MB
+setvar("systemsize", getdisksize("/system", "m"));
+
+# Get Data Partition Size in KB
+setvar("datasize", getdisksize("/data", "k"));
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]getdiskfree[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Get partition free space for given path.
+        [B]NOTE:[/B] This Function May not Supported with all Recovery, because it use mount command to mount the partition
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]partition_freesize[/SIZE] [B]getdiskfree[/B](path, unit);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]path[/B] - Mount Point of Partition
+          [*][B]unit[/B] - Return as Unit ( "m"=MB, "k"=KB, "b"=bytes )
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return partition free spece in unit size.
+        1024 = 1KB, 1024KB = 1MB
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get sd-ext Partition Free Space in Bytes
+setvar("sdextfree", getdiskfree("/sd-ext", "b"));
+
+# Get sdcard Partition Free Space in MB
+setvar("sdcardfree", getdiskfree("/sdcard", "m"));
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]getdiskusedpercent[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Get partition usage in percentage for given path.
+        [B]NOTE:[/B] This Function May not Supported with all Recovery, because it use mount command to mount the partition
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]partition_freesize[/SIZE] [B]getdiskusedpercent[/B](path);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]path[/B] - Mount Point of Partition
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return partition free spece in unit size from 0 to 100.
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Get sdcard Partition Usage in Percentage
+setvar("sdcardusage", getdiskusedpercent("/sdcard"));
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]MATH & COMPARISON FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]cmp[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Compare 2 Integer Size
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]boolean[/SIZE] [B]cmp[/B](int1, operator, int2);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]int1[/B] - Value 1 for comparison
+          [*][B]operator[/B] - Comparison Operator. Supported operator:
+            [LIST]
+              [*]"[B]==[/B]" - (Value 1) equal (Value 2)
+              [*]"[B]>[/B]" - (Value 1) Greater than (Value 2)
+              [*]"[B]<[/B]" - (Value 1) Less than (Value 2)
+              [*]"[B]>=[/B]" - (Value 1) Greater than or equal to (Value 2)
+              [*]"[B]<=[/B]" - (Value 1) Less than or equal to (Value 2)
+              [*]"[B]!=[/B]" - (Value 1) Not equal (Value 2)
+            [/LIST]
+          [*][B]int2[/B] - Value 2 for comparison
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return boolean string of resulted comparison. can be used directly in if/else, or iif.
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Compare 2 Integer
+if
+  cmp("2000", ">=", "1500")
+then
+  ...
+endif;
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]cal[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Calculate 2 Integer with simple Arithmetic operator
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]calculated_value[/SIZE] [B]cal[/B](int1, operator, int2);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]int1[/B] - Value 1 for calculating
+          [*][B]operator[/B] - Arithmetic Operator. Supported operator:
+            [LIST]
+              [*]"[B]+[/B]" - Addition - Sum of (Value 1) and (Value 2)
+              [*]"[B]-[/B]" - Subtraction - Difference of (Value 1) and (Value 2)
+              [*]"[B]*[/B]" - Multiplication - Product of (Value 1) and (Value 2)
+              [*]"[B]/[/B]" - Division - Quotient of (Value 1) and (Value 2)
+              [*]"[B]%[/B]" - Modulus - Remainder of (Value 1) divided by (Value 2)
+            [/LIST]
+          [*][B]int2[/B] - Value 2 for calculating
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        Return calculated value.
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Calculate and compare it
+if
+  cmp( cal("1000","+","500") , ">=", "1500")
+then
+  ...
+endif;
+
+# Multiplication
+alert(
+  "4000 * 200",
+  "Result: "+cal("4000","*","200")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]LOGICAL FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]iif[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Inline IF. Compare something in first argument, and return true_value if the logical return true, and false_value if false
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]returned_value[/SIZE] [B]iif[/B](logic, true_value, false_value);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]logic[/B] - Logical statement same as if/elseif logical sintaxm you can use cmp, or direct comparison like "==", or logical operator like "||", "&&", "!"
+          [*][B]true_value[/B] - True value will be pass in return value if logic was true
+          [*][B]false_value[/B] - False value will be pass in return value if logic was false
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        true_value or false_value depended by logic
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Example to show dual language
+alert(
+  iif(getvar("lang")=="id","Selamat Datang","Welcome"),
+  iif(getvar("lang")!="id","This Only Test","Ini Hanya Test")
+);
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[B]MISC FUNCTIONS[/B]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]exit[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Terminate current Installation Proccess
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]exit[/B](dummy_arguments);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]dummy_arguments[/B] - Edify should pass at least 1 arguments. Just Pass "" for it
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Terminate Installation
+exit("");
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]back[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Back to previous Installation wizard UI
+        [B]NOTE:[/B] Experimental Function
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]back[/B](dummy_arguments);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]dummy_arguments[/B] - Edify should pass at least 1 arguments. Just Pass "" for it
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Back Example - If click no in confirm, it will back to checkbox
+checkbox( .... );
+if
+  confirm("Back","Back to previous Wizard?")
+then
+  back("");
+endif;
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]pleasewait[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Show wait indicator for busy processing.
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]pleasewait[/B](wait_text);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]wait_text[/B] - Text to show in wait interface
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Show wait indicator before running long-time exec
+pleasewait("Please Wait.. Running Exec...");
+resexec("longshell.sh");
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+[INDENT][SIZE="5"][FONT="Century Gothic"][COLOR="Navy"][B]reboot[/B][/COLOR][/FONT][/SIZE]
+  [INDENT]
+    [B]Descriptions:[/B]
+      [INDENT]
+        Reboot device
+      [/INDENT]
+    [B]Sintax:[/B]
+      [INDENT][SIZE="4"]
+        [SIZE="2"]void[/SIZE] [B]reboot[/B](method);
+      [/SIZE][/INDENT]
+    [B]Parameters:[/B]
+      [INDENT]
+        [LIST]
+          [*][B]method[/B] - Reboot Method, "now" : reboot directly, "onfinish" : reboot after installation finished, "cancel" : cancel onfinish reboot
+        [/LIST]
+      [/INDENT]
+    [B]Return Value:[/B]
+      [INDENT]
+        none
+      [/INDENT]
+    [B]Examples:[/B]
+      [INDENT]
+        [CODE]# Reboot Directly
+reboot("now");
+[/CODE]
+      [/INDENT]
+  [/INDENT]
+[/INDENT]
+
+  
   //-- MAIN UI FUNCTIONS (With Next & Back Buttons)
   RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
   RegisterFunction("splash",        AROMA_SPLASH);        //-- SPLASH SCREEN
@@ -1020,18 +1377,4 @@ alert(
   RegisterFunction("textdialog",    AROMA_TEXTDIALOG);    //-- TEXT DIALOG
   RegisterFunction("confirm",       AROMA_CONFIRM);       //-- CONFIRM DIALOG
   
-  //-- DISK INFO FUNCTIONS
-  RegisterFunction("getdisksize",         AROMA_GETPART); //-- GET DISK SIZE
-  RegisterFunction("getdiskfree",         AROMA_GETPART); //-- GET DISK FREE
-  RegisterFunction("getdiskusedpercent",  AROMA_GETPART); //-- GET DISKUSAGE AS PERCENTAGE
   
-  //-- COMPARISON & MATH
-  RegisterFunction("cmp", AROMA_CMP);                     //-- COMPARE INTEGER
-  RegisterFunction("cal", AROMA_CAL);                     //-- CALCULATE INTEGER
-  RegisterFunction("iif", AROMA_IIF);                     //-- INLINE IF
-  
-  //-- ETC
-  RegisterFunction("exit",          AROMA_EXIT);          //-- TERMINATE PROCCESS
-  RegisterFunction("back",          AROMA_BACK);          //-- BACK TO PREVIOUS WIZARD
-  RegisterFunction("pleasewait",    AROMA_PLEASEWAIT);    //-- SHOW WAIT SCREEN
-  RegisterFunction("reboot",        AROMA_REBOOT);        //-- REBOOT DEVICE

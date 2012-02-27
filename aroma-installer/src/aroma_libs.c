@@ -32,6 +32,17 @@ long alib_tick(){
   struct tms tm;
   return times(&tm);
 }
+char * ai_rtrim(char * chr){
+  char * res = chr;
+  int i;
+  for (i=strlen(res)-1;i>=0;i--){
+    if ((res[i]==' ')||(res[i]=='\n')||(res[i]=='\r')||(res[i]=='\t')){
+      res[i]=0;
+    }
+    else break;
+  }
+  return res;
+}
 char * ai_trim(char * chr){
   char * res = chr;
   char   off = 0;
@@ -156,20 +167,38 @@ int alib_diskusage(const char * path){
     return 100-perc;
   } 
 }
-long alib_disksize(const char * path){
+byte alib_disksize(const char * path, unsigned long * ret, int division){
   struct statvfs fiData;
   if((statvfs(path,&fiData))<0) {
-    return -1;
+    return 0;
   } else {
-    return (fiData.f_blocks*fiData.f_bsize);
+    if (ret!=NULL){
+      double block = ((double) fiData.f_blocks) / division;
+      double sizek = block * fiData.f_bsize;
+      
+      if (block == (sizek/fiData.f_bsize))
+        ret[0] = round(sizek);
+      else
+        return 0;
+    }
+    return 1;
   }
 }
-long alib_diskfree(const char * path){
+byte alib_diskfree(const char * path, unsigned long * ret, int division){
   struct statvfs fiData;
   if((statvfs(path,&fiData))<0) {
-    return -1;
+    return 0;
   } else {
-    return (fiData.f_bfree*fiData.f_bsize);
+    if (ret!=NULL){
+      double block = ((double) fiData.f_bfree) / division;
+      double sizek = block * fiData.f_bsize;
+      
+      if (block == (sizek/fiData.f_bsize))
+        ret[0] = round(sizek);
+      else
+        return 0;
+    }
+    return 1;
   }
 }
 void alib_exec(char * cmd, char * arg){

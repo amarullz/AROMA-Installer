@@ -204,7 +204,13 @@ static void *aroma_install_package(void *cookie){
   //-- Start Installer
   pid_t pid = fork();
   if (pid == 0) {
-      setenv("UPDATE_PACKAGE", getArgv(1), 1);
+      setenv("UPDATE_PACKAGE",  getArgv(1), 1);
+      setenv("AROMA_TMP",       AROMA_TMP, 1);
+      setenv("AROMA_VERSION",   AROMA_VERSION, 1);
+      setenv("AROMA_BUILD",     AROMA_BUILD, 1);
+      setenv("AROMA_BUILD_CN",  AROMA_BUILD_CN, 1);
+      setenv("AROMA_NAME",      AROMA_NAME, 1);
+      setenv("AROMA_COPY",      AROMA_COPY, 1);
       
       dup2(pipefd[1],STDOUT_FILENO);
       dup2(pipefd[1],STDERR_FILENO);
@@ -274,7 +280,7 @@ static void *aroma_install_package(void *cookie){
         if (str) {
           if (str[0]=='@'){
             char tmpbuf[256];
-            snprintf(tmpbuf,255,"<#%02x%02x%02x><b>%s</b></#>",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),str+1);
+            snprintf(tmpbuf,255,"<#selectbg_g><b>%s</b></#>",str+1);
             actext_appendtxt(ai_buftxt,tmpbuf);
             fprintf(fpi,"%s\n",tmpbuf);
             char * t_trimmed = ai_trim(str+1);
@@ -292,14 +298,14 @@ static void *aroma_install_package(void *cookie){
       } else if (strcmp(command, "minzip:") == 0) {
         char* minzipcmd = ai_trim(strtok(NULL, "\""));
         if (strcmp(minzipcmd,"Extracted file")==0){
-          char* filename = strtok(NULL, "\"\n");
+          char* filename = strtok(NULL, "\" \n");
           char* fstr=ai_fixlen(filename,"Extract:");
           if (fstr!=NULL){
-            snprintf(ai_progress_info,100,"<#%02x%02x%02x>Extract:</#>%s",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),fstr);
+            snprintf(ai_progress_info,100,"<#selectbg_g>Extract:</#>%s",fstr);
             free(fstr);
           }
           else{
-            snprintf(ai_progress_info,100,"<#%02x%02x%02x>Extract:</#>%s",ag_r(acfg()->selectbg_g),ag_g(acfg()->selectbg_g),ag_b(acfg()->selectbg_g),filename);
+            snprintf(ai_progress_info,100,"<#selectbg_g>Extract:</#>%s",filename);
           }
           fprintf(fp,"    Extract: %s\n",filename);
           if (ai_progress_fract_n>0){

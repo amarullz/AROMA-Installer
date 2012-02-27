@@ -191,6 +191,20 @@ byte ag_init(){
     }
     else{
       ag_32     = 1;
+      
+      if (ag_fbv.red.msb_right!=0){
+        //-- Swap Offset for Most Significant Bit = Right
+        int of_r = ag_fbv.red.offset;
+        int of_g = ag_fbv.green.offset;
+        int of_b = ag_fbv.blue.offset;
+        int of_a = ag_fbv.transp.offset;
+        ag_fbv.red.offset   = of_a;
+        ag_fbv.green.offset = of_b;
+        ag_fbv.blue.offset  = of_g;
+        ag_fbv.transp.offset= of_r;
+      }
+      
+      //-- Memory Allocation
       ag_fbuf32 = (byte*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
       ag_bf32   = (dword*) malloc(ag_fbsz);
       ag_bz32   = (dword*) malloc(ag_fbsz);
@@ -221,13 +235,14 @@ byte ag_init(){
   }
   return 0;
 }
-
-//-- RELEASE AMARULLZ GRAPHIC
-void ag_close(){
+void ag_close_thread(){
   ag_isrun=0;
   pthread_join(ag_pthread,NULL);
   pthread_detach(ag_pthread);
-  
+}
+
+//-- RELEASE AMARULLZ GRAPHIC
+void ag_close(){
   if (ag_fbv.bits_per_pixel!=16){
     /*
     if (ag_bf32!=NULL) free(ag_bf32);
@@ -341,25 +356,47 @@ void ag_busyprogress(){
   int bs_w2= bs_w/2;
   int x,y;
   if (ag_32==1){
-    for (x=bs_x;x<bs_x+bs_w;x++){
-      if ((x+ag_busypos)%(bs_h*2)<bs_h){
-        int i=x-bs_x;
-        int alp;
-        if (i<bs_w2)
-          alp = ((i*255)/bs_w2);
-        else
-          alp = (((bs_w-i)*255)/bs_w2);
-        alp=min(alp,255);
-    
-        for (y=bs_y;y<bs_y+bs_h;y++){
-          int yp = y * ag_fbv.xres;
-          int xy  = yp+x;
-          
-          int dxy = (ag_fbf.line_length*y)+(x*agclp);
-          ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]  =alp;
-          ag_fbuf32[dxy+(ag_fbv.green.offset>>3)]=alp;
-          ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)] =alp;
-          //ag_rgb32(alp,alp,alp);
+    if (agclp==4){      
+      for (x=bs_x;x<bs_x+bs_w;x++){
+        if ((x+ag_busypos)%(bs_h*2)<bs_h){
+          int i=x-bs_x;
+          int alp;
+          if (i<bs_w2)
+            alp = ((i*255)/bs_w2);
+          else
+            alp = (((bs_w-i)*255)/bs_w2);
+          alp=min(alp,255);
+          for (y=bs_y;y<bs_y+bs_h;y++){
+            int yp = y * ag_fbv.xres;
+            int xy  = yp+x;
+            int dxy = (ag_fbf.line_length*y)+(x*agclp);
+            
+            *((dword*) (ag_fbuf32+dxy)) =
+              (alp << ag_fbv.red.offset)|
+              (alp << ag_fbv.green.offset)|
+              (alp << ag_fbv.blue.offset);
+          }
+        }
+      }
+    }
+    else{
+      for (x=bs_x;x<bs_x+bs_w;x++){
+        if ((x+ag_busypos)%(bs_h*2)<bs_h){
+          int i=x-bs_x;
+          int alp;
+          if (i<bs_w2)
+            alp = ((i*255)/bs_w2);
+          else
+            alp = (((bs_w-i)*255)/bs_w2);
+          alp=min(alp,255);
+          for (y=bs_y;y<bs_y+bs_h;y++){
+            int yp = y * ag_fbv.xres;
+            int xy  = yp+x;
+            int dxy = (ag_fbf.line_length*y)+(x*agclp);
+            ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]  =alp;
+            ag_fbuf32[dxy+(ag_fbv.green.offset>>3)]=alp;
+            ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)] =alp;
+          }
         }
       }
     }
@@ -386,15 +423,30 @@ void ag_busyprogress(){
 }
 void ag32fbufcopy(dword * bfbz){
   int x,y;
-  for (y=0;y<ag_fbv.yres;y++){
-    int yp = y * ag_fbv.xres;
-    int yd = (ag_fbf.line_length*y);
-    for (x=0;x<ag_fbv.xres;x++){
-      int xy = yp+x;
-      int dxy= yd+(x*agclp);
-      ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]   = ag_r32(bfbz[xy]);
-      ag_fbuf32[dxy+(ag_fbv.green.offset>>3)] = ag_g32(bfbz[xy]);
-      ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]  = ag_b32(bfbz[xy]);
+  if (agclp==4){
+    for (y=0;y<ag_fbv.yres;y++){
+      int yp = y * ag_fbv.xres;
+      int yd = (ag_fbf.line_length*y);
+      for (x=0;x<ag_fbv.xres;x++){
+        int xy = yp+x;
+        *((dword*) (ag_fbuf32+yd+(x*agclp))) =
+            (ag_r32(bfbz[xy]) << ag_fbv.red.offset)|
+            (ag_g32(bfbz[xy]) << ag_fbv.green.offset)|
+            (ag_b32(bfbz[xy]) << ag_fbv.blue.offset);
+      }
+    }
+  }
+  else{
+    for (y=0;y<ag_fbv.yres;y++){
+      int yp = y * ag_fbv.xres;
+      int yd = (ag_fbf.line_length*y);
+      for (x=0;x<ag_fbv.xres;x++){
+        int xy = yp+x;
+        int dxy= yd+(x*agclp);
+        ag_fbuf32[dxy+(ag_fbv.red.offset>>3)]   = ag_r32(bfbz[xy]);
+        ag_fbuf32[dxy+(ag_fbv.green.offset>>3)] = ag_g32(bfbz[xy]);
+        ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]  = ag_b32(bfbz[xy]);
+      }
     }
   }
 }
@@ -1128,21 +1180,88 @@ byte ag_fontwidth(char c,byte isbig){
 }
 int ag_tabwidth(int x, byte isbig){
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
-  int spacesz = fnt->fw[0]*4;
+  int spacesz = fnt->fw[0]*8;
   return (spacesz-(x%spacesz));
 }
-byte ag_check_escape(char * soff, const char ** ssource, char * buf){
+
+//-- Colorset
+static char ag_colorsets[28][14]={
+  "#winbg",
+  "#winbg_g",
+  "#winfg",
+  "#winfg_gray",
+  "#dialogbg",
+  "#dialogbg_g",
+  "#dialogfg",
+  "#textbg",
+  "#textfg",
+  "#textfg_gray",
+  "#controlbg",
+  "#controlbg_g",
+  "#controlfg",
+  "#selectbg",
+  "#selectbg_g",
+  "#selectfg",
+  "#titlebg",
+  "#titlebg_g",
+  "#titlefg",
+  "#dlgtitlebg",
+  "#dlgtitlebg_g",
+  "#dlgtitlefg",
+  "#scrollbar",
+  "#navbg",
+  "#navbg_g",
+  "#border",
+  "#border_g",
+  "#progressglow"
+};
+//-- get Color By Index
+color ag_getcolorset(int color_index){
+  color cl=0;
+  switch(color_index){
+    case 0:  cl=acfg()->winbg; break;
+    case 1:  cl=acfg()->winbg_g; break;
+    case 2:  cl=acfg()->winfg; break;
+    case 3:  cl=acfg()->winfg_gray; break;
+    case 4:  cl=acfg()->dialogbg; break;
+    case 5:  cl=acfg()->dialogbg_g; break;
+    case 6:  cl=acfg()->dialogfg; break;
+    case 7:  cl=acfg()->textbg; break;
+    case 8:  cl=acfg()->textfg; break;
+    case 9:  cl=acfg()->textfg_gray; break;
+    case 10: cl=acfg()->controlbg; break;
+    case 11: cl=acfg()->controlbg_g; break;
+    case 12: cl=acfg()->controlfg; break;
+    case 13: cl=acfg()->selectbg; break;
+    case 14: cl=acfg()->selectbg_g; break;
+    case 15: cl=acfg()->selectfg; break;
+    case 16: cl=acfg()->titlebg; break;
+    case 17: cl=acfg()->titlebg_g; break;
+    case 18: cl=acfg()->titlefg; break;
+    case 19: cl=acfg()->dlgtitlebg; break;
+    case 20: cl=acfg()->dlgtitlebg_g; break;
+    case 21: cl=acfg()->dlgtitlefg; break;
+    case 22: cl=acfg()->scrollbar; break;
+    case 23: cl=acfg()->navbg; break;
+    case 24: cl=acfg()->navbg_g; break;
+    case 25: cl=acfg()->border; break;
+    case 26: cl=acfg()->border_g; break;
+    case 27: cl=acfg()->progressglow; break;
+  };
+  return cl;
+}
+byte ag_check_escape(char * soff, const char ** ssource, char * buf, byte realescape, byte * o){
   const char * s = *ssource;
   char off = *soff;
   int  i=0;
-  char tb[8];
+  char tb[15];
   
-  if ((off=='\\')&&(*s=='<')){ *soff = *s++; *ssource=s; }
-  else if ((off=='<')&&((*s=='u')||(*s=='b')||(*s=='#')||(*s=='/'))){
+  if ((off=='\\')&&(*s=='<')){ *soff = *s++; *ssource=s; if (o!=NULL) *o=1; }
+  else if ((off=='<')&&((*s=='u')||(*s=='b')||(*s=='q')||(*s=='*')||(*s=='@')||(*s=='#')||(*s=='/'))){
     const char * sv = s;
-    memset(tb,0,8);
+    memset(tb,0,15);
     byte foundlt = 0;
-    for (i=0;i<8;i++){
+    for (i=0;i<15;i++){
       char cv=*sv++;
       if (cv=='>'){
         tb[i]   = 0;
@@ -1152,14 +1271,44 @@ byte ag_check_escape(char * soff, const char ** ssource, char * buf){
       tb[i]=cv;
     }
     if (foundlt){
+      if (tb[0]=='#'){
+        int ci=0;
+        for (ci=0;ci<28;ci++){
+          if (strcmp(tb,ag_colorsets[ci])==0){
+            if (buf!=NULL){
+              if (realescape){
+                snprintf(buf,15,tb);
+              }
+              else{
+                color ccolor=ag_getcolorset(ci);
+                snprintf(buf,8,"#%02x%02x%02x",ag_r(ccolor),ag_g(ccolor),ag_b(ccolor));
+              }
+            }
+            *ssource=sv;
+            return 1;
+          }
+        }
+      }
+      
       if (
           (strcmp(tb,"u")==0)||
           (strcmp(tb,"/u")==0)||
           (strcmp(tb,"b")==0)||
           (strcmp(tb,"/b")==0)||
+          (strcmp(tb,"q")==0)||
+          (strcmp(tb,"/q")==0)||
+          (strcmp(tb,"*")==0)||
+          (strcmp(tb,"/*")==0)||
           (strcmp(tb,"/#")==0)||
-          (strlen(tb)==4)||
-          (strlen(tb)==7)
+          (strcmp(tb,"/@")==0)||
+          
+          //-- ALIGN
+          (strcmp(tb,"@left")==0)||
+          (strcmp(tb,"@right")==0)||
+          (strcmp(tb,"@center")==0)||
+          (strcmp(tb,"@fill")==0)||
+          
+          ((tb[0]=='#') && ((strlen(tb)==4)||(strlen(tb)==7)))
       ){
         if (buf!=NULL) sprintf(buf,"%s",tb);
         *ssource=sv;
@@ -1177,8 +1326,11 @@ int ag_txtwidth(const char *s, byte isbig){
   char tb[8];
   char off;
   while((off = *s++)){
-    if (ag_check_escape(&off,&s,NULL)) continue;
-    w+=ag_fontwidth(off,isbig);
+    if (ag_check_escape(&off,&s,NULL,1,NULL)) continue;
+    if (off=='\t')
+      w+=ag_tabwidth(w,isbig);
+    else
+      w+=ag_fontwidth(off,isbig);
   }    
   return w;
 }
@@ -1186,8 +1338,350 @@ int ag_fontheight(byte isbig){
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
   return fnt->fh;
 }
-//-- Calculate Text Width
+//-- Draw Text
+byte ag_text(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
+  return ag_text_ex(_b,maxwidth,x,y,s,cl_def,isbig,0);
+}
+byte ag_textf(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
+  return ag_text_ex(_b,maxwidth,x,y,s,cl_def,isbig,1);
+}
+byte ag_text_ex(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor){
+  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,forcecolor,1);
+}
+byte ag_texts(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
+  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,0,0);
+}
+byte ag_textfs(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
+  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,1,0);
+}
+
+//############################ NEW TEXT HANDLER
+int ag_txt_getline(const char * s, int maxwidth_ori, byte isbig, byte * ischangealign, int * indent, int * next_indent, byte * endofstring){
+  char tb[15];//-- Escape Data
+  char c=0;   //-- Current Char
+  byte o=0;   //-- Previous Char
+  int  l=0;   //-- Line String Length
+  int  w=0;   //-- Current Width
+  int  p=-1;  //-- Previous Space Pos
+  int  maxwidth = maxwidth_ori - indent[0];
+  int  indentsz = ag_fontwidth(' ',isbig)+ag_fontwidth(0xa9,isbig);
+  byte fns=0; //-- No Space Exists
+  while ((c=*s++)){
+    if (ag_check_escape(&c,&s,tb,1,&o)){
+      if (w>0){
+        if  (
+              (strcmp(tb,"/@")==0)||
+              (strcmp(tb,"@left")==0)||
+              (strcmp(tb,"@right")==0)||
+              (strcmp(tb,"@center")==0)||
+              (strcmp(tb,"@fill")==0)
+            ){
+          if (ischangealign!=NULL) ischangealign[0]=1;
+          if (*s=='\n') return (l+3+strlen(tb));
+          return l;
+        }
+        else if ((strcmp(tb,"/q")==0)||(strcmp(tb,"/*")==0)){
+          next_indent[0]=indent[0]-indentsz;
+          if (next_indent[0]<0) next_indent[0] = 0;
+          
+          if (fns){
+            if (ischangealign!=NULL) ischangealign[0]=1;
+            if (*s=='\n') return (l+3+strlen(tb));
+            return l;
+          }
+          else{
+            indent[0]=next_indent[0];
+            maxwidth = maxwidth_ori - indent[0];
+          }
+        }
+        else if ((strcmp(tb,"q")==0)||(strcmp(tb,"*")==0)) {
+          next_indent[0]=indent[0]+indentsz;
+          if (next_indent[0]>indentsz*5) next_indent[0] = indentsz*5;
+          
+          if (fns){
+            if (ischangealign!=NULL) ischangealign[0]=1;
+            if (*s=='\n') return (l+3+strlen(tb));
+            return l;
+          }
+          else{
+            indent[0]=next_indent[0];
+            maxwidth = maxwidth_ori - indent[0];
+          }
+        }
+      }
+      else if ((strcmp(tb,"/q")==0)||(strcmp(tb,"/*")==0)){
+        w=0;
+        indent[0]-=indentsz;
+        if (indent[0]<0) indent[0] = 0;
+        next_indent[0]=indent[0];
+        maxwidth = maxwidth_ori - indent[0];
+      }
+      else if ((strcmp(tb,"q")==0)||(strcmp(tb,"*")==0)){
+        w=0;
+        indent[0]+=indentsz;
+        if (indent[0]>indentsz*5) indent[0] = indentsz*5;
+        next_indent[0]=indent[0];
+        maxwidth = maxwidth_ori - indent[0];
+      }
+      l+=2+strlen(tb);
+      p=l;
+    }
+    else{
+      if (c=='\n'){
+        if (ischangealign!=NULL) ischangealign[0]=1;
+        return l+1;
+      }
+      else if (c=='\t')
+        w+=ag_tabwidth(w,isbig);
+      else
+        w+=ag_fontwidth(c,isbig);
+      
+      if (w>maxwidth){
+        if (p==-1)
+          return l;
+        return p;
+      }
+      else if ((c==' ')||(c=='\t')){
+        l++;
+        p=l;
+      }
+      else if (c=='<'){
+        l++;
+        if (o) l++;
+        fns=1;
+      }
+      else{
+        l++;
+        fns=1;
+      }
+    }
+    o = 0;
+  }
+  endofstring[0]=1;
+  return l;
+}
+char * ag_substring(const char * s, int len){
+  if (len<1) return NULL;
+
+  char * ln = malloc(len+1);
+  memset(ln,0,len+1);
+  
+  int i;
+  for (i=0;i<len;i++){
+    if (s[i]=='\n') break;
+    ln[i]=s[i];
+  }
+  return ln;
+}
 int ag_txtheight(int maxwidth, const char *s, byte isbig){
+  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
+  if (!fnt->loaded) return 0;
+  int  fheight = fnt->fh;
+  
+  int indent= 0;
+  int lines = 0;
+  while (*s!=0){
+    int next_indent = indent;
+    byte eos = 0;
+    int line_width  = ag_txt_getline(s,maxwidth,isbig,NULL,&indent,&next_indent,&eos);
+    if (line_width==0) break;
+    lines++;
+    s+=line_width;
+    indent=next_indent;
+    if (eos) break;
+  }
+  return (lines*fheight);
+}
+
+byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor,byte multiline){
+  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
+  if (!fnt->loaded) return 0;
+  if (_b==NULL) _b=&ag_c;
+  if (!maxwidth) maxwidth = _b->w-x;
+
+  int  fheight = fnt->fh;
+  
+  char tb[8];         //-- Escape Data
+  byte bold = 0;      //-- Bold
+  byte undr = 0;      //-- Underline
+  byte algn = 0;      //-- Alignment
+  color cl  = cl_def; //-- Current Color
+  int  cx   = x;
+  int indent= 0;
+  while (*s!=0){
+    byte chalign   = 0;
+    int next_indent= indent;
+    byte eos = 0;
+    int line_width = ag_txt_getline(s,maxwidth,isbig,&chalign,&indent,&next_indent,&eos);
+    if (line_width==0) break;
+    
+    char * bf=ag_substring(s,line_width);
+    if (bf!=NULL){
+      const char * line_string  = ai_rtrim(bf);
+      int lwpx                  = ag_txtwidth(line_string,isbig);
+      int ldpx                  = (maxwidth-indent)-lwpx;
+      char off                  = 0;
+      
+      //-- Alignment
+      if (algn==1)
+        cx=ldpx/2 + x + indent;
+      else if (algn==2)
+        cx=ldpx + x + indent;
+      else
+        cx=x + indent;
+      
+      int first_cx = cx;
+      
+      int sp_n    = 0;    //-- space count
+      int * sp_v  = NULL; //-- space add sz
+      if (chalign==0){
+        if (algn==3){
+          sp_n=0;
+          char vc = 0;
+          byte vf =0;
+          const char * lstr = line_string;
+          while((vc = *lstr++)){
+            if (!ag_check_escape(&vc,&lstr,NULL,1,NULL)){
+              if (vc=='\t'){
+                sp_n = 0;
+                break;
+              }
+              else if (vf){
+                if (vc==' ') sp_n++;
+              }
+              else if(vc!=' ') vf = 1;
+            }
+          }
+        }
+        if (sp_n>0){
+          sp_v    = malloc(sizeof(int) * sp_n);
+          memset(sp_v,0,sizeof(int) * sp_n);
+          int pn  = 0;
+          int pz  = lwpx;
+          while (pz<maxwidth-indent){
+            sp_v[pn]++;
+            pz++;
+            if (++pn>sp_n-1) pn=0;
+          }
+        }
+      }
+      
+      byte first_space=0;
+      int  space_pos  =0;
+      while((off = *line_string++)){
+        if (ag_check_escape(&off,&line_string,tb,0,NULL)){
+          if (strcmp(tb,"/#")==0){
+            if (!forcecolor) cl=cl_def;
+          }
+          else if ((tb[0]=='#')&&((strlen(tb)==4)||(strlen(tb)==7))){
+            if (!forcecolor) cl=strtocolor(tb);
+          }
+          else if (strcmp(tb,"*")==0){
+            if (indent>0){
+              int vcx = (first_space)?cx:first_cx;
+              ag_drawchar_ex(_b,vcx-(ag_fontwidth(' ',isbig)+ag_fontwidth(0xa9,isbig)),y,0xa9,cl,isbig,0,0);
+              if (!first_space) cx = first_cx;
+            }
+          }
+          else if (strcmp(tb,"/u")==0)      undr=0;
+          else if (strcmp(tb,"u")==0)       undr=1;
+          else if (strcmp(tb,"/b")==0)      bold=0;
+          else if (strcmp(tb,"b")==0)       bold=1;
+          else if (strcmp(tb,"@center")==0){
+            algn=1;
+            cx = ldpx/2 + x + indent;
+            first_cx = cx;
+          }
+          else if (strcmp(tb,"@right")==0){
+            algn=2;
+            cx = ldpx + x + indent;
+            first_cx = cx;
+          }
+          else if (strcmp(tb,"@fill")==0){
+            algn=3;
+            cx = x + indent;
+            first_cx = cx;
+            
+            if (chalign==0){
+              sp_n=0;
+              char vc = 0;
+              byte vf =0;
+              const char * lstr = line_string;
+              while((vc = *lstr++)){
+                if (!ag_check_escape(&vc,&lstr,NULL,1,NULL)){
+                  if (vc=='\t'){
+                    sp_n = 0;
+                    break;
+                  }
+                  else if (vf){
+                    if (vc==' ') sp_n++;
+                  }
+                  else if(vc!=' ') vf = 1;
+                }
+              }
+              
+              if (sp_n>0){
+                sp_v    = malloc(sizeof(int) * sp_n);
+                memset(sp_v,0,sizeof(int) * sp_n);
+                int pn  = 0;
+                int pz  = lwpx;
+                while (pz<maxwidth-indent){
+                  sp_v[pn]++;
+                  pz++;
+                  if (++pn>sp_n-1) pn=0;
+                }
+              }
+            }
+          }
+          else if ((strcmp(tb,"@left")==0)||(strcmp(tb,"/@")==0)){
+            algn=0;
+            cx = x + indent;
+            first_cx = cx;
+          }
+        }
+        else{          
+          int fwidth = 0;
+          if (off=='\t'){
+            fwidth = ag_tabwidth(cx-x,isbig);
+          }
+          else{
+            fwidth = ag_fontwidth(off,isbig);
+            ag_drawchar_ex(_b,cx,y,off,cl,isbig,undr,bold);
+          }
+          
+          if (first_space){
+            if(off==' '){
+              if (sp_n>space_pos){
+                fwidth+=sp_v[space_pos];
+                space_pos++;
+              }
+            }
+          }
+          else if(off!=' ') first_space = 1;
+          
+          cx+= fwidth;
+        }
+      }
+      
+      if (sp_v!=NULL) free(sp_v);
+      free(bf);
+    }
+    
+    if (!multiline) break;
+    
+    indent=next_indent;
+    y+=fheight;
+    s+=line_width;
+    
+    if (eos) break;
+  }
+  return 1;
+}
+
+//############################ OLD TEXT HANDLER
+//-- Calculate Text Width
+/*****
+int ag_txtheight_(int maxwidth, const char *s, byte isbig){
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
   if (!fnt->loaded) return 0;
   char off;
@@ -1197,7 +1691,7 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
   int  prevspace=0;
   byte onlongtext=0;
   while((off = *s++)){
-    if (ag_check_escape(&off,&s,NULL)) continue;
+    if (ag_check_escape(&off,&s,NULL,1)) continue;
     if (off=='\n'){
       curx = 0;
       y+=fheight;
@@ -1209,7 +1703,7 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
         const char * ss = s;
         char cf;
         while ((cf=*ss++)){
-          if (ag_check_escape(&cf,&ss,NULL)) continue;
+          if (ag_check_escape(&cf,&ss,NULL,1)) continue;
           if (cf=='\t')
             nextspacew+=ag_tabwidth(curx+nextspacew,isbig);
           else
@@ -1218,6 +1712,10 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
         }
       }
       if (nextspacew>maxwidth){
+        if (curx>0){
+          curx = 0;
+          y+=fheight;
+        }
         onlongtext = 1;
         nextspacew = 0;
       }
@@ -1251,23 +1749,8 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
   if (curx==0) return y;
   return (y+fheight);
 }
-//-- Draw Text
-byte ag_text(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
-  return ag_text_ex(_b,maxwidth,x,y,s,cl_def,isbig,0);
-}
-byte ag_textf(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
-  return ag_text_ex(_b,maxwidth,x,y,s,cl_def,isbig,1);
-}
-byte ag_text_ex(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor){
-  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,forcecolor,1);
-}
-byte ag_texts(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
-  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,0,0);
-}
-byte ag_textfs(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig){
-  return ag_text_exl(_b,maxwidth,x,y,s,cl_def,isbig,1,0);
-}
-byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor,byte multiline){
+
+byte ag_text_exl_(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor,byte multiline){
   if (_b==NULL) _b=&ag_c;
   if (!maxwidth) maxwidth = _b->w-x;
   
@@ -1285,7 +1768,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
   byte  onlongtext    = 0;
   
   while((off = *s++)){
-    if (ag_check_escape(&off,&s,tb)){
+    if (ag_check_escape(&off,&s,tb,0)){
       if (strcmp(tb,"/#")==0){
         if (!forcecolor) cl=cl_def;
       }
@@ -1319,7 +1802,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
         const char * ss = s;
         char cf;
         while ((cf=*ss++)){
-          if (ag_check_escape(&cf,&ss,NULL)) continue;
+          if (ag_check_escape(&cf,&ss,NULL,1)) continue;
           if (cf=='\t')
             nextspacew+=ag_tabwidth(curx+nextspacew-x,isbig);
           else
@@ -1328,6 +1811,11 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
         }
       }
       if (nextspacew>maxwidth){
+        if (curx-x>0){
+          if (!multiline) break;
+          curx = x;
+          y+=fheight;
+        }
         onlongtext = 1;
         nextspacew = 0;
       }
@@ -1366,3 +1854,4 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
   }
   return 1;
 }
+*****/
