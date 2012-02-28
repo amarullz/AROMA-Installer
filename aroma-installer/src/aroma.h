@@ -65,8 +65,8 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "1.60"
-#define AROMA_BUILD       "120227-026"
+#define AROMA_VERSION     "1.61"
+#define AROMA_BUILD       "120228-027"
 #define AROMA_BUILD_CN    "Cempaka"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -74,8 +74,8 @@
 #define AROMA_COPY        "(c) 2012 by amarullz xda-developers"
 
 //-- Temporary Dir - Move from /tmp/aroma-data to /tmp/aroma symlink to /tmp/aroma-data for backward compatibility
-//#define AROMA_SYSTMP      "/tmp"
-#define AROMA_SYSTMP      "/data"
+#define AROMA_SYSTMP      "/tmp"
+//#define AROMA_SYSTMP      "/data"
 #define AROMA_TMP         AROMA_SYSTMP "/aroma"
 #define AROMA_TMP_S       AROMA_SYSTMP "/aroma-data"
 
@@ -433,6 +433,7 @@ CANVAS *  agc();          // Get Main AROMA Graph Canvas
 byte      ag_init();      // Init AROMA Graph and Framebuffers
 void      ag_close_thread(); // Close Graph Thread
 void      ag_close();     // Close AROMA Graph and Framebuffers
+void      ag_changecolorspace(int r, int g, int b, int a); // Change Color Space
 
 void      ag_sync();                        // Sync Main Canvas with Framebuffer
 int       agw();                            // Get Display X Resolution

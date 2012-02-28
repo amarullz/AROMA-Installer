@@ -125,6 +125,32 @@ dword ag_calculatealpha16to32(color dcl,dword scl,byte l){
   byte b = (byte) (((((int) ag_b(dcl)) * ralpha) + (((int) ag_b32(scl)) * l)) >> 8);
   return ag_rgb32(r,g,b);
 }
+void ag_changecolorspace(int r, int g, int b, int a){
+  if (ag_32){
+    ag_fbv.red.offset   = r;
+    ag_fbv.green.offset = g;
+    ag_fbv.blue.offset  = b;
+    ag_fbv.transp.offset= a;
+    
+    ag_blank(NULL); //-- 32bit Use Blank
+
+    int x,y;
+    for (y=0;y<ag_fbv.yres;y++){
+      int yp = y * ag_fbv.xres;
+      int yd = (ag_fbf.line_length*y);
+      for (x=0;x<ag_fbv.xres;x++){
+        int xy = yp+x;
+        int dxy= yd+(x*agclp);
+        ag_bf32[xy] = ag_rgb32(
+          ag_fbuf32[dxy+(ag_fbv.red.offset>>3)],
+          ag_fbuf32[dxy+(ag_fbv.green.offset>>3)],
+          ag_fbuf32[dxy+(ag_fbv.blue.offset>>3)]);
+        ag_setpixel(&ag_c,x,y,ag_rgbto16(ag_bf32[xy]));
+      }
+    }
+    
+  }
+}
 
 /*********************************[ FUNCTIONS ]********************************/
 //-- INITIALIZING AMARULLZ GRAPHIC
@@ -191,18 +217,6 @@ byte ag_init(){
     }
     else{
       ag_32     = 1;
-      
-      if (ag_fbv.red.msb_right!=0){
-        //-- Swap Offset for Most Significant Bit = Right
-        int of_r = ag_fbv.red.offset;
-        int of_g = ag_fbv.green.offset;
-        int of_b = ag_fbv.blue.offset;
-        int of_a = ag_fbv.transp.offset;
-        ag_fbv.red.offset   = of_a;
-        ag_fbv.green.offset = of_b;
-        ag_fbv.blue.offset  = of_g;
-        ag_fbv.transp.offset= of_r;
-      }
       
       //-- Memory Allocation
       ag_fbuf32 = (byte*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);

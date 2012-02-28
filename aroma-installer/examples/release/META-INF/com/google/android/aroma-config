@@ -39,6 +39,20 @@
 #
 ###
 
+##
+# Fix Colorspace Issue
+#
+# For device which have a problem with color ( not display the correct color )
+# try to set "force_colorspace" with ini_set. It may caused by wrong framebuffer
+# information that passed by kernel into framebuffer device.
+#
+# You can use one of following values:
+#   "rgba", "abgr", "argb", "bgra"
+#
+# NOTE: It must be in top most script, or you will got the color flicker
+#
+ini_set("force_colorspace","rgba");
+
 
 ##
 # Calibrate Touchscreen

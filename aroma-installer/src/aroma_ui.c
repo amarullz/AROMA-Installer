@@ -1062,6 +1062,22 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(args[0],"customkeycode_select")==0) acfg()->ckey_select=valkey;
   else if (strcmp(args[0],"customkeycode_back") == 0) acfg()->ckey_back=valkey;
   else if (strcmp(args[0],"customkeycode_menu") == 0) acfg()->ckey_menu=valkey;
+    
+  //-- Force Color Space  
+  else if (strcmp(args[0],"force_colorspace") == 0){
+    if (strcasecmp(args[1],"rgba")==0){
+      ag_changecolorspace(0,8,16,24);
+    }
+    else if(strcasecmp(args[1],"abgr")==0){
+      ag_changecolorspace(24,16,8,0);
+    }
+    else if(strcasecmp(args[1],"argb")==0){
+      ag_changecolorspace(8,16,24,0);
+    }
+    else if(strcasecmp(args[1],"bgra")==0){
+      ag_changecolorspace(16,8,0,24);
+    }
+  }
   
   
   //-- Background Should Be Redrawed
