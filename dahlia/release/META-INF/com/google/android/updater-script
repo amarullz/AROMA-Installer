@@ -1,0 +1,368 @@
+##
+#
+# AROMA Installer - Installer Script
+#       (c) 2011 by Ahmad Amarullah
+#           amarullz - xda-developers
+#
+#       Version 1.60 - TEST updater-script
+#       FOR LEARNING PORPOSE ONLY
+#
+##
+
+##
+#
+# OLD UPDATER-BINARY
+#
+# Here you can use old command for flashing files, like:
+#  mount
+#  umount
+#  delete_recursive
+#  format
+#  package_extract_dir
+#  set_perm_recursive
+#
+
+## CHECKING Configuration from aroma-config
+#
+# Check it using if else statement, with file_getprop
+# in /tmp/aroma
+#
+# Example:
+# if
+#      file_getprop("/tmp/aroma/customize.prop","item.6.3") == "1"
+# then
+#   ... here the command ...
+# endif;
+#
+
+## INFO COMMAND FOR AROMA
+#
+#-- DIFFERENT BEHAVIOUR
+#
+# set_progress(0.5);
+#    Set Progress position: 0.0 = 0%; 0.5 = 50%; 1.0 = 100%
+#    
+# show_progress(0.2, 400);
+#    show_progress( progress size, number of files to be extracted );
+#    if we had 50 files, and want to "add" 0.2 into progress after all finished
+#    use (0.2, 50)
+#
+# show_progress(0.2, "-2000");
+#    show_progress( progress size, wait for 2000ms );
+#    For show progress with time as progress indicator, use negative value. After 2second progress will add 0.2/20% into the value
+#    use (0.2, "-2000"). Note, use quote for value "-2000"
+#
+# ui_print("@ Title");
+#    Set progress title
+#
+# ui_print("Default Text");
+#    Set Normal Log Text
+#
+##
+
+#####################################################################################################
+#
+# EXAMPLES INSTALLER SCRIPT - It won't flash anything.
+#
+# This script will use run_program("/tmp/aroma/sleep","500"); to wait the command to another command
+# in real installation, you don't need it.... so delete the lines
+#
+#
+ui_print("@INFORMATIONS");
+ui_print("This installation was used for testing only.");
+ui_print("It won't flash anything.");
+ui_print(" ");
+ui_print(" ");
+
+set_progress(0.01);
+ui_print("@Mounting & Formating Devices");
+
+set_progress(0.02);
+ui_print("  Mounting /data");
+run_program("/tmp/aroma/sleep","500");
+#
+# Example:
+# unmount("/data");
+# mount("MTD","userdata","/data");
+#
+
+set_progress(0.03);
+ui_print("  Mounting /sd-ext");
+run_program("/tmp/aroma/sleep","500");
+#
+# Example:
+# unmount("/sd-ext");
+# run_program("/sbin/busybox", "mount", "-t", "auto", "/dev/block/mmcblk0p2", "/sd-ext");
+#
+
+set_progress(0.04);
+show_progress(0.05, "-2000"); #-- Example show_progress with time as indicator for 2 second
+ui_print("  Wait for 2 Seconds");
+run_program("/tmp/aroma/sleep","2000");
+#
+# Example:
+# unmount("/system");
+# format("MTD", "system");
+#
+
+set_progress(0.09);
+ui_print("  Mounting /system");
+run_program("/tmp/aroma/sleep","500");
+#
+# Example:
+# mount("MTD", "system", "/system");
+#
+
+set_progress(0.1);
+ui_print(" ");
+ui_print("@Example Progress by Time for 10 Seconds");
+show_progress(0.3, "-10000"); #-- Example show_progress with time as indicator for 10 second
+run_program("/tmp/aroma/sleep","10000");
+set_progress(0.4);
+
+#
+# Example Extract Files
+#
+ui_print(" ");
+ui_print("@Example Progress by Files");
+ui_print("  Extracting Files Into Temporary");
+ui_print("  For Exampling Progress by files");
+show_progress(0.3, "1264");       #-- Example show_progress with files extracted as indicator - 158 x 8 Times files
+
+#-- Extract Then Delete It ( 8x )
+ui_print("  Extract 1");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 2");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 3");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 4");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 5");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 6");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 7");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print("  Extract 8");
+package_extract_dir("", "/tmp"); delete_recursive("/tmp/META-INF"); ui_print(" ");
+
+ui_print(" ");
+set_progress(0.7);
+
+ui_print("@Installing Customize Packages");
+show_progress(0.2, "-5700"); #-- 19 package * 300ms per package = 5700ms
+##---- Customize Packages
+	  
+    # Facebook
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.1.1") == "1"
+    then
+      ui_print("@  Installing Facebook");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+
+    # Twitter
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.1.2") == "1"
+    then
+      ui_print("@  Installing Twitter");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+    # AdobeFlashPlayer
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.1.3") == "1"
+    then
+      ui_print("@  Installing AdobeFlashPlayer");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+    # AdobeReader
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.1.4") == "1"
+    then
+      ui_print("@  Installing AdobeReader");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# EStrongFilemanager
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.2.1") == "1"
+    then
+      ui_print("@  Installing EStrongFilemanager");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# BackupEverything
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.2.2") == "1"
+    then
+      ui_print("@  Installing BackupEverything");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# DaemonController
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.2.3") == "1"
+    then
+      ui_print("@  Installing DaemonController");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# DSPManager
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.2.4") == "1"
+    then
+      ui_print("@  Installing DSPManager");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+    # BookmarksWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.1") == "1"
+    then
+      ui_print("@  Installing BookmarksWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# CalculatorWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.2") == "1"
+    then
+      ui_print("@  Installing CalculatorWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# CalendarWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.3") == "1"
+    then
+      ui_print("@  Installing CalendarWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# ContactWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.4") == "1"
+    then
+      ui_print("@  Installing ContactWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# FMRadioWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.5") == "1"
+    then
+      ui_print("@  Installing FMRadioWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# MusicWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.6") == "1"
+    then
+      ui_print("@  Installing MusicWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# QuickLaunchWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.7") == "1"
+    then
+      ui_print("@  Installing QuickLaunchWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# TrendsWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.8") == "1"
+    then
+      ui_print("@  Installing TrendsWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# GenieWidget
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.3.9") == "1"
+    then
+      ui_print("@  Installing GenieWidget");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# HTCSkins
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.4.1") == "1"
+    then
+      ui_print("@  Installing HTCSkins");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+	
+	# MoreSkins
+    if
+      file_getprop("/tmp/aroma/customize.prop","item.4.2") == "1"
+    then
+      ui_print("@  Installing MoreSkins");
+      run_program("/tmp/aroma/sleep","300");
+    endif;
+
+#--- END OF Customize
+ui_print(" ");
+set_progress(0.9);
+
+#-- Kernel
+ui_print("@Kernel & Mods");
+if
+  file_getprop("/tmp/aroma/mods.prop","selected.1") == "1"
+then
+  ui_print(" 2.6.8 Kernel");
+endif;
+
+if
+  file_getprop("/tmp/aroma/mods.prop","selected.1") == "2"
+then
+  ui_print(" 3.0.0 Kernel");
+endif;
+
+if
+  file_getprop("/tmp/aroma/mods.prop","selected.1") == "3"
+then
+  ui_print(" AROMA Kernel");
+endif;
+run_program("/tmp/aroma/sleep","500");
+set_progress(0.93);
+
+
+#-- Boot Animation
+ui_print(" Boot Animation selected = "+file_getprop("/tmp/aroma/mods.prop","selected.2"));
+run_program("/tmp/aroma/sleep","500");
+set_progress(0.95);
+
+#-- SD-EXT Mods
+ui_print(" SD-EXT Mods selected = "+file_getprop("/tmp/aroma/mods.prop","selected.3"));
+run_program("/tmp/aroma/sleep","500");
+set_progress(0.97);
+
+#-- Input Method
+ui_print(" Input Method selected = "+file_getprop("/tmp/aroma/mods.prop","selected.4"));
+run_program("/tmp/aroma/sleep","500");
+set_progress(0.98);
+
+#-- Camera
+ui_print(" Camera selected = "+file_getprop("/tmp/aroma/mods.prop","selected.5"));
+run_program("/tmp/aroma/sleep","500");
+set_progress(0.99);
+
+ui_print(" ");
+
+#-- Finish
+ui_print(" ");
+ui_print("@Finished");
+set_progress(1);

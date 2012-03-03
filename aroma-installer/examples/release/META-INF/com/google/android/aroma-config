@@ -21,7 +21,7 @@
 #           amarullz - xda-developers
 #           http://www.amarullz.com/
 #
-#       Binary Version  : 1.60
+#       Binary Version  : 1.62
 #       Binary Codename : Cempaka
 #
 ### INFO:
@@ -51,7 +51,7 @@
 #
 # NOTE: It must be in top most script, or you will got the color flicker
 #
-ini_set("force_colorspace","rgba");
+# ini_set("force_colorspace","rgba");
 
 
 ##
@@ -96,10 +96,10 @@ ini_set("force_colorspace","rgba");
 # Initializing Rom Information
 #
 ini_set("rom_name",             "AROMA Test Zip");
-ini_set("rom_version",          "1.60");
+ini_set("rom_version",          "1.62");
 ini_set("rom_author",           "amarullz");
 ini_set("rom_device",           "Any Device");
-ini_set("rom_date",             "Feb, 20 2012");
+ini_set("rom_date",             "Mar, 03 2012");
 
 ##
 # Show Simple Splash

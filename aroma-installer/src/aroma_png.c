@@ -734,5 +734,6 @@ byte apng_stretch(
       }
     }
   }
+  free(qe);
   return 1;
 }

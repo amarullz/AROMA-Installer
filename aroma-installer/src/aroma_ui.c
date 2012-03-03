@@ -2767,6 +2767,7 @@ byte aui_start(){
     }
     free(script_installer.data);
     free(state.errmsg);
+    atheme_releaseall();
     return res;
   }
   else{

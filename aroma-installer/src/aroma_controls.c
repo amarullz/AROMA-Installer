@@ -166,6 +166,7 @@ PNGCANVASP atheme_create(char * key, char * path){
   if (id!=-1){
     PNGCANVAS * ap = malloc(sizeof(PNGCANVAS));
     if (apng_load(ap,path)){
+      atheme_release(key);
       acfg_var.theme[id]=ap;
       int ln = strlen(path)-1;
       acfg_var.theme_9p[id]=0;

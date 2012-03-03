@@ -78,6 +78,8 @@ void acopt_ondestroy(void * x){
   ACONTROLP ctl= (ACONTROLP) x;
   ACOPTDP d  = (ACOPTDP) ctl->d;
   ag_ccanvas(&d->control);
+  ag_ccanvas(&d->control_focused);
+  
   if (d->itemn>0){
     int i;
     for (i=0;i<d->itemn;i++){
