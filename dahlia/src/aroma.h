@@ -76,7 +76,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "2.00"
-#define AROMA_BUILD       "120228-001"
+#define AROMA_BUILD       "120307-002"
 #define AROMA_BUILD_CN    "Dahlia"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -108,6 +108,24 @@ typedef struct{
 	color * data;    // Data 
 } CANVAS;
 
+//
+// AROMA Assosiative Array Structure
+//
+typedef struct{
+  char * key;
+  char * val;
+} AARRAY_ITEM, * AARRAY_ITEMP;
+
+typedef struct{
+  int length;
+  AARRAY_ITEMP items;
+} AARRAY, * AARRAYP;
+
+AARRAYP   aarray_create();
+char *    aarray_get(AARRAYP a, char * key);
+byte      aarray_set(AARRAYP a, char * key, char * val);
+byte      aarray_del(AARRAYP a, char * key);
+byte      aarray_free(AARRAYP a);
 
 //
 // AROMA PNG Canvas Structure
@@ -157,22 +175,31 @@ typedef struct {
 } AFTGLYPH, * AFTGLYPHP;
 
 //
-// AROMA FREETYPE FONT
+// AROMA FREETYPE FONT FACE
 //
 typedef struct {
-  byte      init;   // Initialized
-  FT_Face   face;   // Freetype Face
-  byte      s;      // Size in dp
-  byte      p;      // Size in px
-  byte      h;      // Height in px
-  byte      y;      // Top Margin
-  // byte *    fw;     // Font Width
-  char      zp[256];// Font Zpath
-  AZMEM     mem;
+  FT_Face     face;
+  AFTGLYPHP   cache;
+  long        cache_n;
+  byte        kern;
+  byte *      mem;
+} AFTFACE, * AFTFACEP;
+
+//
+// AROMA FREETYPE FAMILY
+//
+typedef struct {
+  //-- Face Holder
+  AFTFACEP  faces;
+  int       facen;
   
-  AFTGLYPHP c;      // Cache
-  long      cn;     // Cache Num
-} AFTFONT, * AFTFONTP;
+  //-- General Info
+  byte      s;
+  byte      p;
+  byte      h;
+  byte      y;
+  byte      init;
+} AFTFAMILY, * AFTFAMILYP;
 
 //
 // AROMA Touch & Event Structure
@@ -302,23 +329,23 @@ typedef struct  {
   byte  fadeframes;           // Number of Frame used for Fade Transition
   
   // Common Text
-  char  text_ok[32];          // OK
-  char  text_next[32];        // Next >
-  char  text_back[32];        // < Back
+  char  text_ok[64];          // OK
+  char  text_next[64];        // Next >
+  char  text_back[64];        // < Back
   
-  char  text_yes[32];         // Yes
-  char  text_no[32];          // No
-  char  text_about[32];       // About
-  char  text_calibrating[32]; // Calibration Tools
-  char  text_quit[32];        // Quit
-  char  text_quit_msg[64];   // Quit Message
+  char  text_yes[64];         // Yes
+  char  text_no[64];          // No
+  char  text_about[64];       // About
+  char  text_calibrating[64]; // Calibration Tools
+  char  text_quit[64];        // Quit
+  char  text_quit_msg[128];   // Quit Message
   
   // ROM Text
-  char rom_name[64];          // ROM Name
-  char rom_version[64];       // ROM Version
-  char rom_author[64];        // ROM Author
-  char rom_device[64];        // ROM Device Name
-  char rom_date[64];          // ROM Date
+  char rom_name[128];          // ROM Name
+  char rom_version[128];       // ROM Version
+  char rom_author[128];        // ROM Author
+  char rom_device[128];        // ROM Device Name
+  char rom_date[128];          // ROM Date
   
   // CUSTOM KEY
   int ckey_up;
@@ -390,9 +417,19 @@ typedef struct{
 //
 FILE *    apipe();        // Recovery pipe to communicate the command
 byte      aui_start();    // Start AROMA UI
+char *    aui_readfromfs(char * name);
+char *    aui_readfromzip(char * name);
 char*     getArgv(int id);
 void      a_reboot(byte type);
 
+//
+// AROMA Languages Functions
+//
+void alang_release();
+byte alang_load(char * z);
+char * alang_ams(const char * str);
+void acfg_reset_text();
+char * alang_get(char * key);
 
 //
 // AROMA Zip Functions
@@ -407,6 +444,8 @@ byte      az_extract(const char * zpath, const char * dest);            // Extra
 char * aui_parsepropstring(char * buffer,char *key);
 char * aui_readfromzip(char * name);
 void aui_drawnav(CANVAS * bg,int x, int y, int w, int h);
+char * aui_getvar(char * name);
+
 
 //-- .9.png struct
 typedef struct{
@@ -455,14 +494,23 @@ byte apng9_draw(
 //
 // AROMA Freetype Wrapper
 //
-byte aft_open();
-byte aft_close();
-byte aft_fontwidth(int c,byte isbig);
-byte aft_setfontsize(byte size, byte isbig);
-byte aft_spacewidth(byte isbig);
-byte aft_fontheight(byte isbig);
-byte aft_loadfont(char * zpath, byte size, byte isbig);
-byte aft_drawfont(CANVAS * _b, byte isbig, int fpos, int xpos, int ypos, color cl,byte underline,byte bold);
+byte    aft_fontready(byte isbig);
+byte    aft_open();
+byte    aft_close();
+int     aft_kern(int c, int p, byte isbig);
+int     aft_fontwidth(int c,byte isbig);
+int     aft_spacewidth(byte isbig);
+byte    aft_fontheight(byte isbig);
+byte    aft_load(const char * source_name, int size, byte isbig,char * relativeto);
+byte    aft_drawfont(CANVAS * _b, byte isbig, int fpos, int xpos, int ypos, color cl,byte underline,byte bold);
+// byte    aft_loadfont(char * zpath, byte size, byte isbig);
+
+//
+// AROMA Freetype Arabic & RTL Handler
+//
+byte AFT_ISARABIC(int c);
+byte aft_read_arabic(int * soff, const char * src, const char ** ss, int * string, byte * prop, int maxlength, int * outlength, int * move);
+byte aft_isrtl(int c,byte checkleft);
 
 
 //
@@ -477,6 +525,8 @@ byte      apng_draw_ex(CANVAS * _b, PNGCANVAS * p, int xpos,            // Draw 
 //
 // AROMA Graphic Function
 //
+byte      ag_isfreetype(byte isbig);
+byte      ag_fontready(byte isbig);
 CANVAS *  agc();          // Get Main AROMA Graph Canvas
 byte      ag_init();      // Init AROMA Graph and Framebuffers
 void      ag_close_thread(); // Close Graph Thread
@@ -540,8 +590,8 @@ color     ag_calculatecontrast(color c,float intensity);
 // AROMA PNG Font Functions
 //
 int   ag_fontheight(byte isbig);                      // Get Font Height
-byte  ag_loadsmallfont(char * fontname, byte is_freetype); // Load Small Font From Zip
-byte  ag_loadbigfont(char * fontname, byte is_freetype); // Load Big Font From Zip
+byte  ag_loadsmallfont(char * fontname, byte is_freetype, char * relativeto); // Load Small Font From Zip
+byte  ag_loadbigfont(char * fontname, byte is_freetype, char * relativeto); // Load Big Font From Zip
 void  ag_closefonts();                                // Release Big & Small Fonts
 byte  ag_drawchar(CANVAS *_b,int x, int y, int c,    // Draw Character into Canvas
         color cl, byte isbig);

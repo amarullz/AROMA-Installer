@@ -155,8 +155,8 @@ ACONTROLP accb(
   if (w<agdp()*16) w=agdp()*16;
   
   //-- Limit Title Length  
-  char title[64];
-  snprintf(title,63,"%s",textv);
+  char title[128];
+  snprintf(title,128,"%s",textv);
   
   //-- Initializing Button Data
   ACCBDP d = (ACCBDP) malloc(sizeof(ACCBD));

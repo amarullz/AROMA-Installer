@@ -51,10 +51,8 @@
 #
 # NOTE: It must be in top most script, or you will got the color flicker
 #
-ini_set("force_colorspace","rgba");
-
-fontresload("0","droid.ttf","12");
-fontresload("1","droid.ttf","18");
+#ini_set("force_colorspace","rgba");
+#
 
 
 ##
@@ -99,58 +97,127 @@ fontresload("1","droid.ttf","18");
 # Initializing Rom Information
 #
 ini_set("rom_name",             "AROMA Test Zip");
-ini_set("rom_version",          "1.60");
+ini_set("rom_version",          "2.00 NIGHTLY");
 ini_set("rom_author",           "amarullz");
 ini_set("rom_device",           "Any Device");
-ini_set("rom_date",             "Feb, 20 2012");
+ini_set("rom_date",             "Mar, 07 2012");
 
-
-textbox(
-  #-- Title
-    "Test Unicode Chars",
-  
-  #-- Subtitle / Description
-    "腾讯科技讯（乐天）1月5日消息.",
-  
-  #-- Icon
-    "@info",
-  
-  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
-    resread("unicode.txt")
-);
 
 ##
 # Show Simple Splash
 #
-#splash(
-#  #-- Duration 2000ms / 2 seconds
-#    2000,
+splash(
+  #-- Duration 2000ms / 2 seconds
+    2000,
   
   #-- <AROMA Resource Dir>/sample.png
-#    "sample"
-#);
+    "sample"
+);
 
 ##
 # Show Animated Splash
 #
-#anisplash(
+anisplash(
   #-- Number of Loop
-#    4,
+    4,
   
   #-- Frame 1 [ Image, duration in millisecond ]. <AROMA Resource Dir>/splash/a[1..6].png
-#    "splash/a1", 500,
-#    "splash/a2", 30,
-#    "splash/a3", 30,
-#    "splash/a4", 30,
-#    "splash/a5", 30,
-#    "splash/a6", 30
-#);
+    "splash/a1", 500,
+    "splash/a2", 30,
+    "splash/a3", 30,
+    "splash/a4", 30,
+    "splash/a5", 30,
+    "splash/a6", 30
+);
 
 ##
 # Show Calibrating Tools Directly before show any UI
 #
 #--- Remove this calibtool if you already know the calibrate data
-#calibtool("");
+calibtool("");
+
+#
+# Set Small Font to Support all fonts
+#
+fontresload( "0", "ttf/DroidSans.ttf;ttf/DroidSansArabic.ttf;ttf/DroidSansFallback.ttf;", "12" ); #-- Use sets of font (Font Family)
+
+###################################################################################################################
+#
+# SHOW LANGUAGE SELECTION
+#
+selectbox(
+  #-- Title
+    "Select Language",
+  
+  #-- Sub Title
+    "Please select installer language that you want to use in this installation test:",
+  
+  #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
+    "@default",
+  
+  #-- Will be saved in /tmp/aroma/theme.prop
+    "lang.prop",
+  
+  #---------------------------------[ Selectbox Without Group ]----------------------------------#
+  # TITLE            |  SUBTITLE                                                 | Initial Value #
+  #------------------+-----------------------------------------------------------+---------------#
+
+    "English",            "Welcome to Installer",                                        1,      #-- selected.0 = 1
+    "Indonesian",         "Selamat datang di Installer",                                 0,      #-- selected.0 = 2
+    "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
+	"Simplified Chinesse","欢迎到安装",                                                         0,       #-- selected.0 = 4
+	"Arabic",             "مرحبا بكم في المثبت",                                               0        #-- selected.0 = 5        
+
+  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+);
+
+##
+# SET LANGUAGE & FONT FAMILY
+#
+if prop("lang.prop","selected.0")=="1" then
+  loadlang("langs/en.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" ); #-- "0" = Small Font ( Look at Fonts & UNICODE Demo Below )
+  fontresload( "1", "ttf/DroidSans.ttf", "18" ); #-- "1" = Big Font
+endif;
+
+if prop("lang.prop","selected.0")=="2" then
+  loadlang("langs/id.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
+if prop("lang.prop","selected.0")=="3" then
+  loadlang("langs/es.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
+if prop("lang.prop","selected.0")=="4" then
+  loadlang("langs/cn.lang");
+  fontresload( "0", "ttf/DroidSansFallback.ttf;ttf/DroidSans.ttf", "12" ); #-- Use sets of font (Font Family)
+  fontresload( "1", "ttf/DroidSansFallback.ttf;ttf/DroidSans.ttf", "18" );
+endif;
+
+if prop("lang.prop","selected.0")=="5" then
+  loadlang("langs/ar.lang");
+  fontresload( "0", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "12" ); #-- Use sets of font (Font Family)
+  fontresload( "1", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "18" );
+endif;
+
+###################################################################################################################
+#
+# SHOW LANGUAGE TEST MULTILINE
+#
+viewbox(
+  #-- Title
+    lang("langtest.title"),  #-- you can use lang("langtest.title") function or directly in string "<~langtest.title>"
+  
+  #-- Text
+    "<~langtest.multiline>",
+  
+  #-- Icon
+    "@info"
+);
 
 
 ###################################################################################################################
@@ -159,10 +226,10 @@ textbox(
 #
 selectbox(
   #-- Title
-    "Select Theme",
+    "<~themes.title>",
   
   #-- Sub Title
-    "Please select installer theme that you want to use in this installation test:",
+    "<~themes.desc>",
   
   #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
     "@personalize",
@@ -206,28 +273,28 @@ if prop("theme.prop","selected.0")=="5" then
   theme("sense");
 endif;
 
+
 ###################################################################################################################
 #
 # STEP 2 - SHOW ROM INFORMATION
 #
 viewbox(
   #-- Title
-    "Welcome",
+    "<~welcome.title>",
   
   #-- Text
-    "You are about to Installing <b>"+
+    "<~welcome.text1> <b>"+
 	  #-- Get Config Value
 	  ini_get("rom_name")+
-	"</b> for <b>"+ini_get("rom_device")+"</b>.\n\n"+
+	"</b> <~common.for> <b>"+ini_get("rom_device")+"</b>.\n\n"+
     
-    "AROMA Installer was the first and the only Touch and Customizable "+
-    "ANDROID ROM Installer in the World.\n\n"+
+    "<~welcome.text2>\n\n"+
 	
-      "  VERSION\t: <b><#selectbg_g>"+ini_get("rom_version")+"</#></b>\n"+
-      "  CODENAME\t: <b><#selectbg_g>Cempaka</#></b>\n"+
-      "  UPDATED\t: <b><#selectbg_g>"+ini_get("rom_date")+"</#></b>\n\n\n"+
+      "  <~welcome.version>\t: <b><#selectbg_g>"+ini_get("rom_version")+"</#></b>\n"+
+      "  <~welcome.codename>\t: <b><#selectbg_g>Dahlia</#></b>\n"+
+      "  <~welcome.updated>\t: <b><#selectbg_g>"+ini_get("rom_date")+"</#></b>\n\n\n"+
 
-    "Press Next to Continue the Installation...",
+    "<~welcome.next>",
   
   #-- Icon
     "@welcome"
@@ -240,10 +307,10 @@ viewbox(
 #
 agreebox(
   #-- Title
-    "Terms and Conditions",
+    "<~terms.title>",
   
   #-- Subtitle / Description
-    "Please read carefully The AROMA Installer Terms and Conditions Below.",
+    "<~terms.desc>",
   
   #-- Icon
     "@license",
@@ -252,10 +319,10 @@ agreebox(
     resread("license.txt"),
   
   #-- Checkbox Text
-    "I Agree with this Terms and Conditions...",
+    "<~terms.check>",
   
   #-- Unchecked Alert Message
-    "Please check the agreement..."
+    "<~terms.confirm>"
 );
 
 
@@ -265,10 +332,10 @@ agreebox(
 #
 textbox(
   #-- Title
-    "Changelog",
+    "<~changelog.title>",
   
   #-- Subtitle
-    "AROMA Installer Changelog",
+    "<~changelog.desc>",
   
   #-- Icon
     "@update",
@@ -276,6 +343,16 @@ textbox(
   #-- Arg 4
     resread("changelog.txt")
 );
+
+##
+##-- Back To English :D - and Use DroidSans.ttf
+##
+alert("Back To English","OK, Multilanguage demo ends here... It will use english now...", "@info");
+loadlang("langs/en.lang");
+fontresload( "0", "ttf/DroidSans.ttf", "12" );
+fontresload( "1", "ttf/DroidSans.ttf", "18" );
+##
+##
 
 
 ###################################################################################################################
@@ -306,7 +383,8 @@ menubox(
     "Dialog Demo",            "Show AROMA dialogs demonstration",                          "@alert",        #-- selected = 5
     "Back Sequence Demo",     "Show AROMA back feature demonstration",                     "@customize",    #-- selected = 6
 	"Presistent Data Demo",   "Save & Load customize data into/from sdcard",               "@update",       #-- selected = 7
-    "Other Demo",             "Show others AROMA Features demonstration",                  "@apps"          #-- selected = 8
+	"Fonts & Unicode",        "Show TrueType/OpenType Fonts and UNICODE demonstration",    "@welcome",      #-- selected = 8
+    "Other Demo",             "Show others AROMA Features demonstration",                  "@apps"          #-- selected = 9
 );
 
 
@@ -878,12 +956,260 @@ if prop("demo.prop","selected")=="7" then
 	back("2");
 endif;
 
+# fontresload("0","droid.ttf","12");
+# fontresload("1","droid.ttf","18");
+##--------------------------------------
+#
+# FONTS & UNICODE DEMO
+#
+if prop("demo.prop","selected")=="8" then
+
+  #-- Show Other Demo
+  menubox(
+    #-- Title
+      "Fonts & UNICODE Demo",
+    
+    #-- Sub Title
+      "Please Select Fonts & UNICODE Demo Below.",
+    
+    #-- Icon
+      "@welcome",
+      
+    #-- Will be saved in /tmp/aroma/other_demo.prop
+      "fonts_demo.prop",
+      
+    #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+    # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+    #-------------------------+-----------------------------------------------------------+---------------#
+    
+      "DroidSans",              "Show License text with DroidSans Truetype font",            "@default",     #-- selected = 1
+      "DroidSerif-Regular",     "Show License text with DroidSerif-Regular Truetype font",   "@default",     #-- selected = 2
+      "Chinesse Characters",    "Show Chinesse text example",                                "@update",      #-- selected = 3
+      "Arabic Characters",      "Show Arabic text example",                                  "@update",      #-- selected = 4
+	  "Russian & Latin Characters",     "Show Russian & Latin text example",                 "@update"       #-- selected = 5
+  );
+  
+  #-- Font Demo
+  if (prop("fonts_demo.prop","selected")=="1") || (prop("fonts_demo.prop","selected")=="2") then
+	
+	if (prop("fonts_demo.prop","selected")=="1") then
+	
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "0",
+		#-- Font File
+		  "ttf/DroidSans.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "12"
+	  );
+	  
+	  #-- Load Truetype Font ( Absolute From ZIP Path )
+	  fontload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "1",
+		#-- Font File
+		  "META-INF/com/google/android/aroma/ttf/DroidSans.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "18"
+	  );
+	  
+	endif;
+	
+	if (prop("fonts_demo.prop","selected")=="2") then
+	
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "0",
+		#-- Font File
+		  "ttf/DroidSerif-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "12"
+	  );
+	  
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "1",
+		#-- Font File
+		  "ttf/DroidSerif-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "18"
+	  );
+	  
+	endif;
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"Terms and Conditions",
+	  
+	  #-- Subtitle / Description
+		"Please read carefully The AROMA Installer Terms and Conditions Below.",
+	  
+	  #-- Icon
+		"@license",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("license.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+  #-- Chinesse Demo
+  if (prop("fonts_demo.prop","selected")=="3") then
+	
+    #-- Load Chinesse Fonts
+    fontresload( "0", "ttf/DroidSansFallback.ttf;ttf/DroidSans.ttf", "12" );
+	fontresload( "1", "ttf/DroidSansFallback.ttf;ttf/DroidSans.ttf", "18" );
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"UNICODE DEMO",
+	  
+	  #-- Subtitle / Description
+		"This text below was demonstration of AROMA Installer rendering chinesse unicode characters",
+	  
+	  #-- Icon
+		"@update",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("unicode/chinesse.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+  #-- Arabic Demo
+  if (prop("fonts_demo.prop","selected")=="4") then
+	
+    #-- Load Chinesse Fonts
+    fontresload( "0", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "12" );
+	fontresload( "1", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "18" );
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"UNICODE DEMO",
+	  
+	  #-- Subtitle / Description
+		"This text below was demonstration of AROMA Installer rendering chinesse unicode characters",
+	  
+	  #-- Icon
+		"@update",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("unicode/arabic.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+  #-- Russian & Latin Demo
+  if (prop("fonts_demo.prop","selected")=="5") then
+	
+    #-- Load Chinesse Fonts
+    fontresload( "0", "ttf/DroidSans.ttf", "12" );
+	fontresload( "1", "ttf/DroidSans.ttf", "18" );
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"UNICODE DEMO",
+	  
+	  #-- Subtitle / Description
+		"This text below was demonstration of AROMA Installer rendering chinesse unicode characters",
+	  
+	  #-- Icon
+		"@update",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("unicode/russian_latin.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+endif;
+
+
 
 ##--------------------------------------
 #
 # Other Demo
 #
-if prop("demo.prop","selected")=="8" then
+if prop("demo.prop","selected")=="9" then
 
   #-- Show Other Demo
   menubox(

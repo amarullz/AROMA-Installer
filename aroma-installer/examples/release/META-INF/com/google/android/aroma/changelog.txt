@@ -1,3 +1,8 @@
+<b><#selectbg_g>CEMPAKA - 1.63 - BUILD 120306-32</#></b>
+<*>Fix Memory leaks</*>
+<*>add ini_set("force_colorspace","rgba");</*>
+<*>add support for atmel_maxtouch - Asus Transformer Touch Screen</*>
+
 <b><#selectbg_g>CEMPAKA - 1.60 - BUILD 120227-26</#></b>
 <*>Add msb_right check for Endianess video memory</*>
 <*>Fix Installer text log drawing</*>

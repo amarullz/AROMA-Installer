@@ -25,7 +25,7 @@
 /***************************[ OPTION BOX ]**************************/
 #define ACOPT_MAX_GROUP   64
 typedef struct{
-  char title[32];
+  char title[64];
   char desc[128];
   int  id;
   int  h;
@@ -248,8 +248,8 @@ byte acopt_add(ACONTROLP ctl,char * title, char * desc, byte selected){
   
   //-- Allocating Memory For Item Data
   ACOPTIP newip = (ACOPTIP) malloc(sizeof(ACOPTI));
-  snprintf(newip->title,31,"%s",title);
-  snprintf(newip->desc,127,"%s",desc);
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
   newip->th       = ag_txtheight(d->clientTextW,newip->title,0);
   newip->dh       = ag_txtheight(d->clientTextW,newip->desc,0);
   newip->ty       = agdp()*5;
@@ -292,8 +292,8 @@ byte acopt_addgroup(ACONTROLP ctl,char * title, char * desc){
   
   //-- Allocating Memory For Item Data
   ACOPTIP newip = (ACOPTIP) malloc(sizeof(ACOPTI));
-  snprintf(newip->title,31,"%s",title);
-  snprintf(newip->desc,127,"%s",desc);
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
   newip->th       = ag_txtheight(d->clientTextW+(agdp()*14),newip->title,0);
   newip->dh       = 0;// ag_txtheight(d->clientTextW+(agdp()*14),newip->desc,0);
   newip->ty       = agdp()*3;

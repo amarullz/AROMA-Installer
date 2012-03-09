@@ -1,0 +1,69 @@
+﻿### LICENSE:
+#
+# Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+### LANGUAGE STRING RESOURCE FILE
+#
+#   Language  : English
+#   By        : amarullz
+#
+
+#
+#--- COMMON SYSTEM STRING RESOURCE
+#
+text_ok=موافق
+text_next=التالي
+text_back=ظهر
+text_yes=نعم
+text_no=لا
+text_about=حول
+text_calibrating=معايرة أدوات
+text_quit=إنهاء التثبيت
+text_quit_msg=هل أنت متأكد لإنهاء المثبت؟
+
+#
+#-- CUSTOM STRING RESOURCE
+#
+common.for=لل
+
+langtest.title=لغة الاختبار
+langtest.multiline=ويقع هذا النص في langs/ar.lang\
+استخدم مائل قبل الدخول لإضافة سطر جديد\
+\
+يمكنك أيضا القيام <b>Formatting</b> داخل لغة مورد سلسلة.\
+\
+شكرا لاستخدام AROMA Installer
+
+#-- End of string without any backslash for multiline text
+
+
+themes.title=اختيار الموضوع
+themes.desc=الرجاء اختيار موضوع المثبت الذي تريد استخدامه في هذا الاختبار التثبيت:
+
+welcome.title=ترحيب
+welcome.text1=أنت على وشك تثبيت
+welcome.text2=وكان AROMA Installer القرص الروبوت الأول واللمس فقط وقابلة للتخصيص المثبت في العالم.
+welcome.version=VERSION
+welcome.codename=CODENAME
+welcome.updated=ين ياباني
+welcome.next=اضغط التالي لمتابعة التثبيت...
+
+terms.title=الشروط والأحكام
+terms.desc=الرجاء قراءة بعناية AROMA Installer والبنود والشروط أدناه.
+terms.check=أنا أتفق مع هذا البنود والشروط ...
+terms.confirm=يرجى الاطلاع على اتفاق ...
+
+changelog.title=التغيير
+changelog.desc=AROMA Installer التغيير

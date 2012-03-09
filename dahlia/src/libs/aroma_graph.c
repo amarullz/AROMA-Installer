@@ -51,6 +51,8 @@ static byte                            AG_SMALL_FONT_FT=0;  //-- Small Font is F
 static byte                            AG_BIG_FONT_FT=0;    //-- Big Font is Freetype
 static int                             ag_dp;          //-- Device Pixel
 static byte                            agclp;
+static byte                            ag_font_onload=0;
+static byte                            ag_oncopybusy=0;
 
 /****************************[ DECLARED FUNCTIONS ]*****************************/
 static void *ag_thread(void *cookie);
@@ -314,6 +316,10 @@ void ag_copybusy(char * wait){
   ag_canvas(&tmpc,agw(),agh());
   ag_draw(&tmpc,&ag_c,0,0);
   ag_rectopa(&tmpc,0,0,agw(),agh(),0x0000,180);
+  
+  while (!(ag_fontready(0))) usleep(50);
+  ag_oncopybusy=1;
+  
   //char * wait = "Please Wait...";
   int pad     = agdp()*50;
   int txtW    = ag_txtwidth(wait,0);
@@ -335,6 +341,7 @@ void ag_copybusy(char * wait){
     ag_rectopa(&tmpc,0,winY+i,agw(),1,0x0000,alp);
   }
   ag_text(&tmpc,txtW,txtX,txtY,wait,0xffff,0);
+  ag_oncopybusy=0;
   
   int bs_x = (agw()/2) - (ag_busywinW/2);
   int bs_y = (agh()/2) + ag_fontheight(0) - (agdp()*2);
@@ -1163,24 +1170,56 @@ byte ag_roundgrad_ex(CANVAS *_b,int x, int y, int w, int h, color cl1, color cl2
 
 /******************************[ FONT FUNCTIONS ]******************************/
 //-- Load Small Font
-byte ag_loadsmallfont(char * fontname, byte is_freetype){
+/* DRAW LIST BULLET */
+byte ag_fontready(byte isbig){
+  if (ag_font_onload) return 0;
+  byte isfreetype=isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
+  if (isfreetype) return aft_fontready(isbig);
+  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
+  return fnt->loaded;
+}
+int ag_bulletwidth(byte isbig){
+  if (!ag_fontready(isbig)) return 0;
+  float h=(float) ag_fontheight(isbig);
+  int s=ceil(h/2.5);
+  if (s%2!=0) s--;
+  if (s==0) s=2;
+  return s;
+}
+void ag_draw_bullet(CANVAS * _b,int x,int y,color cl,byte isbig, byte type){
+  if (!ag_fontready(isbig)) return;
+  int h = ag_fontheight(isbig);
+  int w = ag_bulletwidth(isbig);
+  int s = min(h,w);
+  int vx= ceil(((float) (w-s))/2);
+  int vy= ceil(((float) (h-s))/2);
+  ag_roundgrad(_b,vx+x,vy+y,s,s,cl,cl,(type%2==0)?0:s);
+}
+byte ag_loadsmallfont(char * fontname, byte is_freetype, char * relativeto){
+  while (ag_oncopybusy) usleep(50);
+  ag_font_onload=1;
   byte r=0;
-  if (is_freetype!=0){
-    r=aft_loadfont(fontname, is_freetype, 0);
+  if ((is_freetype!=0)&&(relativeto!=NULL)){
+    AG_SMALL_FONT_FT = 0;
+    r=aft_load(fontname, is_freetype+1, 0,relativeto);
     if (r) AG_SMALL_FONT_FT = 1;
   }
   else{
-    AG_SMALL_FONT_FT = 0;
     apng_closefont(&AG_SMALL_FONT);
     r=apng_loadfont(&AG_SMALL_FONT,fontname);
+    if (r) AG_SMALL_FONT_FT = 0;
   }
+  ag_font_onload=0;
   return r;
 }
 //-- Load Big Font
-byte ag_loadbigfont(char * fontname, byte is_freetype){
+byte ag_loadbigfont(char * fontname, byte is_freetype, char * relativeto){
+  while (ag_oncopybusy) usleep(50);
+  ag_font_onload=1;
   byte r=0;
-  if (is_freetype!=0){
-    r=aft_loadfont(fontname, is_freetype, 1);
+  if ((is_freetype!=0)&&(relativeto!=NULL)){
+    AG_BIG_FONT_FT = 0;
+    r=aft_load(fontname, is_freetype+1, 1,relativeto);
     if (r) AG_BIG_FONT_FT = 1;
   }
   else{
@@ -1188,17 +1227,20 @@ byte ag_loadbigfont(char * fontname, byte is_freetype){
     r=apng_loadfont(&AG_BIG_FONT,fontname);
     if (r) AG_BIG_FONT_FT = 0;
   }
+  ag_font_onload=0;
   return r;
 }
 void ag_closefonts(){
   apng_closefont(&AG_BIG_FONT);
   apng_closefont(&AG_SMALL_FONT);
 }
+
 //-- Draw Character
 byte ag_drawchar_ex(CANVAS *_b,int x, int y, int c, color cl, byte isbig, byte underline, byte bold){
+  if (!ag_fontready(isbig)) return 0;
+
   if (_b==NULL) _b=&ag_c;
   byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
-  
   if (isfreetype){
     return aft_drawfont(_b,isbig,c,x,y,cl,underline,bold);
   }
@@ -1217,6 +1259,7 @@ byte ag_drawchar(CANVAS *_b,int x, int y, int c, color cl, byte isbig){
 }
 //-- Calculate Font Width
 byte ag_fontwidth(int c,byte isbig){
+  if (!ag_fontready(isbig)) return 0;
   byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
   if (isfreetype){
     return aft_fontwidth(c,isbig);
@@ -1229,13 +1272,26 @@ byte ag_fontwidth(int c,byte isbig){
   if (cd>95) return 0;
   return fnt->fw[cd];
 }
+int ag_fontwidth_kerning(int c,int p, byte isbig){
+  if (!ag_fontready(isbig)) return 0;
+  byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
+  if (isfreetype){
+    return aft_fontwidth(c,isbig)+aft_kern(c,p,isbig);
+  }
+  return ag_fontwidth(c,isbig);
+}
+byte ag_isfreetype(byte isbig){
+  return (isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT);
+}
 int ag_tabwidth(int x, byte isbig){
+  if (!ag_fontready(isbig)) return 0;
   byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
   if (isfreetype){
     int spacesz = aft_spacewidth(isbig)*8;
     return (spacesz-(x%spacesz));
   }
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
+  if (!fnt->loaded) return 0;
   int spacesz = fnt->fw[0]*8;
   return (spacesz-(x%spacesz));
 }
@@ -1377,24 +1433,60 @@ byte ag_check_escape(int * soff, const char ** ssource, char * buf, byte realesc
   return 0;
 }
 //-- Calculate 1 Line Text Width
-int ag_txtwidth(const char *s, byte isbig){
+int ag_txtwidth(const char *ss, byte isbig){
+  if (!ag_fontready(isbig)) return 0;
   int w = 0;
   int x = 0;
   int  i=0;
   char tb[8];
   int off;
   int move=0;
-  // while((off = *s++)){
+  int p=0;
+  byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
+  
+  char * sams   = alang_ams(ss);
+  const char * s= sams;
   while((off=utf8c(s,&s,&move))){
     if ((move==1)&&(ag_check_escape(&off,&s,NULL,1,NULL))) continue;
-    if (off=='\t')
-      w+=ag_tabwidth(w,isbig);
-    else
-      w+=ag_fontwidth(off,isbig);
-  }    
+    
+    int is_arabic=0;
+    if (isfreetype){
+      int   arabic_str[1024];
+      byte  arabic_prop[1024];
+      int   outlength=0;
+      int   ctmp = off;
+      const char * stmp = s;
+      if (aft_read_arabic(&ctmp,stmp,&stmp,arabic_str,arabic_prop,1024,&outlength,&move)){
+        int rtl_arabic_i = 0;
+        int arabic_width = 0;
+        int rtl_poff = p;
+        for (rtl_arabic_i=0;rtl_arabic_i<outlength;rtl_arabic_i++){
+          arabic_width += ag_fontwidth(arabic_str[rtl_arabic_i],isbig)+aft_kern(arabic_str[rtl_arabic_i],rtl_poff,isbig);
+          rtl_poff = arabic_str[rtl_arabic_i];
+        }
+        w+=arabic_width;
+        is_arabic = 1;
+        off = ctmp;
+        s = stmp;
+      }
+    }
+    if (!is_arabic){
+      if (off=='\t')
+        w+=ag_tabwidth(w,isbig);
+      else
+        w+=ag_fontwidth_kerning(off,p,isbig);
+    }
+    p=off;
+  }
+  free(sams);
   return w;
 }
 int ag_fontheight(byte isbig){
+  if (!ag_fontready(isbig)) return 0;
+  byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
+  if (isfreetype){
+    return aft_fontheight(isbig);
+  }
   PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
   return fnt->fh;
 }
@@ -1417,6 +1509,10 @@ byte ag_textfs(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,
 
 //############################ NEW TEXT HANDLER
 int ag_txt_getline(const char * s, int maxwidth_ori, byte isbig, byte * ischangealign, int * indent, int * next_indent, byte * endofstring){
+  if (maxwidth_ori==0) return 0;
+  if (!ag_fontready(isbig)) return 0;
+  if (maxwidth_ori<ag_fontheight(isbig)*2) maxwidth_ori=ag_fontheight(isbig)*2;
+
   char tb[15];//-- Escape Data
   int  c=0;   //-- Current Char
   byte o=0;   //-- Previous Char
@@ -1426,10 +1522,12 @@ int ag_txt_getline(const char * s, int maxwidth_ori, byte isbig, byte * ischange
   int  maxwidth = maxwidth_ori - indent[0];
   
   byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;  
-  int  indentsz = ag_fontwidth(' ',isbig)+ag_fontwidth(isfreetype?0x2022:0xa9,isbig);
+  int  indentsz = (ag_fontwidth(' ',isbig)*2)+ag_bulletwidth(isbig); // +ag_fontwidth(isfreetype?0x2022:0xa9,isbig);
   
   byte fns=0; //-- No Space Exists
   int  move=0;
+  int  pc=0;
+  
   // while ((c=*s++)){
   while((c=utf8c(s,&s,&move))){
     if ((move==1)&&(ag_check_escape(&c,&s,tb,1,&o))) {
@@ -1492,14 +1590,39 @@ int ag_txt_getline(const char * s, int maxwidth_ori, byte isbig, byte * ischange
       p=l;
     }
     else{
-      if (c=='\n'){
-        if (ischangealign!=NULL) ischangealign[0]=1;
-        return l+move;
+      byte is_arabic = 0;
+      if (isfreetype){
+        int   arabic_str[1024];
+        byte  arabic_prop[1024];
+        int   outlength=0;
+        
+        int   ctmp = c;
+        const char * stmp = s;
+        if (aft_read_arabic(&ctmp,stmp,&stmp,arabic_str,arabic_prop,1024,&outlength,&move)){
+          int rtl_arabic_i = 0;
+          int arabic_width = 0;
+          int rtl_poff = pc;
+          for (rtl_arabic_i=0;rtl_arabic_i<outlength;rtl_arabic_i++){
+            arabic_width += ag_fontwidth(arabic_str[rtl_arabic_i],isbig)+aft_kern(arabic_str[rtl_arabic_i],rtl_poff,isbig);
+            rtl_poff = arabic_str[rtl_arabic_i];
+          }
+          w+=arabic_width;
+          is_arabic = 1;
+          c = ctmp;
+          s = stmp;
+        }
       }
-      else if (c=='\t')
-        w+=ag_tabwidth(w,isbig);
-      else
-        w+=ag_fontwidth(c,isbig);
+      if (!is_arabic){
+        if (c=='\n'){
+          if (ischangealign!=NULL) ischangealign[0]=1;
+          return l+move;
+        }
+        else if (c=='\t')
+          w+=ag_tabwidth(w,isbig);
+        else
+          w+=ag_fontwidth_kerning(c,pc,isbig);
+          // w+=ag_fontwidth(c,isbig);
+      }
       
       if (w>maxwidth){
         if (p==-1)
@@ -1519,6 +1642,7 @@ int ag_txt_getline(const char * s, int maxwidth_ori, byte isbig, byte * ischange
         l+=move;
         fns=1;
       }
+      pc=c;
     }
     o = 0;
   }
@@ -1533,16 +1657,23 @@ char * ag_substring(const char * s, int len){
   
   int i;
   for (i=0;i<len;i++){
-    if (s[i]=='\n') break;
+    if ((s[i]=='\n')||(!s[i])){
+      ln[i]=0;
+      break;
+    }
     ln[i]=s[i];
   }
   return ln;
 }
-int ag_txtheight(int maxwidth, const char *s, byte isbig){
-  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
-  if (!fnt->loaded) return 0;
-  int  fheight = fnt->fh;
-  
+int ag_txtheight(int maxwidth, const char *ss, byte isbig){
+  if (maxwidth==0) return 0;
+  if (!ag_fontready(isbig)) return 0;
+  int  fheight = ag_fontheight(isbig);
+  if (fheight==0) return 0;
+  if (maxwidth<fheight*2) maxwidth=fheight*2;
+
+  char * sams   = alang_ams(ss);
+  const char * s= sams;
   int indent= 0;
   int lines = 0;
   while (*s!=0){
@@ -1555,18 +1686,26 @@ int ag_txtheight(int maxwidth, const char *s, byte isbig){
     indent=next_indent;
     if (eos) break;
   }
+  free(sams);
+  
   return (lines*fheight);
 }
 
-byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_def,byte isbig,byte forcecolor,byte multiline){
-  PNGFONTS * fnt = isbig?&AG_BIG_FONT:&AG_SMALL_FONT;
-  if (!fnt->loaded) return 0;
+/* DRAW TEXT */
+byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *ss, color cl_def,byte isbig,byte forcecolor,byte multiline){
+  if (maxwidth==0) return 0;
+  if (!ag_fontready(isbig)) return 0;
   if (_b==NULL) _b=&ag_c;
   if (!maxwidth) maxwidth = _b->w-x;
 
-  int  fheight = fnt->fh;
+  int  fheight = ag_fontheight(isbig);
+  if (fheight==0) return 0;
+  if (maxwidth<fheight*2) maxwidth=fheight*2;
   
   byte isfreetype = isbig?AG_BIG_FONT_FT:AG_SMALL_FONT_FT;
+  
+  char * sams   = alang_ams(ss);
+  const char * s= sams;
   
   char tb[8];         //-- Escape Data
   byte bold = 0;      //-- Bold
@@ -1580,6 +1719,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
     int next_indent= indent;
     byte eos = 0;
     int line_width = ag_txt_getline(s,maxwidth,isbig,&chalign,&indent,&next_indent,&eos);
+    
     if (line_width==0) break;
     
     char * bf=ag_substring(s,line_width);
@@ -1638,6 +1778,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
       byte first_space=0;
       int  space_pos  =0;
       int  move_main  =0;
+      int  pc         =0;
       // while((off = *line_string++)){
       while((off=utf8c(line_string,&line_string,&move_main))){
         if ((move_main==1)&&(ag_check_escape(&off,&line_string,tb,0,NULL))) {
@@ -1650,7 +1791,9 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
           else if (strcmp(tb,"*")==0){
             if (indent>0){
               int vcx = (first_space)?cx:first_cx;
-              ag_drawchar_ex(_b,vcx-(ag_fontwidth(' ',isbig)+ag_fontwidth(isfreetype?0x2022:0xa9,isbig)),y,isfreetype?0x2022:0xa9,cl,isbig,0,0);
+              // ag_drawchar_ex(_b,vcx-(ag_fontwidth(' ',isbig)+ag_fontwidth(isfreetype?0x2022:0xa9,isbig)),y,isfreetype?0x2022:0xa9,cl,isbig,0,0);
+              int indentsz = ((ag_fontwidth(' ',isbig)*2)+ag_bulletwidth(isbig));
+              ag_draw_bullet(_b,vcx-(indentsz-ag_fontwidth(' ',isbig)),y,cl,isbig,round(indent/indentsz));
               if (!first_space) cx = first_cx;
             }
           }
@@ -1679,7 +1822,6 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
               byte vf =0;
               int move=0;
               const char * lstr = line_string;
-              //while((vc = *lstr++)){
               while((vc=utf8c(lstr,&lstr,&move))){
                 if ((move!=1)||(!ag_check_escape(&vc,&lstr,NULL,1,NULL))) {
                   if (vc=='\t'){
@@ -1718,9 +1860,86 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
             fwidth = ag_tabwidth(cx-x,isbig);
           }
           else{
-            fwidth = ag_fontwidth(off,isbig);
-            ag_drawchar_ex(_b,cx,y,off,cl,isbig,undr,bold);
+            int krn=0;
+            if (isfreetype) krn = aft_kern(off,pc,isbig);
+            fwidth = ag_fontwidth(off,isbig)+krn;
+            
+            if (isfreetype&&aft_isrtl(off,0)){
+              
+              const char * rtl_line_string  = line_string;
+              const char * rtl_last_string  = line_string;
+              int rtl_last_off              = off;
+              int rtl_off                   = off;
+              int rtl_width                 = 0;
+              int rtl_length                = 0;
+              int rtl_poff                  = pc;
+              int rtl_spacepos              = space_pos;
+              int rtl_out[1024];
+              int rtl_fwidth[1024];
+              memset(rtl_out,0,sizeof(int)*1024);
+              memset(rtl_fwidth,0,sizeof(int)*1024);
+              
+              do{
+                int   arabic_str[1024];
+                byte  arabic_prop[1024];
+                int   outlength=0;
+                
+                if (aft_read_arabic(&rtl_off,rtl_line_string,&rtl_line_string,arabic_str,arabic_prop,1024,&outlength,&move_main)){
+                  int rtl_arabic_i = 0;
+                  for (rtl_arabic_i=0;rtl_arabic_i<outlength;rtl_arabic_i++){
+                    int char_width = ag_fontwidth(arabic_str[rtl_arabic_i],isbig)+aft_kern(arabic_str[rtl_arabic_i],rtl_poff,isbig);
+                    rtl_out[rtl_length+rtl_arabic_i] = arabic_str[rtl_arabic_i];
+                    rtl_fwidth[rtl_length+rtl_arabic_i]=char_width;
+                    rtl_width += char_width;
+                    rtl_poff = arabic_str[rtl_arabic_i];
+                  }
+                  rtl_length+=outlength;
+                }
+                else{
+                  int rtl_char_w = ag_fontwidth(rtl_off,isbig)+aft_kern(rtl_off,rtl_poff,isbig);
+                  if(rtl_off==' '){
+                    if (sp_n>rtl_spacepos){
+                      rtl_char_w+=sp_v[rtl_spacepos];
+                      rtl_spacepos++;
+                    }
+                  }
+                  rtl_width += rtl_char_w;
+                  rtl_fwidth[rtl_length]= rtl_char_w;
+                  rtl_out[rtl_length++] = rtl_off;
+                }
+                
+                rtl_poff              = rtl_off;
+                rtl_last_off          = rtl_off;
+                rtl_last_string       = rtl_line_string;
+                
+                rtl_off = utf8c(rtl_line_string,&rtl_line_string,&move_main);
+                if ((aft_isrtl(rtl_off,1)==0)||(rtl_off=='<')) break;
+                if (rtl_length>1023) break;
+              }while(rtl_off!=0);
+              
+              int rtl_draw_i  = 0;
+              int rtl_pos     = cx+rtl_width;
+              
+              for (rtl_draw_i=0;rtl_draw_i<rtl_length;rtl_draw_i++){
+                int fxw = rtl_fwidth[rtl_draw_i];
+                int fch = rtl_out[rtl_draw_i];
+                rtl_pos-= fxw;
+                
+                if(fch!=' '){
+                  aft_drawfont(_b,isbig,fch,rtl_pos,y,cl,undr,bold);
+                }
+              }
+              
+              off          = rtl_last_off;
+              fwidth      += rtl_width;
+              line_string  = rtl_last_string;
+            }
+            else{
+              ag_drawchar_ex(_b,cx+krn,y,off,cl,isbig,undr,bold);
+            }
           }
+          
+          pc = off;
           
           if (first_space){
             if(off==' '){
@@ -1748,5 +1967,7 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
     
     if (eos) break;
   }
+  
+  free(sams);
   return 1;
 }

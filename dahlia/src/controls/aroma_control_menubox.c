@@ -24,7 +24,7 @@
 
 /***************************[ MENU BOX ]**************************/
 typedef struct{
-  char title[32];
+  char title[64];
   char desc[128];
   PNGCANVAS * img;
   int  id;
@@ -184,8 +184,8 @@ byte acmenu_add(ACONTROLP ctl,char * title, char * desc, char * img){
   
   //-- Allocating Memory For Item Data
   ACMENUIP newip = (ACMENUIP) malloc(sizeof(ACMENUI));
-  snprintf(newip->title,31,"%s",title);
-  snprintf(newip->desc,127,"%s",desc);
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
   
   //-- Load Image
   newip->img      = (PNGCANVAS *) malloc(sizeof(PNGCANVAS));

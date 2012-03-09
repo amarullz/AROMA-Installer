@@ -104,8 +104,8 @@ void aui_redraw(){
 //* Init Window Background With New Title
 //* 
 void aui_setbg(char * titlev){
-  char title[32];
-  snprintf(title,31,"%s",titlev);
+  char title[64];
+  snprintf(title,64,"%s",titlev);
   aui_redraw();
   int elmP  = agdp()*4;
   int titW  = ag_txtwidth(title,1);
@@ -168,7 +168,7 @@ void aui_writetofs(char * name, char * value){
 //*
 char * aui_readfromtmp(char * name){
   char path[256];
-  snprintf(path,255,"%s/%s",AROMA_TMP,name);
+  snprintf(path,256,"%s/%s",AROMA_TMP,name);
   aui_readfromfs(path);
 }
 
@@ -177,7 +177,7 @@ char * aui_readfromtmp(char * name){
 //*
 void aui_writetotmp(char * name, char * value){
   char path[256];
-  snprintf(path,255,"%s/%s",AROMA_TMP,name);
+  snprintf(path,256,"%s/%s",AROMA_TMP,name);
   aui_writetofs(path,value);
 }
 
@@ -251,7 +251,7 @@ char * aui_parsepropzip(char * filename,char *key){
 //* 
 char * aui_getvar(char * name){
   char path[256];
-  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  snprintf(path,256,"%s/.__%s.var",AROMA_TMP,name);
   return aui_readfromfs(path);
 }
 
@@ -260,7 +260,7 @@ char * aui_getvar(char * name){
 //* 
 void aui_setvar(char * name, char * value){
   char path[256];
-  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  snprintf(path,256,"%s/.__%s.var",AROMA_TMP,name);
   aui_writetofs(path,value);
 }
 
@@ -269,7 +269,7 @@ void aui_setvar(char * name, char * value){
 //* 
 void aui_appendvar(char * name, char * value){
   char path[256];
-  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  snprintf(path,256,"%s/.__%s.var",AROMA_TMP,name);
   FILE * fp = fopen(path,"ab");
   if (fp!=NULL){
     fwrite(value,1,strlen(value),fp);
@@ -282,7 +282,7 @@ void aui_appendvar(char * name, char * value){
 //* 
 void aui_delvar(char * name){
   char path[256];
-  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  snprintf(path,256,"%s/.__%s.var",AROMA_TMP,name);
   unlink(path);
 }
 
@@ -291,7 +291,7 @@ void aui_delvar(char * name){
 //* 
 void aui_prependvar(char * name, char * value){
   char path[256];
-  snprintf(path,255,"%s/.__%s.var",AROMA_TMP,name);
+  snprintf(path,256,"%s/.__%s.var",AROMA_TMP,name);
   char * buf = aui_getvar(name);
   FILE * fp = fopen(path,"wb");
   if (fp!=NULL){
@@ -343,20 +343,19 @@ Value* AROMA_FONT(const char* name, State* state, int argc, Expr* argv[]) {
   _INITARGS();
   
   char zpath[256];
-  if (strcmp(name,"fontresload")==0){
-    snprintf(zpath,255,"%s/%s",AROMA_DIR,args[1]);
-  }
-  else{
-    snprintf(zpath,255,"%s",args[1]);
-  }
+  if (strcmp(name,"fontresload")==0)
+    snprintf(zpath,256,"%s/",AROMA_DIR);
+  else
+    snprintf(zpath,256,"");
   
   int size = atoi(args[2]);
-  
   if (args[0][0]=='0'){
-    ag_loadsmallfont(zpath, size);
+    if (!ag_loadsmallfont(args[1], size, zpath))
+      ag_loadsmallfont("fonts/small",0,NULL);
   }
   else{
-    ag_loadbigfont(zpath, size);
+    if (!ag_loadbigfont(args[1], size, zpath))
+      ag_loadbigfont("fonts/big",0,NULL);
   }
   
   //-- Release Arguments
@@ -395,8 +394,8 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
 
   //-- Parse The Prop
   char themename[256];
-  snprintf(themename,255,"%s/themes/%s/theme.prop",AROMA_DIR,args[0]);
-  snprintf(acfg()->themename,63,"%s",args[0]);
+  snprintf(themename,256,"%s/themes/%s/theme.prop",AROMA_DIR,args[0]);
+  snprintf(acfg()->themename,64,"%s",args[0]);
   char * propstr = aui_readfromzip(themename);
   if (propstr){
     int i=0;
@@ -405,7 +404,7 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
       char * val = aui_parsepropstring(propstr,key);
       if (val!=NULL){
         if (strcmp(val,"")!=0){
-          snprintf(themename,255,"themes/%s/%s",args[0],val);
+          snprintf(themename,256,"themes/%s/%s",args[0],val);
           atheme_create(key,themename);
         }
         free(val);
@@ -453,25 +452,29 @@ Value* AROMA_THEME(const char* name, State* state, int argc, Expr* argv[]) {
     //-- LOAD SMALL FONT
     char * font = aui_parsepropstring(propstr,"font.small");
     if (font!=NULL){
-      snprintf(themename,255,"themes/%s/%s",args[0],font);
-      if (!ag_loadsmallfont(themename,0))
-        ag_loadsmallfont("fonts/small",0);
+      if (!ag_isfreetype(0)){
+        snprintf(themename,256,"themes/%s/%s",args[0],font);
+        if (!ag_loadsmallfont(themename,0,NULL))
+          ag_loadsmallfont("fonts/small",0,NULL);
+      }
       free(font);
     }
     
     //-- LOAD BIG FONT
     font = aui_parsepropstring(propstr,"font.big");
     if (font!=NULL){
-      snprintf(themename,255,"themes/%s/%s",args[0],font);
-      if (!ag_loadbigfont(themename,0))
-        ag_loadbigfont("fonts/big",0);
+      if (!ag_isfreetype(0)){
+        snprintf(themename,256,"themes/%s/%s",args[0],font);
+        if (!ag_loadbigfont(themename,0,NULL))
+          ag_loadbigfont("fonts/big",0,NULL);
+      }
       free(font);
     }
 
     free(propstr);
   }
   else{
-    snprintf(acfg()->themename,63,"");
+    snprintf(acfg()->themename,64,"");
   }
 
   //-- Background Should Be Redrawed
@@ -500,13 +503,13 @@ Value* AROMA_EXTRACT(const char* name, State* state, int argc, Expr* argv[]) {
   
   byte res=0;
   char dpath[256];
-  snprintf(dpath,255,"%s/%s",AROMA_TMP,args[1]);
+  snprintf(dpath,256,"%s/%s",AROMA_TMP,args[1]);
   if (strcmp("ziptotmp",name)==0){
     res=az_extract(args[0], dpath);
   }
   else if (strcmp("restotmp",name)==0){
     char zpath[256];
-    snprintf(zpath,255,"%s/%s",AROMA_DIR,args[0]);
+    snprintf(zpath,256,"%s/%s",AROMA_DIR,args[0]);
     res=az_extract(zpath, dpath);
   }
   
@@ -538,7 +541,7 @@ Value* AROMA_FILEGETPROP(const char* name, State* state, int argc, Expr* argv[])
     result = aui_parseprop(args[0],args[1]);
   else if (strcmp(name,"prop")==0){
     char path[256];
-    snprintf(path,255,"%s/%s",AROMA_TMP,args[0]);
+    snprintf(path,256,"%s/%s",AROMA_TMP,args[0]);
     result = aui_parseprop(path,args[1]);
   }
   else if (strcmp(name,"zipprop")==0){
@@ -546,7 +549,7 @@ Value* AROMA_FILEGETPROP(const char* name, State* state, int argc, Expr* argv[])
   }
   else if (strcmp(name,"resprop")==0){
     char path[256];
-    snprintf(path,255,"%s/%s",AROMA_DIR,args[0]);
+    snprintf(path,256,"%s/%s",AROMA_DIR,args[0]);
     result = aui_parsepropzip(path,args[1]);
   }
   
@@ -625,7 +628,7 @@ Value* AROMA_RESREAD(const char* name, State* state, int argc, Expr* argv[]) {
     
   //-- Create Path Into Resource Dir
   char path[256];
-  snprintf(path,255,"%s/%s",AROMA_DIR,args[0]);
+  snprintf(path,256,"%s/%s",AROMA_DIR,args[0]);
   
   //-- Read From Zip
   char * buf = aui_readfromzip(path);
@@ -656,7 +659,7 @@ Value* AROMA_PLEASEWAIT(const char* name, State* state, int argc, Expr* argv[]) 
   
   //-- Set Busy Text
   char txt[32];
-  snprintf(txt,31,args[0]);
+  snprintf(txt,32,args[0]);
   ag_setbusy_withtext(txt);
   
   //-- Release Arguments
@@ -1018,33 +1021,33 @@ Value* AROMA_INI_GET(const char* name, State* state, int argc, Expr* argv[]) {
   memset(retval,0,64);
   
   //-- Set Property
-  if      (strcmp(args[0],"roundsize") == 0)          snprintf(retval,63,"%i",acfg()->roundsz);
-  else if (strcmp(args[0],"button_roundsize") == 0)   snprintf(retval,63,"%i",acfg()->btnroundsz);
-  else if (strcmp(args[0],"window_roundsize") == 0)   snprintf(retval,63,"%i",acfg()->winroundsz);
-  else if (strcmp(args[0],"transition_frame") == 0)   snprintf(retval,63,"%i",acfg()->fadeframes);
+  if      (strcmp(args[0],"roundsize") == 0)          snprintf(retval,64,"%i",acfg()->roundsz);
+  else if (strcmp(args[0],"button_roundsize") == 0)   snprintf(retval,64,"%i",acfg()->btnroundsz);
+  else if (strcmp(args[0],"window_roundsize") == 0)   snprintf(retval,64,"%i",acfg()->winroundsz);
+  else if (strcmp(args[0],"transition_frame") == 0)   snprintf(retval,64,"%i",acfg()->fadeframes);
 
-  else if (strcmp(args[0],"text_ok") == 0)            snprintf(retval,63,"%s",acfg()->text_ok);
-  else if (strcmp(args[0],"text_next") == 0)          snprintf(retval,63,"%s",acfg()->text_next);
-  else if (strcmp(args[0],"text_back") == 0)          snprintf(retval,63,"%s",acfg()->text_back);
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(retval,64,"%s",acfg()->text_ok);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(retval,64,"%s",acfg()->text_next);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(retval,64,"%s",acfg()->text_back);
 
-  else if (strcmp(args[0],"text_yes") == 0)           snprintf(retval,63,"%s",acfg()->text_yes);
-  else if (strcmp(args[0],"text_no") == 0)            snprintf(retval,63,"%s",acfg()->text_no);
-  else if (strcmp(args[0],"text_about") == 0)         snprintf(retval,63,"%s",acfg()->text_about);
-  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(retval,63,"%s",acfg()->text_calibrating);
-  else if (strcmp(args[0],"text_quit") == 0)          snprintf(retval,63,"%s",acfg()->text_quit);
-  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(retval,63,"%s",acfg()->text_quit_msg);
+  else if (strcmp(args[0],"text_yes") == 0)           snprintf(retval,64,"%s",acfg()->text_yes);
+  else if (strcmp(args[0],"text_no") == 0)            snprintf(retval,64,"%s",acfg()->text_no);
+  else if (strcmp(args[0],"text_about") == 0)         snprintf(retval,64,"%s",acfg()->text_about);
+  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(retval,64,"%s",acfg()->text_calibrating);
+  else if (strcmp(args[0],"text_quit") == 0)          snprintf(retval,64,"%s",acfg()->text_quit);
+  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(retval,64,"%s",acfg()->text_quit_msg);
     
-  else if (strcmp(args[0],"rom_name") == 0)           snprintf(retval,63,"%s",acfg()->rom_name);
-  else if (strcmp(args[0],"rom_version") == 0)        snprintf(retval,63,"%s",acfg()->rom_version);
-  else if (strcmp(args[0],"rom_author") == 0)         snprintf(retval,63,"%s",acfg()->rom_author);
-  else if (strcmp(args[0],"rom_device") == 0)         snprintf(retval,63,"%s",acfg()->rom_device);
-  else if (strcmp(args[0],"rom_date") == 0)           snprintf(retval,63,"%s",acfg()->rom_date);
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(retval,64,"%s",acfg()->rom_name);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(retval,64,"%s",acfg()->rom_version);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(retval,64,"%s",acfg()->rom_author);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(retval,64,"%s",acfg()->rom_device);
+  else if (strcmp(args[0],"rom_date") == 0)           snprintf(retval,64,"%s",acfg()->rom_date);
   
-  else if (strcmp(args[0],"customkeycode_up")==0)     snprintf(retval,63,"%i",acfg()->ckey_up);
-  else if (strcmp(args[0],"customkeycode_down")==0)   snprintf(retval,63,"%i",acfg()->ckey_down);
-  else if (strcmp(args[0],"customkeycode_select")==0) snprintf(retval,63,"%i",acfg()->ckey_select);
-  else if (strcmp(args[0],"customkeycode_back") == 0) snprintf(retval,63,"%i",acfg()->ckey_back);
-  else if (strcmp(args[0],"customkeycode_menu") == 0) snprintf(retval,63,"%i",acfg()->ckey_menu);
+  else if (strcmp(args[0],"customkeycode_up")==0)     snprintf(retval,64,"%i",acfg()->ckey_up);
+  else if (strcmp(args[0],"customkeycode_down")==0)   snprintf(retval,64,"%i",acfg()->ckey_down);
+  else if (strcmp(args[0],"customkeycode_select")==0) snprintf(retval,64,"%i",acfg()->ckey_select);
+  else if (strcmp(args[0],"customkeycode_back") == 0) snprintf(retval,64,"%i",acfg()->ckey_back);
+  else if (strcmp(args[0],"customkeycode_menu") == 0) snprintf(retval,64,"%i",acfg()->ckey_menu);
   
   //-- Release Arguments
   _FREEARGS();
@@ -1077,22 +1080,22 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(args[0],"window_roundsize") == 0)   acfg()->winroundsz=valint;
   else if (strcmp(args[0],"transition_frame") == 0)   acfg()->fadeframes=valint;
 
-  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,31,args[1]);
-  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,31,args[1]);
-  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,31,args[1]);
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,64,args[1]);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,64,args[1]);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,64,args[1]);
 
-  else if (strcmp(args[0],"text_yes") == 0)           snprintf(acfg()->text_yes,31,args[1]);
-  else if (strcmp(args[0],"text_no") == 0)            snprintf(acfg()->text_no,31,args[1]);
-  else if (strcmp(args[0],"text_about") == 0)         snprintf(acfg()->text_about,31,args[1]);
-  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(acfg()->text_calibrating,31,args[1]);
-  else if (strcmp(args[0],"text_quit") == 0)          snprintf(acfg()->text_quit,31,args[1]);
-  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(acfg()->text_quit_msg,63,args[1]);
+  else if (strcmp(args[0],"text_yes") == 0)           snprintf(acfg()->text_yes,64,args[1]);
+  else if (strcmp(args[0],"text_no") == 0)            snprintf(acfg()->text_no,64,args[1]);
+  else if (strcmp(args[0],"text_about") == 0)         snprintf(acfg()->text_about,64,args[1]);
+  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(acfg()->text_calibrating,64,args[1]);
+  else if (strcmp(args[0],"text_quit") == 0)          snprintf(acfg()->text_quit,64,args[1]);
+  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(acfg()->text_quit_msg,128,args[1]);
     
-  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,63,args[1]);
-  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,63,args[1]);
-  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,63,args[1]);
-  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,63,args[1]);
-  else if (strcmp(args[0],"rom_date") == 0)           snprintf(acfg()->rom_date,63,args[1]);
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,128,args[1]);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,128,args[1]);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,128,args[1]);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,128,args[1]);
+  else if (strcmp(args[0],"rom_date") == 0)           snprintf(acfg()->rom_date,128,args[1]);
   
   
   else if (strcmp(args[0],"customkeycode_up")==0)     acfg()->ckey_up=valkey;
@@ -1308,7 +1311,7 @@ Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Background
   aui_setbg(args[0]);
   char text[1024];
-  snprintf(text,1023,"%s",args[1]);
+  snprintf(text,1024,"%s",args[1]);
   
   //-- Init Drawing Data
   int pad         = agdp() * 4;
@@ -1397,7 +1400,7 @@ Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
   char save_var_name[256];
   if (argc==6){
     //-- Save Variable Name
-    snprintf(save_var_name,255,args[5]);
+    snprintf(save_var_name,256,args[5]);
   }
             
   //-- Release Arguments
@@ -1487,15 +1490,15 @@ Value* AROMA_TEXTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Background
   aui_setbg(args[0]);
   char text[256];
-  snprintf(text,255,"%s",args[1]);
+  snprintf(text,256,"%s",args[1]);
   
   //-- Unchecked Alert Message
   char unchkmsg[256];
-  if (!isplain) snprintf(unchkmsg,255,"%s",args[5]);
+  if (!isplain) snprintf(unchkmsg,256,"%s",args[5]);
     
   //-- Title Text
-  char titletxt[32];
-  snprintf(titletxt,31,"%s",args[0]);
+  char titletxt[64];
+  snprintf(titletxt,64,"%s",args[0]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -1653,8 +1656,8 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Strings
   char path[256];
   char text[256];
-  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
-  snprintf(text,255,"%s",args[1]);
+  snprintf(path,256,"%s/%s",AROMA_TMP,args[3]);
+  snprintf(text,256,"%s",args[1]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -1737,7 +1740,7 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
     }
     else if (defchk!=3){
       idx++;
-      snprintf(propkey,63,"item.%d.%d",group_id,idx);
+      snprintf(propkey,64,"item.%d.%d",group_id,idx);
       char * res = aui_parseprop(path,propkey);
       if (res!=NULL){
         defchk = (strcmp(res,"1")==0)?1:0;
@@ -1783,7 +1786,7 @@ Value* AROMA_CHECKBOX(const char* name, State* state, int argc, Expr* argv[]) {
     for (i=0;i<itemcnt;i++) {
       if (!accheck_isgroup(chk1,i)){
         byte state = accheck_ischecked(chk1,i);
-        snprintf(propkey,63,"item.%d.%d=%d\n",accheck_getgroup(chk1,i),accheck_getgroupid(chk1,i)+1,state);
+        snprintf(propkey,64,"item.%d.%d=%d\n",accheck_getgroup(chk1,i),accheck_getgroupid(chk1,i)+1,state);
         fwrite(propkey,1,strlen(propkey),fp);
       }
     }
@@ -1826,8 +1829,8 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Strings
   char path[256];
   char text[256];
-  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
-  snprintf(text,255,"%s",args[1]);
+  snprintf(path,256,"%s/%s",AROMA_TMP,args[3]);
+  snprintf(text,256,"%s",args[1]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -1911,10 +1914,10 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
     }
     else if (defchk!=3){
       idx++;
-      snprintf(propkey,63,"selected.%d",group_id);
+      snprintf(propkey,64,"selected.%d",group_id);
       char * savedsel = aui_parseprop(path,propkey);
       
-      snprintf(propkey,63,"%d",idx);
+      snprintf(propkey,64,"%d",idx);
       if (savedsel!=NULL){
         defchk = (strcmp(savedsel,propkey)==0)?1:0;
         free(savedsel);
@@ -1963,7 +1966,7 @@ Value* AROMA_SELECTBOX(const char* name, State* state, int argc, Expr* argv[]) {
       int selidx   = acopt_getselectedindex(opt1,i);
       if (selidx!=-1){
         int selindex = acopt_getgroupid(opt1,selidx)+1;
-        snprintf(propkey,63,"selected.%d=%d\n",i,selindex);
+        snprintf(propkey,64,"selected.%d=%d\n",i,selindex);
         fwrite(propkey,1,strlen(propkey),fp);
       }
     }
@@ -2006,8 +2009,8 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Strings
   char path[256];
   char text[256];
-  snprintf(path,255,"%s/%s",AROMA_TMP,args[3]);
-  snprintf(text,255,"%s",args[1]);
+  snprintf(path,256,"%s/%s",AROMA_TMP,args[3]);
+  snprintf(text,256,"%s",args[1]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -2111,7 +2114,7 @@ Value* AROMA_MENUBOX(const char* name, State* state, int argc, Expr* argv[]) {
   }
   
   int selindex = acmenu_getselectedindex(menu1)+1;
-  snprintf(propkey,63,"selected=%d\n",selindex);
+  snprintf(propkey,64,"selected=%d\n",selindex);
   
   //-- Collecting Items:
   FILE * fp = fopen(path,"wb");
@@ -2151,11 +2154,11 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Init Strings
   char text[256];                   //-- Text When Installing
   char finish_text[256];            //-- Text After Installing
-  snprintf(text,255,"%s",args[1]);
+  snprintf(text,256,"%s",args[1]);
   if (argc==4)
-    snprintf(finish_text,255,"%s",args[3]);
+    snprintf(finish_text,256,"%s",args[3]);
   else
-    snprintf(finish_text,255,"%s",args[1]);
+    snprintf(finish_text,256,"%s",args[1]);
   
   //-- Drawing Data
   int pad         = agdp() * 4;
@@ -2238,7 +2241,7 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
   aparse_installpos = func_pos;
   
   //-- Installer OK
-  snprintf(text,255,"%i",ret_status);
+  snprintf(text,256,"%i",ret_status);
   
   //-- Installer Not Return OK
   return StringValue(strdup(text));
@@ -2511,10 +2514,10 @@ Value* AROMA_GETPART(const char* name, State* state, int argc, Expr* argv[]) {
 done:
   //-- Finish
   if (valid){
-    snprintf(retstr,63,"%lu",ret);  
+    snprintf(retstr,64,"%lu",ret);  
   }
   else{
-    snprintf(retstr,63,"-1");
+    snprintf(retstr,64,"-1");
   }
   return StringValue(strdup(retstr));
 }
@@ -2531,7 +2534,7 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   
   int exec_status=-1;
   char status_str[16];
-  snprintf(status_str,15,"-1");
+  snprintf(status_str,16,"-1");
   
   //-- Get Arguments
   _INITARGS();
@@ -2541,7 +2544,7 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   byte isremoveexec = 0;
   if (strcmp(name,"zipexec")==0){
     isremoveexec    = 1;
-    snprintf(path,255,"%s/exec_tmp",AROMA_TMP);
+    snprintf(path,256,"%s/exec_tmp",AROMA_TMP);
     int res = az_extract(args[0],path);
     if (res==0){
       _FREEARGS();
@@ -2551,8 +2554,8 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(name,"resexec")==0){
     char zpath[256];
     isremoveexec    = 1;
-    snprintf(path, 255,"%s/exec_tmp",AROMA_TMP);
-    snprintf(zpath,255,"%s/%s",AROMA_DIR,args[0]);
+    snprintf(path, 256,"%s/exec_tmp",AROMA_TMP);
+    snprintf(zpath,256,"%s/%s",AROMA_DIR,args[0]);
     int res = az_extract(zpath,path);
     if (res==0){
       _FREEARGS();
@@ -2560,7 +2563,7 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
     }
   }
   else{
-    snprintf(path, 255,"%s",args[0]);
+    snprintf(path, 256,"%s",args[0]);
   }
   
   //-- Init Exec CMD & Arguments
@@ -2605,7 +2608,7 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Get Return Status
   waitpid(pid, &exec_status, 0);
-  snprintf(status_str,15,"%i",WEXITSTATUS(exec_status));
+  snprintf(status_str,16,"%i",WEXITSTATUS(exec_status));
   free(args2);
 
   if (isremoveexec){
@@ -2618,6 +2621,69 @@ Value* AROMA_EXEC(const char* name, State* state, int argc, Expr* argv[]) {
 done:
   //-- Return
   return StringValue(strdup(status_str));
+}
+
+
+//* 
+//* loadlang
+//*
+void aui_langloadsave(char * dest, int max, char * key){
+  char * val = alang_get(key);
+  if (val!=NULL) snprintf(dest,max,val);
+}
+Value* AROMA_LOADLANG(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc != 1) {
+    return ErrorAbort(state, "%s() expects 1 arg (language_file)", name);
+  }
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  //-- Load Language Data
+  char path[256];
+  snprintf(path,256,"%s/%s",AROMA_DIR,args[0]);
+  byte res = alang_load(path);
+  
+  //-- Replace Text
+  if (res){
+    acfg_reset_text();
+    aui_langloadsave(acfg()->text_ok, 64, "text_ok");
+    aui_langloadsave(acfg()->text_next, 64, "text_next");
+    aui_langloadsave(acfg()->text_back, 64, "text_back");
+    aui_langloadsave(acfg()->text_yes, 64, "text_yes");
+    aui_langloadsave(acfg()->text_no, 64, "text_no");
+    aui_langloadsave(acfg()->text_about, 64, "text_about");
+    aui_langloadsave(acfg()->text_calibrating, 64, "text_calibrating");
+    aui_langloadsave(acfg()->text_quit, 64, "text_quit");
+    aui_langloadsave(acfg()->text_quit_msg, 128, "text_quit_msg");
+  }
+  
+  _FREEARGS();
+  
+  return StringValue(strdup(res?"1":""));
+}
+
+//* 
+//* lang
+//*
+Value* AROMA_LANG(const char* name, State* state, int argc, Expr* argv[]) {
+  if (argc != 1) {
+    return ErrorAbort(state, "%s() expects 1 arg (words_key)", name);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  
+  //-- Get Arguments
+  _INITARGS();
+  
+  char * out = alang_get(args[0]);
+  
+  _FREEARGS();
+  
+  return StringValue(strdup((out==NULL)?"":out));
 }
 
 /************************************[ AROMA EDIFY REGISTER ]************************************/
@@ -2638,6 +2704,9 @@ void RegisterAroma() {
   RegisterFunction("fontload",      AROMA_FONT);          //-- SHOW CALIBRATING TOOL
   RegisterFunction("fontresload",   AROMA_FONT);          //-- SHOW CALIBRATING TOOL
   
+  //-- LANGUAGE FUNCTIONS
+  RegisterFunction("loadlang",      AROMA_LOADLANG);       //-- Load Language File
+  RegisterFunction("lang",          AROMA_LANG);           //-- Get Language Words
   
   //-- VARIABLE FUNCTIONS
   RegisterFunction("getvar",        AROMA_GETVAR);        //-- GET VARIABLE
@@ -2774,15 +2843,18 @@ byte aui_start(){
   do{
     //-- Init Config and Fonts
     acfg_init();
-    ag_loadsmallfont("fonts/small",0);
-    ag_loadbigfont("fonts/big",0);
+    ag_loadsmallfont("fonts/small",0,NULL);
+    ag_loadbigfont("fonts/big",0,NULL);
+    alang_release();
     
     aui_isbgredraw = 1;
     if (result!=NULL) free(result);
     aparse_history_pos  = 0;
     aparse_isback       = 0;
     result = Evaluate(&state, root);
+    
   }while(aparse_isback);
+  
   ag_ccanvas(&aui_win_bg);
   ag_ccanvas(&aui_bg);
   
@@ -2806,6 +2878,7 @@ byte aui_start(){
     free(script_installer.data);
     free(state.errmsg);
     
+    alang_release();
     atheme_releaseall();
     return res;
   }
@@ -2814,6 +2887,7 @@ byte aui_start(){
     free(result);
   }
   
+  alang_release();
   atheme_releaseall();
   return 1;
 }

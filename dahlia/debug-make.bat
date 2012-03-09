@@ -14,6 +14,8 @@ D:\DevelTools\cndk\bin\arm-none-linux-gnueabi-gcc -g ^
   -static ^
   -Wl,-s -Werror ^
   -DFT2_BUILD_LIBRARY=1 ^
+  -D_GLIBCXX_DEBUG_PEDANTIC ^
+  -D_GLIBCXX_DEBUG ^
   -DDARWIN_NO_CARBON ^
     ^
       *.o ^

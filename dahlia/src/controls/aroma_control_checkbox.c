@@ -26,7 +26,7 @@
 
 /***************************[ CHECKBOX ]**************************/
 typedef struct{
-  char title[32];
+  char title[64];
   char desc[128];
   byte checked;
   int  id;
@@ -255,8 +255,8 @@ byte accheck_add(ACONTROLP ctl,char * title, char * desc, byte checked){
   
   //-- Allocating Memory For Item Data
   ACCHECKIP newip = (ACCHECKIP) malloc(sizeof(ACCHECKI));
-  snprintf(newip->title,31,"%s",title);
-  snprintf(newip->desc,127,"%s",desc);
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
   newip->th       = ag_txtheight(d->clientTextW,newip->title,0);
   newip->dh       = ag_txtheight(d->clientTextW,newip->desc,0);
   newip->ty       = agdp()*5;
@@ -296,8 +296,8 @@ byte accheck_addgroup(ACONTROLP ctl,char * title, char * desc){
   
   //-- Allocating Memory For Item Data
   ACCHECKIP newip = (ACCHECKIP) malloc(sizeof(ACCHECKI));
-  snprintf(newip->title,31,"%s",title);
-  snprintf(newip->desc,127,"%s",desc);
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
   newip->th       = ag_txtheight(d->clientTextW+(agdp()*14),newip->title,0);
   newip->dh       = 0;
   newip->ty       = agdp()*3;

@@ -28,7 +28,7 @@
 #include <sys/poll.h>
 #include <linux/input.h>
 #include <pthread.h>
-#include "../aroma.h"
+#include "aroma.h"
 
 //-- DEFINED
 #define MAX_DEVICES 16
@@ -286,6 +286,20 @@ void ev_input_callback(int fd, short revents){
                 }
               }
             }
+            else if (evtouch_state==0){
+              if (evtouch_mt_syn==3){
+                evtouch_mt_syn=1;
+                atouch_translate_raw();
+                evtouch_locked=1;
+                evtouch_alreadyu=0;
+                evtouch_x=evtouch_tx;
+                evtouch_y=evtouch_ty;
+                evtouch_state = 1;
+                evtouch_sx = evtouch_x;
+                evtouch_sy = evtouch_y;
+                ev_post_message(evtouch_code,1);
+              }
+            }
           }
         }break;
         
@@ -341,6 +355,13 @@ void ev_input_callback(int fd, short revents){
                     ev_post_message(evtouch_code,0);
                   }
                 }
+              }
+            }
+            else{
+              byte tmptouch  = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
+              if ((tmptouch!=0)&&(tmptouch!=3)){
+                evtouch_mt_syn=3;
+                evtouch_locked=0;
               }
             }
           }
@@ -508,21 +529,25 @@ int atouch_wait_ex(ATEV *atev, byte calibratingtouch){
           if (evtouch_state==0){
             atev->d = 0;
             if (evtouch_x<capiative_btnsz){
+              vibrate(30);
               atev->k = KEY_HOME;
               evtouch_locked=0;
               return ATEV_SELECT;
             }
             else if (evtouch_x<(capiative_btnsz*2)){
+              vibrate(30);
               atev->k = KEY_MENU;
               evtouch_locked=0;
               return ATEV_MENU;
             }
             else if (evtouch_x<(capiative_btnsz*3)){
+              vibrate(30);
               atev->k = KEY_BACK;
               evtouch_locked=0;
               return ATEV_BACK;
             }
             else if (evtouch_x<(capiative_btnsz*4)){
+              vibrate(30);
               atev->k = KEY_SEARCH;
               evtouch_locked=0;
               return ATEV_MENU;

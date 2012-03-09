@@ -217,8 +217,6 @@ int main(int argc, char **argv) {
   LOGS("Closing Recovery Pipe\n");
   fclose(acmd_pipe);
 
-
-
 #ifndef _AROMA_NODEBUG
   aroma_dump_malloc();
 #endif

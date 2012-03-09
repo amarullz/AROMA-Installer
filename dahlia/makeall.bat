@@ -19,6 +19,8 @@ D:\DevelTools\cndk\bin\arm-none-linux-gnueabi-gcc ^
   -Wl,--gc-sections ^
   -fPIC -DPIC ^
   -Wl,-s -Werror ^
+  -D_GLIBCXX_DEBUG_PEDANTIC ^
+  -D_GLIBCXX_DEBUG ^
   -D_AROMA_NODEBUG ^
   -DFT2_BUILD_LIBRARY=1 ^
   -DDARWIN_NO_CARBON ^

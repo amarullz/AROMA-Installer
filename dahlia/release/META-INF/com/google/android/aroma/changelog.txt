@@ -1,3 +1,17 @@
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120307-002</#></b>
+<*>Change list bullet drawing method</*>
+<*>Add support for kerning font when use TrueType/OpenType</*>
+<*>Add AROMA Memory management and memory debuging build (COMPILE FROM SOURCE ONLY)</*>
+<*>Add more limit size for AROMA texts</*>
+<*>Add font glyph cache for faster freetype drawing & processing</*>
+<*>Add support for Modern Standard Arabic</*>
+<*>Add support for RTL</*>
+<*>Add support for TrueType and OpenType fonts</*>
+<*>Add support for UTF8 encoding in aroma-config and all AMS text. For updater-script use NO-BOM UTF8</*>
+<*>Fix Memory leaks</*>
+<*>Add ini_set("force_colorspace","rgba");</*>
+<*>Add support for atmel_maxtouch - Asus Transformer Touch Screen</*>
+
 <b><#selectbg_g>CEMPAKA - 1.60 - BUILD 120227-26</#></b>
 <*>Add msb_right check for Endianess video memory</*>
 <*>Fix Installer text log drawing</*>
@@ -51,7 +65,7 @@
   <*>exec - Run Prohram/Exec</*>
   <*>back - BACK TO PREVIOUS WIZARD</*>
   <*>reboot - REBOOT DEVICE</*></#></*>
-<*><u>Deprecated Funcrions</u><#textfg_gray>
+<*><u>Deprecated Functions</u><#textfg_gray>
   <*>readfile - Will Renamed to zipread</*>
   <*>readfile_aroma - Will Renamed to resread</*></#></*>
 <*>Add Some Fix in Touch Up Handler</*>

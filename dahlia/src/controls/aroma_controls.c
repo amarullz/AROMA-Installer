@@ -29,6 +29,17 @@ static byte      on_dialog_window = 0;
 
 /***************************[ CONFIG FUNCTIONS ]**************************/
 AC_CONFIG * acfg(){ return &acfg_var; }
+void acfg_reset_text(){
+  snprintf(acfg_var.text_ok,64,"OK");
+  snprintf(acfg_var.text_next,64,"Next >");
+  snprintf(acfg_var.text_back,64,"< Back");
+  snprintf(acfg_var.text_yes,64,"Yes");
+  snprintf(acfg_var.text_no,64,"No");
+  snprintf(acfg_var.text_about,64,"About");
+  snprintf(acfg_var.text_calibrating,64,"Calibrating Tools");
+  snprintf(acfg_var.text_quit,64,"Quit Installation");
+  snprintf(acfg_var.text_quit_msg,128,"Are you sure to quit the installer?");
+}
 void acfg_init_ex(byte themeonly){
   acfg_var.winbg        = ag_rgb(0xf0,0xf0,0xf0);
   acfg_var.winbg_g      = ag_rgb(0xee,0xee,0xee);
@@ -75,24 +86,16 @@ void acfg_init_ex(byte themeonly){
   acfg_var.btnroundsz   = 2;
   acfg_var.fadeframes   = 5;
   
-  snprintf(acfg_var.themename,63,"");
+  snprintf(acfg_var.themename,64,"");
   
   if (themeonly==0){
-    snprintf(acfg_var.text_ok,31,"OK");
-    snprintf(acfg_var.text_next,31,"Next >");
-    snprintf(acfg_var.text_back,31,"< Back");
-    snprintf(acfg_var.text_yes,31,"Yes");
-    snprintf(acfg_var.text_no,31,"No");
-    snprintf(acfg_var.text_about,31,"About");
-    snprintf(acfg_var.text_calibrating,31,"Calibrating Tools");
-    snprintf(acfg_var.text_quit,31,"Quit Installation");
-    snprintf(acfg_var.text_quit_msg,63,"Are you sure to quit the installer?");
+    acfg_reset_text();
     
-    snprintf(acfg_var.rom_name,63,AROMA_NAME);
-    snprintf(acfg_var.rom_version,63,AROMA_VERSION);
-    snprintf(acfg_var.rom_author,63,AROMA_BUILD_A);
-    snprintf(acfg_var.rom_device,63,"Not Defined");
-    snprintf(acfg_var.rom_date,63,AROMA_BUILD);
+    snprintf(acfg_var.rom_name,128,AROMA_NAME);
+    snprintf(acfg_var.rom_version,128,AROMA_VERSION);
+    snprintf(acfg_var.rom_author,128,AROMA_BUILD_A);
+    snprintf(acfg_var.rom_device,128,"Not Defined");
+    snprintf(acfg_var.rom_date,128,AROMA_BUILD);
     
     
     acfg_var.ckey_up      = 0;
@@ -563,8 +566,8 @@ void aw_textdialog(AWINDOWP parent,char * titlev,char * text,char * ok_text){
   ag_rectopa(agc(),0,0,agw(),agh(),0x0000,180);
   ag_sync();
   
-  char title[32];
-  snprintf(title,31,"%s",titlev);
+  char title[64];
+  snprintf(title,64,"%s",titlev);
   
   int pad   = agdp()*4;
   int winW  = agw()-(pad*2);
@@ -666,8 +669,8 @@ void aw_alert(AWINDOWP parent,char * titlev,char * textv,char * img,char * ok_te
   ag_sync();
   
   char title[32];
-  char text[513];
-  snprintf(title,31,"%s",titlev);
+  char text[512];
+  snprintf(title,32,"%s",titlev);
   snprintf(text,512,"%s",textv);
   
   int pad   = agdp()*4;
@@ -791,9 +794,9 @@ byte aw_confirm(AWINDOWP parent, char * titlev,char * textv,char * img,char * ye
   ag_rectopa(agc(),0,0,agw(),agh(),0x0000,180);
   ag_sync();
   
-  char title[32];
-  char text[513];
-  snprintf(title,31,"%s",titlev);
+  char title[64];
+  char text[512];
+  snprintf(title,64,"%s",titlev);
   snprintf(text,512,"%s",textv);
   
   int pad   = agdp()*4;
@@ -938,8 +941,8 @@ byte aw_calibdraw(CANVAS * c,
 
   if (id!=-1){
     char txt[128];
-    snprintf(txt,127,"Step %i: Tap The Circle To Calibrate",id+1);
-    char * txt2 = "Press Back Key or Other Keys To Cancel";
+    snprintf(txt,128,"Step %i: Tap The Circle To Calibrate",id+1);
+    char * txt2 = "Press Power Key or Other Keys To Cancel";
     int tw = ag_txtwidth(txt,0);
     int tw2 = ag_txtwidth(txt2,0);
     int tx = (agw()/2) - (tw/2);
@@ -953,7 +956,7 @@ byte aw_calibdraw(CANVAS * c,
   }
   else{
     char * txt  = "Tap The Screen to Test Calibrated Data";
-    char * txt2 = "Press Back or Other Keys To Continue";
+    char * txt2 = "Press Power or Other Keys To Continue";
     int tw = ag_txtwidth(txt,0);
     int tw2 = ag_txtwidth(txt2,0);
     int tx = (agw()/2) - (tw/2);
@@ -1113,14 +1116,14 @@ void aw_calibtools(AWINDOWP parent){
   if (data_is_valid){
     atouch_set_calibrate(cal_x,add_x,cal_y,add_y);    
     if (!USE_HACK){
-      snprintf(datx,255,
-        "Use/Replace this command in <#009>aroma-config</#>:\n\n"
+      snprintf(datx,256,
+        "Use/replace this command in <#009>aroma-config</#>:\n\n"
         "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\",\"yes\"\n);</#>\n\n",
       cal_x,add_x,cal_y,add_y);
     }
     else{
-      snprintf(datx,255,
-        "Use/Replace this command in <#009>aroma-config</#>:\n\n"
+      snprintf(datx,256,
+        "Use/replace this command in <#009>aroma-config</#>:\n\n"
         "<#060>calibrate(\n  \"%01.4f\",\"%i\",\"%01.4f\",\"%i\"\n);</#>\n\n",
       cal_x,add_x,cal_y,add_y);
     }
@@ -1162,7 +1165,7 @@ doneit:
   }
 }
 void aw_about_dialog(AWINDOWP parent){
-  char unchkmsg[513];
+  char unchkmsg[512];
   
   snprintf(unchkmsg,512,
     "<b>%s %s</b>\n"
