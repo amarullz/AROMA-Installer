@@ -1,4 +1,7 @@
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 1203dd-00x</#></b>
+<*>Add support for French (Thanks to MyUI Team)</*>
 <b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120307-002</#></b>
+<*>Add Multilanguage functions</*>
 <*>Change list bullet drawing method</*>
 <*>Add support for kerning font when use TrueType/OpenType</*>
 <*>Add AROMA Memory management and memory debuging build (COMPILE FROM SOURCE ONLY)</*>

@@ -167,6 +167,7 @@ selectbox(
     "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
 	"Simplified Chinesse","欢迎到安装",                                                         0,       #-- selected.0 = 4
 	"Arabic",             "مرحبا بكم في المثبت",                                               0        #-- selected.0 = 5        
+    "French",             "Bienvenue dans l'installateur",                                 0,      #-- selected.0 = 6
 
   #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
 );
@@ -203,6 +204,13 @@ if prop("lang.prop","selected.0")=="5" then
   fontresload( "0", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "12" ); #-- Use sets of font (Font Family)
   fontresload( "1", "ttf/DroidSansArabic.ttf;ttf/DroidSans.ttf", "18" );
 endif;
+
+if prop("lang.prop","selected.0")=="6" then
+  loadlang("langs/fr.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
 
 ###################################################################################################################
 #
