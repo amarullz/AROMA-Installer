@@ -28,7 +28,7 @@
 #include <sys/poll.h>
 #include <linux/input.h>
 #include <pthread.h>
-#include "aroma.h"
+#include "../aroma.h"
 
 //-- DEFINED
 #define MAX_DEVICES 16

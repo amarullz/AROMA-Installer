@@ -16,22 +16,22 @@
 #
 ### LANGUAGE STRING RESOURCE FILE
 #
-#   Language  : Chinesse Simple
-#   By        : amarullz + google translate
+#   Language  : Simplified Chinesse
+#   By        : kinghunki
 #
 
 #
 #--- COMMON SYSTEM STRING RESOURCE
 #
 text_ok=确定
-text_next=未来 >
-text_back=< 背面
-text_yes=是
-text_no=没有
+text_next=下一步 >
+text_back=< 返回
+text_yes=同意
+text_no=放弃
 text_about=关于
 text_calibrating=校准工具
 text_quit=退出安装
-text_quit_msg=你一定要退出安装吗？
+text_quit_msg=你确定要退出安装吗？
 
 #
 #-- CUSTOM STRING RESOURCE
@@ -54,14 +54,14 @@ themes.desc=要在此安装测试使用，请选择安装的主题：
 
 welcome.title=欢迎
 welcome.text1=你即将安装
-welcome.text2=AROMA Installer 是第一和唯一的触摸和世界定制的Android ROM的Installer.
-welcome.version=版
+welcome.text2=AROMA Installer 是第一也是唯一的触摸选择刷机过程的.
+welcome.version=版本
 welcome.codename=代号
 welcome.updated=更新
 welcome.next=按下一步继续安装...
 
 terms.title=条款和条件
-terms.desc=请仔细阅读仔细的香气安装条款和以下条件.
+terms.desc=请仔细阅读仔细的AROMA安装条款和以下条件.
 terms.check=我同意本条款及条件...
 terms.confirm=请检查协议...
 
