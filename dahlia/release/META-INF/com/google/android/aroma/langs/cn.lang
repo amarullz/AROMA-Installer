@@ -16,8 +16,8 @@
 #
 ### LANGUAGE STRING RESOURCE FILE
 #
-#   Language  : Simplified Chinesse
-#   By        : kinghunki
+#   Language  : 简体中文
+#   By        : amarullz + google translate + 魂客（kinghunki）
 #
 
 #
@@ -29,22 +29,21 @@ text_back=< 返回
 text_yes=同意
 text_no=放弃
 text_about=关于
-text_calibrating=校准工具
+text_calibrating=屏幕校准
 text_quit=退出安装
 text_quit_msg=你确定要退出安装吗？
 
 #
 #-- CUSTOM STRING RESOURCE
 #
-common.for=为
+common.for=到您的
 
 langtest.title=语言测试
-langtest.multiline=这个文本是位于 langs/cn.lang\
-使用反斜杠之前进入添加新行\
-\
-里面的语言字符串资源，你也可以做 <b>格式</b> 级.\
-\
-感谢您使用 AROMA Installer
+langtest.multiline=这个简体中文文件在：langs/cn.lang\
+如果你有更好的解释，请自行打开.lang文件修改其中内容。
+
+感谢amarullz 提供的智能刷机脚本。
+感谢您使用 AROMA Installer智能刷机脚本。
 
 #-- End of string without any backslash for multiline text
 
@@ -54,16 +53,16 @@ themes.desc=要在此安装测试使用，请选择安装的主题：
 
 welcome.title=欢迎
 welcome.text1=你即将安装
-welcome.text2=AROMA Installer 是第一也是唯一的触摸选择刷机过程的.
-welcome.version=版本
-welcome.codename=代号
-welcome.updated=更新
+welcome.text2=AROMA Installer 是第一也是唯一的触摸选择刷机过程的智能脚本.
+welcome.version=ROM 版本
+welcome.codename=定制作者
+welcome.updated=更新日期
 welcome.next=按下一步继续安装...
 
-terms.title=条款和条件
-terms.desc=请仔细阅读仔细的AROMA安装条款和以下条件.
-terms.check=我同意本条款及条件...
-terms.confirm=请检查协议...
+terms.title=条款和许可
+terms.desc=请仔细阅读仔细的AROMA安装条款和以下许可.
+terms.check=我同意本条款及许可...
+terms.confirm=请认真阅读协议并同意...
 
-changelog.title=变更
-changelog.desc=AROMA Installer 变更
+changelog.title=更新日志
+changelog.desc=关于更新说明

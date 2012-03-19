@@ -808,6 +808,9 @@ int agh(){
 int agdp(){
   return ag_dp;
 }
+void set_agdp(int dp){
+  ag_dp=dp;
+}
 
 //-- Convert String to Color
 color strtocolor(char * c){

@@ -1017,37 +1017,38 @@ Value* AROMA_INI_GET(const char* name, State* state, int argc, Expr* argv[]) {
   _INITARGS();
   
   //-- Convert Arguments
-  char retval[64];
-  memset(retval,0,64);
+  char retval[128];
+  memset(retval,0,128);
   
   //-- Set Property
-  if      (strcmp(args[0],"roundsize") == 0)          snprintf(retval,64,"%i",acfg()->roundsz);
-  else if (strcmp(args[0],"button_roundsize") == 0)   snprintf(retval,64,"%i",acfg()->btnroundsz);
-  else if (strcmp(args[0],"window_roundsize") == 0)   snprintf(retval,64,"%i",acfg()->winroundsz);
-  else if (strcmp(args[0],"transition_frame") == 0)   snprintf(retval,64,"%i",acfg()->fadeframes);
+  if      (strcmp(args[0],"roundsize") == 0)          snprintf(retval,128,"%i",acfg()->roundsz);
+  else if (strcmp(args[0],"button_roundsize") == 0)   snprintf(retval,128,"%i",acfg()->btnroundsz);
+  else if (strcmp(args[0],"window_roundsize") == 0)   snprintf(retval,128,"%i",acfg()->winroundsz);
+  else if (strcmp(args[0],"transition_frame") == 0)   snprintf(retval,128,"%i",acfg()->fadeframes);
 
-  else if (strcmp(args[0],"text_ok") == 0)            snprintf(retval,64,"%s",acfg()->text_ok);
-  else if (strcmp(args[0],"text_next") == 0)          snprintf(retval,64,"%s",acfg()->text_next);
-  else if (strcmp(args[0],"text_back") == 0)          snprintf(retval,64,"%s",acfg()->text_back);
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(retval,128,"%s",acfg()->text_ok);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(retval,128,"%s",acfg()->text_next);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(retval,128,"%s",acfg()->text_back);
 
-  else if (strcmp(args[0],"text_yes") == 0)           snprintf(retval,64,"%s",acfg()->text_yes);
-  else if (strcmp(args[0],"text_no") == 0)            snprintf(retval,64,"%s",acfg()->text_no);
-  else if (strcmp(args[0],"text_about") == 0)         snprintf(retval,64,"%s",acfg()->text_about);
-  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(retval,64,"%s",acfg()->text_calibrating);
-  else if (strcmp(args[0],"text_quit") == 0)          snprintf(retval,64,"%s",acfg()->text_quit);
-  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(retval,64,"%s",acfg()->text_quit_msg);
+  else if (strcmp(args[0],"text_yes") == 0)           snprintf(retval,128,"%s",acfg()->text_yes);
+  else if (strcmp(args[0],"text_no") == 0)            snprintf(retval,128,"%s",acfg()->text_no);
+  else if (strcmp(args[0],"text_about") == 0)         snprintf(retval,128,"%s",acfg()->text_about);
+  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(retval,128,"%s",acfg()->text_calibrating);
+  else if (strcmp(args[0],"text_quit") == 0)          snprintf(retval,128,"%s",acfg()->text_quit);
+  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(retval,128,"%s",acfg()->text_quit_msg);
     
-  else if (strcmp(args[0],"rom_name") == 0)           snprintf(retval,64,"%s",acfg()->rom_name);
-  else if (strcmp(args[0],"rom_version") == 0)        snprintf(retval,64,"%s",acfg()->rom_version);
-  else if (strcmp(args[0],"rom_author") == 0)         snprintf(retval,64,"%s",acfg()->rom_author);
-  else if (strcmp(args[0],"rom_device") == 0)         snprintf(retval,64,"%s",acfg()->rom_device);
-  else if (strcmp(args[0],"rom_date") == 0)           snprintf(retval,64,"%s",acfg()->rom_date);
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(retval,128,"%s",acfg()->rom_name);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(retval,128,"%s",acfg()->rom_version);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(retval,128,"%s",acfg()->rom_author);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(retval,128,"%s",acfg()->rom_device);
+  else if (strcmp(args[0],"rom_date") == 0)           snprintf(retval,128,"%s",acfg()->rom_date);
   
-  else if (strcmp(args[0],"customkeycode_up")==0)     snprintf(retval,64,"%i",acfg()->ckey_up);
-  else if (strcmp(args[0],"customkeycode_down")==0)   snprintf(retval,64,"%i",acfg()->ckey_down);
-  else if (strcmp(args[0],"customkeycode_select")==0) snprintf(retval,64,"%i",acfg()->ckey_select);
-  else if (strcmp(args[0],"customkeycode_back") == 0) snprintf(retval,64,"%i",acfg()->ckey_back);
-  else if (strcmp(args[0],"customkeycode_menu") == 0) snprintf(retval,64,"%i",acfg()->ckey_menu);
+  else if (strcmp(args[0],"customkeycode_up")==0)     snprintf(retval,128,"%i",acfg()->ckey_up);
+  else if (strcmp(args[0],"customkeycode_down")==0)   snprintf(retval,128,"%i",acfg()->ckey_down);
+  else if (strcmp(args[0],"customkeycode_select")==0) snprintf(retval,128,"%i",acfg()->ckey_select);
+  else if (strcmp(args[0],"customkeycode_back") == 0) snprintf(retval,128,"%i",acfg()->ckey_back);
+  else if (strcmp(args[0],"customkeycode_menu") == 0) snprintf(retval,128,"%i",acfg()->ckey_menu);
+  else if (strcmp(args[0],"dp") == 0) snprintf(retval,128,"%i",agdp());
   
   //-- Release Arguments
   _FREEARGS();
@@ -1118,6 +1119,9 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
     else if(strcasecmp(args[1],"bgra")==0){
       ag_changecolorspace(16,8,0,24);
     }
+  }
+  else if (strcmp(args[0],"dp") == 0){
+    set_agdp(valint);
   }
   
   

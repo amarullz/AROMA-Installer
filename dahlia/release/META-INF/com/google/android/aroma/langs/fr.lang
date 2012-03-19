@@ -17,7 +17,7 @@
 ### LANGUAGE STRING RESOURCE FILE
 #
 #   Language  : French
-#   By        : RolluS (Team MyUI)
+#   By        : RolluS (Team MyUI) & mickey-r
 #
 
 #
@@ -28,10 +28,10 @@ text_next=Suivant >
 text_back=< Précédent
 text_yes=Oui
 text_no=Non
-text_about=A propos
+text_about=À propos
 text_calibrating=Outils de calibration
 text_quit=Quitter l'installation
-text_quit_msg=Etes vous sur de vouloir quitter l'installateur?
+text_quit_msg=Êtes-vous sûre de vouloir quitter l'installation?
 
 #
 #-- CUSTOM STRING RESOURCE
@@ -39,10 +39,10 @@ text_quit_msg=Etes vous sur de vouloir quitter l'installateur?
 common.for=pour
 
 langtest.title=Test du language
-langtest.multiline=Ce texte est situé dans langs/fr.lang\
-Utilisez un antislash avant d'entrer une nouvelle ligne\
+langtest.multiline=Ce texte se trouve dans langs/fr.lang\
+Utiliser un antislash avant "Entrée" pour ajouter une ligne\
 \
-Vous pouvez ausi <b>formatter</b> à l'intérieur des chaines de langue.\
+Vous pouvez aussi faire une <b>Mise en forme</b> dans les textes de ressource de langue.\
 \
 Merci d'utiliser AROMA Installer
 

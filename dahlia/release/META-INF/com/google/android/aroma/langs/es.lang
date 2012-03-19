@@ -25,13 +25,13 @@
 #
 text_ok=Aceptar
 text_next=Siguiente >
-text_back=< Espalda
+text_back=< Atrás
 text_yes=Sí
 text_no=No
-text_about=Sobre
-text_calibrating=Herramientas de Calibración
-text_quit=Salga de la instalación
-text_quit_msg=¿Está seguro para salir del instalador?
+text_about=Acerca de
+text_calibrating=Calibrar pantalla
+text_quit=Salir de la instalación
+text_quit_msg=¿Seguro que quieres salir?
 
 #
 #-- CUSTOM STRING RESOURCE
@@ -39,31 +39,31 @@ text_quit_msg=¿Está seguro para salir del instalador?
 common.for=para
 
 langtest.title=Prueba de Lenguaje
-langtest.multiline=Este texto se encuentra en langs/es.lang\
-Utilice la barra invertida antes de entrar a agregar a la nueva línea\
+langtest.multiline=Este texto está en langs/es.lang\
+Usa la barra invertida al final del texto para marcar el salto de línea\
 \
-Usted también puede hacer <b>Formato</b> en el interior del recurso de cadena idioma.\
+También puedes aplicar <b>Formato</b> al texto.\
 \
 Gracias por usar AROMA Installer
 
 #-- End of string without any backslash for multiline text
 
 
-themes.title=Seleccione Tema
-themes.desc=Por favor, seleccione el tema de instalación que desea utilizar en esta prueba de instalación:
+themes.title=Selecciona un Tema
+themes.desc=Por favor, selecciona el tema gráfico que quieres usar en esta prueba de instalación:
 
-welcome.title=Bienvenida
-welcome.text1=Usted está a punto de Instalación
-welcome.text2=AROMA Installer fue la instalación de ANDROID ROM en primer lugar y el toque único y personalizable en el Mundo.
+welcome.title=Bienvenido
+welcome.text1=Estás a punto de instalar
+welcome.text2=AROMA Installer fue el primer y el único instalador del mundo táctil y personalizable para ROMs Android.
 welcome.version=VERSIÓN
 welcome.codename=CODENAME
 welcome.updated=ACTUALIZADO
-welcome.next=Pulse Siguiente para continuar la instalación...
+welcome.next=Pulsa Siguiente para continuar la instalación...
 
 terms.title=Términos y Condiciones
-terms.desc=Por favor, lea cuidadosamente los términos y condiciones de AROMA Installer Abajo.
+terms.desc=Por favor, lea cuidadosamente los términos y condiciones de AROMA Installer.
 terms.check=Estoy de acuerdo con estos Términos y Condiciones...
-terms.confirm=Por favor revise el acuerdo...
+terms.confirm=Por favor, revise el acuerdo...
 
 changelog.title=Historial de cambios
-changelog.desc=AROMA Installer Historial de cambios
+changelog.desc=Historial de cambios de AROMA Installer

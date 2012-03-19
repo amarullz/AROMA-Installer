@@ -537,6 +537,7 @@ void      ag_sync();                        // Sync Main Canvas with Framebuffer
 int       agw();                            // Get Display X Resolution
 int       agh();                            // Get Display Y Resolution
 int       agdp();                           // Get Device Pixel Size (WVGA = 3, HVGA = 2)
+void      set_agdp(int dp);                 // Force Graphic Device Pixel Size
 void      ag_sync_fade(int frame);          // Transition Sync - Async
 void      ag_sync_fade_wait(int frame);     // Transition Sync - Sync
 void      ag_sync_force();                  // Force to Sync

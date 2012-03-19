@@ -51,7 +51,23 @@
 #
 # NOTE: It must be in top most script, or you will got the color flicker
 #
-#ini_set("force_colorspace","rgba");
+# ini_set("force_colorspace","rgba");
+#
+
+##
+# Forcing Device Pixelate Size
+#  defaut: floor( min( width, height ) / 160 )
+#
+# Usefull for tablet device, if interface was too big, you can
+# force dp size for smaller UI size.
+#
+#-------- Uncomment one of this to use custom dp size:
+#
+# ini_set("dp","1");
+# ini_set("dp","2");
+# ini_set("dp","3");
+# ini_set("dp","4");
+# ini_set("dp","5");
 #
 
 
@@ -165,10 +181,11 @@ selectbox(
     "English",            "Welcome to Installer",                                        1,      #-- selected.0 = 1
     "Indonesian",         "Selamat datang di Installer",                                 0,      #-- selected.0 = 2
     "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
-	"Simplified Chinesse","欢迎到安装",                                                         0,       #-- selected.0 = 4
-	"Arabic",             "مرحبا بكم في المثبت",                                               0        #-- selected.0 = 5        
-    "French",             "Bienvenue dans l'installateur",                                 0,      #-- selected.0 = 6
-
+    "Simplified Chinesse","欢迎到安装",                                                     0,      #-- selected.0 = 4
+    "Arabic",             "مرحبا بكم في المثبت",                                               0,      #-- selected.0 = 5        
+    "French",             "Bienvenue dans l'installateur",                               0,      #-- selected.0 = 6
+    "Russian",            "Добро пожаловать в установщик",                               0,      #-- selected.0 = 7
+	"Italian",            "Benvenuti Installer",                                         0       #-- selected.0 = 8
   #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
 );
 
@@ -211,6 +228,17 @@ if prop("lang.prop","selected.0")=="6" then
   fontresload( "1", "ttf/DroidSans.ttf", "18" );
 endif;
 
+if prop("lang.prop","selected.0")=="7" then
+  loadlang("langs/ru.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
+if prop("lang.prop","selected.0")=="8" then
+  loadlang("langs/it.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
 
 ###################################################################################################################
 #
