@@ -1,3 +1,7 @@
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120414-010</#></b>
+<*>Fix framebuffer mmap size</*>
+<*>Fix status 0 error</*>
+
 <b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 1203dd-00x</#></b>
 <*>Add support for French (Thanks to MyUI Team)</*>
 <b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120307-002</#></b>

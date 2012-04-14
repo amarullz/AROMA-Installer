@@ -176,7 +176,7 @@ byte ag_init(){
     //-- Init Frame Buffer
     if (ag_fbv.bits_per_pixel==16){
       ag_32   = 0;
-      ag_fbuf = (word*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
+      ag_fbuf = (word*) mmap(0,ag_fbf.smem_len,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
       ag_b    = (word*) malloc(ag_fbsz);
       ag_bz   = (word*) malloc(ag_fbsz);
       
@@ -219,7 +219,7 @@ byte ag_init(){
       ag_32     = 1;
       
       //-- Memory Allocation
-      ag_fbuf32 = (byte*) mmap(0,ag_fbsz,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
+      ag_fbuf32 = (byte*) mmap(0,ag_fbf.smem_len,PROT_READ|PROT_WRITE,MAP_SHARED,ag_fb,0);
       ag_bf32   = (dword*) malloc(ag_fbsz);
       ag_bz32   = (dword*) malloc(ag_fbsz);
       memset(ag_bf32,0,ag_fbsz);
@@ -258,11 +258,9 @@ void ag_close_thread(){
 //-- RELEASE AMARULLZ GRAPHIC
 void ag_close(){
   if (ag_fbv.bits_per_pixel!=16){
-    /*
     if (ag_bf32!=NULL) free(ag_bf32);
     if (ag_bz32!=NULL) free(ag_bz32);
     if (ag_fbuf32!=NULL) munmap(ag_fbuf32,ag_fbsz);
-    */
   }
   else if (ag_fbv.bits_per_pixel==16){
     if (ag_b!=NULL) free(ag_b);

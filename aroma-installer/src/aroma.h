@@ -65,8 +65,8 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "1.63"
-#define AROMA_BUILD       "1203006-031"
+#define AROMA_VERSION     "1.64"
+#define AROMA_BUILD       "120414-040"
 #define AROMA_BUILD_CN    "Cempaka"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"

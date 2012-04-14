@@ -76,7 +76,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "2.00"
-#define AROMA_BUILD       "120307-002"
+#define AROMA_BUILD       "120414-010"
 #define AROMA_BUILD_CN    "Dahlia"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"

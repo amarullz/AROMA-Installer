@@ -16,13 +16,13 @@
 #
 ### FILE INFO:
 #
-# AROMA Installer 1.60 - AROMA Installer Test Script Configuration
+# AROMA Installer 2.00 - AROMA Installer Test Script Configuration
 #       (c) 2011-2012 by Ahmad Amarullah
 #           amarullz - xda-developers
 #           http://www.amarullz.com/
 #
-#       Binary Version  : 1.60
-#       Binary Codename : Cempaka
+#       Binary Version  : 2.00
+#       Binary Codename : Dahlia
 #
 ### INFO:
 #
@@ -63,9 +63,9 @@
 #
 #-------- Uncomment one of this to use custom dp size:
 #
-# ini_set("dp","1");
-# ini_set("dp","2");
-# ini_set("dp","3");
+# ini_set("dp","1"); #-- LDPI ( 240x320 / QVGA )
+# ini_set("dp","2"); #-- MDPI ( 340x480 / HVGA )
+# ini_set("dp","3"); #-- HDPI ( 480x800 / WVGA )
 # ini_set("dp","4");
 # ini_set("dp","5");
 #
@@ -113,10 +113,10 @@
 # Initializing Rom Information
 #
 ini_set("rom_name",             "AROMA Test Zip");
-ini_set("rom_version",          "2.00 NIGHTLY");
+ini_set("rom_version",          "2.00 NIGHTLY A7");
 ini_set("rom_author",           "amarullz");
 ini_set("rom_device",           "Any Device");
-ini_set("rom_date",             "Mar, 07 2012");
+ini_set("rom_date",             "Apr, 14 2012");
 
 
 ##
@@ -181,11 +181,13 @@ selectbox(
     "English",            "Welcome to Installer",                                        1,      #-- selected.0 = 1
     "Indonesian",         "Selamat datang di Installer",                                 0,      #-- selected.0 = 2
     "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
-    "Simplified Chinesse","欢迎到安装",                                                     0,      #-- selected.0 = 4
+    "Simplified Chinesse","欢迎到安装",                                                    0,      #-- selected.0 = 4
     "Arabic",             "مرحبا بكم في المثبت",                                               0,      #-- selected.0 = 5        
     "French",             "Bienvenue dans l'installateur",                               0,      #-- selected.0 = 6
     "Russian",            "Добро пожаловать в установщик",                               0,      #-- selected.0 = 7
-	"Italian",            "Benvenuti Installer",                                         0       #-- selected.0 = 8
+	"Italian",            "Benvenuti Installer",                                         0,      #-- selected.0 = 8
+	"Hebrew",             "ברוכים הבאים להתקנה",										     0,		 #-- selected.0 = 9
+	"Germany",            "Willkommen bei Installer",									 0 		 #-- selected.0 = 10
   #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
 );
 
@@ -239,6 +241,19 @@ if prop("lang.prop","selected.0")=="8" then
   fontresload( "0", "ttf/DroidSans.ttf", "12" );
   fontresload( "1", "ttf/DroidSans.ttf", "18" );
 endif;
+
+if prop("lang.prop","selected.0")=="9" then
+  loadlang("langs/he.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
+if prop("lang.prop","selected.0")=="10" then
+  loadlang("langs/de.lang");
+  fontresload( "0", "ttf/DroidSans.ttf", "12" );
+  fontresload( "1", "ttf/DroidSans.ttf", "18" );
+endif;
+
 
 ###################################################################################################################
 #
@@ -1317,11 +1332,11 @@ if prop("demo.prop","selected")=="9" then
 	    "Calculation",
 		
 	  #-- Alert Text
-		"1024 * 1024\t="+cal("1024","*","1024")+"\n"+
-		"2000 / 10\t="+cal("2000","/","10")+"\n"+
-		"468 + 520\t="+cal("468","+","520")+"\n"+
-		"9860 - 45\t="+cal("9860","-","45")+"\n"+
-		"1113 mod 99\t="+cal("1113","%","99"),
+		"1024 * 1024\t= "+cal("1024","*","1024")+"\n"+
+		"2000 / 10\t= "+cal("2000","/","10")+"\n"+
+		"468 + 520\t= "+cal("468","+","520")+"\n"+
+		"9860 - 45\t= "+cal("9860","-","45")+"\n"+
+		"1113 mod 99\t= "+cal("1113","%","99"),
 		
 	  #-- Alert Icon
 		"@agreement"
@@ -1683,7 +1698,7 @@ then
   #
   # reboot("onfinish");   - Reboot if anything finished
   # reboot("now");        - Reboot Directly
-  # reboot("disable");    - If you set reboot("now") before, use this command to revert it.
+  # reboot("disable");    - If you set reboot("onfinish") before, use this command to revert it.
   #
   reboot("onfinish");
 endif;
