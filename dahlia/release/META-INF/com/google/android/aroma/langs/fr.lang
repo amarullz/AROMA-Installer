@@ -31,7 +31,7 @@ text_no=Non
 text_about=À propos
 text_calibrating=Outils de calibration
 text_quit=Quitter l'installation
-text_quit_msg=Êtes-vous sûre de vouloir quitter l'installation?
+text_quit_msg=Êtes-vous sûr de vouloir quitter l'installation?
 
 #
 #-- CUSTOM STRING RESOURCE
@@ -50,13 +50,13 @@ Merci d'utiliser AROMA Installer
 
 
 themes.title=Choisir le thème
-themes.desc=Merci de sélectionner le thème que vous souhaiter utiliser lors de ce test d'installation:
+themes.desc=Merci de sélectionner le thème que vous souhaitez utiliser lors de ce test d'installation:
 
 welcome.title=Bienvenue
-welcome.text1=Vous aller installer
+welcome.text1=Vous allez installer
 welcome.text2=AROMA Installer est le premier et le seul Installateur de ROM ANDROID ROM tactile au niveau mondial.
 welcome.version=VERSION
-welcome.codename=NON DE CODE
+welcome.codename=NOM DE CODE
 welcome.updated=MISE A JOUR
 welcome.next=Pressez Suivant pour continuer l'installation...
 
@@ -65,5 +65,5 @@ terms.desc=Merci de lire attentivement les Conditions d'utilisation de AROMA Ins
 terms.check=Je suis d'accord avec ces Conditions d'utilisation...
 terms.confirm=Lire les conditions...
 
-changelog.title=Note de version
-changelog.desc=Changement apporté aux version d'AROMA Installer
+changelog.title=Notes de version
+changelog.desc=Changements apportés aux version d'AROMA Installer
