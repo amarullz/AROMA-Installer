@@ -1,0 +1,718 @@
+/*
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Descriptions:
+ * -------------
+ * AROMA UI: Selectbox List Window Control
+ *
+ */
+#include "../aroma.h"
+
+/***************************[ OPTION BOX ]**************************/
+#define ACOPT_MAX_GROUP   64
+typedef struct{
+  char title[64];
+  char desc[128];
+  int  id;
+  int  h;
+  int  y;
+  
+  /* Title & Desc Size/Pos */
+  int  th;
+  int  dh;
+  int  ty;
+  int  dy;
+  
+  /* Type */
+  byte isTitle;
+  int  group;
+  int  groupid;
+} ACOPTI, * ACOPTIP;
+typedef struct{
+  byte      acheck_signature;
+  CANVAS    client;
+  CANVAS    control;
+  CANVAS    control_focused;
+  AKINETIC  akin;
+  int       scrollY;
+  int       maxScrollY;
+  int       prevTouchY;
+  int       invalidDrawItem;
+  
+  /* Client Size */
+  int clientWidth;
+  int clientTextW;
+  int clientTextX;
+  int nextY;
+  
+  /* Items */
+  ACOPTIP * items;
+  int       itemn;
+  int       touchedItem;
+  int       focusedItem;
+  int       draweditemn;
+    
+  int       groupCounts;
+  int       groupCurrId;
+  int       selectedIndexs[ACOPT_MAX_GROUP];
+  
+  /* Focus */
+  byte      focused;
+} ACOPTD, * ACOPTDP;
+void acopt_ondestroy(void * x){
+  ACONTROLP ctl= (ACONTROLP) x;
+  ACOPTDP d  = (ACOPTDP) ctl->d;
+  ag_ccanvas(&d->control);
+  ag_ccanvas(&d->control_focused);
+  if (d->itemn>0){
+    int i;
+    for (i=0;i<d->itemn;i++){
+      free(d->items[i]);
+    }
+    free(d->items);
+    ag_ccanvas(&d->client);
+  }
+  free(ctl->d);
+}
+void acopt_redrawitem(ACONTROLP ctl, int index){
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return; //-- Not Valid Signature
+  if ((index>=d->itemn)||(index<0)) return; //-- Not Valid Index
+  
+  ACOPTIP p = d->items[index];
+  CANVAS *  c = &d->client;
+  
+  //-- Cleanup Background
+  ag_rect(c,0,p->y,d->clientWidth,p->h,acfg()->textbg);
+  
+  if (p->isTitle){
+    ag_roundgrad(c,0,p->y,d->clientWidth,p->h,acfg()->titlebg,acfg()->titlebg_g,0);
+    
+    ag_textf(c,d->clientTextW+(agdp()*14),(d->clientTextX-(agdp()*14))+1,p->y+p->ty,p->title,acfg()->titlebg_g,0);
+    //ag_text(c,d->clientTextW+(agdp()*14),(d->clientTextX-(agdp()*14))+1,p->y+p->dy,p->desc,acfg()->titlebg_g,0);
+    
+    ag_text(c,d->clientTextW+(agdp()*14),d->clientTextX-(agdp()*14),p->y+p->ty-1,p->title,acfg()->titlefg,0);
+    //ag_text(c,d->clientTextW+(agdp()*14),d->clientTextX-(agdp()*14),p->y+p->dy-1,p->desc,acfg()->titlefg,0);
+  }
+  else{
+    color txtcolor = acfg()->textfg;
+    color graycolor= acfg()->textfg_gray;
+    byte isselectcolor=0;
+    if (index==d->touchedItem){
+      if (!atheme_draw("img.selection.push", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+        color pshad = ag_calpushad(acfg()->selectbg_g);
+        dword hl1 = ag_calcpushlight(acfg()->selectbg,pshad);
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,pshad,(agdp()*acfg()->roundsz));
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      }
+      
+      graycolor = txtcolor = acfg()->selectfg;
+      isselectcolor=1;
+    }
+    else if ((index==d->focusedItem)&&(d->focused)){
+      if (!atheme_draw("img.selection", c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2))){
+        dword hl1 = ag_calchighlight(acfg()->selectbg,acfg()->selectbg_g);
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,p->h-(agdp()*2),acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
+        ag_roundgrad(c,0,p->y+agdp(),d->clientWidth,(p->h-(agdp()*2))/2,LOWORD(hl1),HIWORD(hl1),(agdp()*acfg()->roundsz));
+      }
+      graycolor = txtcolor = acfg()->selectfg;
+      isselectcolor=1;
+    }
+    if (index<d->itemn-1){
+      //-- Not Last... Add Separator
+      color sepcl = ag_calculatealpha(acfg()->textbg,acfg()->textfg_gray,80);
+      ag_rect(c,0,p->y+p->h-1,d->clientWidth,1,sepcl);
+    }
+    
+    //-- Now Draw The Text
+    if (isselectcolor){
+      ag_textf(c,d->clientTextW,d->clientTextX,p->y+p->ty,p->title,acfg()->selectbg_g,0);
+      ag_textf(c,d->clientTextW,d->clientTextX,p->y+p->dy,p->desc,acfg()->selectbg_g,0);
+    }
+    ag_text(c,d->clientTextW,d->clientTextX-1,p->y+p->ty-1,p->title,txtcolor,0);
+    ag_text(c,d->clientTextW,d->clientTextX-1,p->y+p->dy-1,p->desc,graycolor,0);
+    
+    //-- Now Draw The Checkbox
+    int halfdp   = ceil(((float) agdp())/2);
+    int halfdp2  = halfdp*2;
+    int optbox_s = (agdp()*10);
+    int optbox_r = floor(optbox_s/2);
+    int optbox_x = round((d->clientTextX/2)- (optbox_s/2));
+    int optbox_y = p->y + round((p->h/2) - (optbox_s/2));
+    
+    byte drawed = 0;
+    int minpad = 3*agdp();
+    int addpad = 6*agdp();
+    if (p->id==d->selectedIndexs[p->group]){
+      if (index==d->touchedItem)
+        drawed=atheme_draw("img.radio.on.push", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+      else if ((index==d->focusedItem)&&(d->focused))
+        drawed=atheme_draw("img.radio.on.focus", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+      else
+        drawed=atheme_draw("img.radio.on", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+    }
+    else{
+      if (index==d->touchedItem)
+        drawed=atheme_draw("img.radio.push", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+      else if ((index==d->focusedItem)&&(d->focused))
+        drawed=atheme_draw("img.radio.focus", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+      else
+        drawed=atheme_draw("img.radio", c,optbox_x-minpad,optbox_y-minpad,optbox_s+addpad,optbox_s+addpad);
+    }
+    
+    if (!drawed){
+      ag_roundgrad(c,
+        optbox_x,
+        optbox_y,
+        optbox_s,
+        optbox_s,
+        acfg()->controlbg_g,
+        acfg()->controlbg,
+        optbox_r
+      );
+      ag_roundgrad(c,
+        optbox_x+halfdp,
+        optbox_y+halfdp,
+        optbox_s-halfdp2,
+        optbox_s-halfdp2,
+        acfg()->textbg,
+        acfg()->textbg,
+        optbox_r-halfdp);
+    
+      if (p->id==d->selectedIndexs[p->group]){
+        ag_roundgrad(c,
+          optbox_x+halfdp2,
+          optbox_y+halfdp2,
+          optbox_s-(halfdp2*2),
+          optbox_s-(halfdp2*2),
+          acfg()->selectbg,
+          acfg()->selectbg_g,
+          optbox_r-halfdp2);
+      }
+    }
+  }
+}
+void acopt_redraw(ACONTROLP ctl){
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return; //-- Not Valid Signature
+  if ((d->itemn>0)&&(d->draweditemn<d->itemn)) {
+    ag_ccanvas(&d->client);
+    ag_canvas(&d->client,d->clientWidth,d->nextY);
+    ag_rect(&d->client,0,0,d->clientWidth,agdp()*max(acfg()->roundsz,4),acfg()->textbg);
+    
+    //-- Set Values
+    d->scrollY     = 0;
+    d->maxScrollY  = d->nextY-(ctl->h-(agdp()*max(acfg()->roundsz,4)));
+    if (d->maxScrollY<0) d->maxScrollY=0;
+    
+    //-- Draw Items
+    int i;
+    for (i=0;i<d->itemn;i++){
+      acopt_redrawitem(ctl,i);
+    }
+    d->draweditemn=d->itemn;
+  }
+  
+}
+int acopt_getselectedindex(ACONTROLP ctl,int group){
+  if ((group<0)||(group>=ACOPT_MAX_GROUP)) return -1;
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return -1; //-- Not Valid Signature
+  return d->selectedIndexs[group];
+}
+int acopt_getgroupid(ACONTROLP ctl, int index){
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return 0; //-- Not Valid Signature
+  return d->items[index]->groupid;
+}
+
+
+//-- Add Item Into Control
+byte acopt_add(ACONTROLP ctl,char * title, char * desc, byte selected){
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return 0; //-- Not Valid Signature
+  
+  //-- Allocating Memory For Item Data
+  ACOPTIP newip = (ACOPTIP) malloc(sizeof(ACOPTI));
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
+  newip->th       = ag_txtheight(d->clientTextW,newip->title,0);
+  newip->dh       = ag_txtheight(d->clientTextW,newip->desc,0);
+  newip->ty       = agdp()*5;
+  newip->dy       = (agdp()*5)+newip->th;
+  newip->h        = (agdp()*10) + newip->dh + newip->th;
+  if (newip->h<(agdp()*22)) newip->h = (agdp()*22);
+  newip->id       = d->itemn;
+  newip->group    = d->groupCounts;
+  newip->groupid  = ++d->groupCurrId;
+  newip->isTitle  = 0;
+  newip->y        = d->nextY;
+  d->nextY       += newip->h;
+  if (selected){
+    d->selectedIndexs[newip->group] = newip->id;
+  }
+  
+  if (d->itemn>0){
+    int i;
+    ACOPTIP * tmpitms   = d->items;
+    d->items              = malloc( sizeof(ACOPTIP)*(d->itemn+1) );
+    for (i=0;i<d->itemn;i++)
+      d->items[i]=tmpitms[i];
+    d->items[d->itemn] = newip;
+    free(tmpitms);
+  }
+  else{
+    d->items    = malloc(sizeof(ACOPTIP));
+    d->items[0] = newip;
+  }
+  d->itemn++;
+  return 1;
+}
+
+//-- Add Item Into Control
+byte acopt_addgroup(ACONTROLP ctl,char * title, char * desc){
+  ACOPTDP d = (ACOPTDP) ctl->d;
+  if (d->acheck_signature != 136) return 0; //-- Not Valid Signature
+  
+  if (d->groupCounts+1>=ACOPT_MAX_GROUP) return 0;
+  
+  //-- Allocating Memory For Item Data
+  ACOPTIP newip = (ACOPTIP) malloc(sizeof(ACOPTI));
+  snprintf(newip->title,64,"%s",title);
+  snprintf(newip->desc,128,"%s",desc);
+  newip->th       = ag_txtheight(d->clientTextW+(agdp()*14),newip->title,0);
+  newip->dh       = 0;// ag_txtheight(d->clientTextW+(agdp()*14),newip->desc,0);
+  newip->ty       = agdp()*3;
+  newip->dy       = (agdp()*3)+newip->th;
+  newip->h        = (agdp()*6) + newip->dh + newip->th;
+  newip->id       = d->itemn;
+  newip->group    = ++d->groupCounts;
+  d->groupCurrId  = -1;
+  newip->groupid  = -1;
+  newip->isTitle  = 1;
+  newip->y        = d->nextY;
+  d->nextY       += newip->h;
+  
+  if (d->itemn>0){
+    int i;
+    ACOPTIP * tmpitms   = d->items;
+    d->items              = malloc( sizeof(ACOPTIP)*(d->itemn+1) );
+    for (i=0;i<d->itemn;i++)
+      d->items[i]=tmpitms[i];
+    d->items[d->itemn] = newip;
+    free(tmpitms);
+  }
+  else{
+    d->items    = malloc(sizeof(ACOPTIP));
+    d->items[0] = newip;
+  }
+  d->itemn++;
+  return 1;
+}
+// 
+
+
+void acopt_ondraw(void * x){
+  ACONTROLP   ctl= (ACONTROLP) x;
+  ACOPTDP   d  = (ACOPTDP) ctl->d;
+  CANVAS *    pc = &ctl->win->c;
+  acopt_redraw(ctl);
+  if (d->invalidDrawItem!=-1){
+    d->touchedItem = d->invalidDrawItem;
+    acopt_redrawitem(ctl,d->invalidDrawItem);
+    d->invalidDrawItem=-1;
+  }
+  
+  //-- Init Device Pixel Size
+  int minpadding = max(acfg()->roundsz,4);
+  int agdp3 = (agdp()*minpadding);
+  int agdp6 = (agdp()*(minpadding*2));
+  int agdpX = agdp6;
+  
+  if (d->focused){
+    ag_draw(pc,&d->control_focused,ctl->x,ctl->y);
+    ag_draw_ex(pc,&d->client,ctl->x+agdp3,ctl->y+agdp(),0,d->scrollY+agdp(),ctl->w-agdp6,ctl->h-(agdp()*2));
+  }
+  else{
+    ag_draw(pc,&d->control,ctl->x,ctl->y);
+    ag_draw_ex(pc,&d->client,ctl->x+agdp3,ctl->y+1,0,d->scrollY+1,ctl->w-agdp6,ctl->h-2);
+  }
+  
+  if (d->maxScrollY>0){
+    //-- Glow
+    int i;
+    byte isST=(d->scrollY>0)?1:0;
+    byte isSB=(d->scrollY<d->maxScrollY)?1:0;
+    int add_t_y = 1;
+    if (d->focused)
+      add_t_y = agdp();
+    for (i=0;i<agdpX;i++){
+      byte alph = 255-round((((float) (i+1))/ ((float) agdpX))*230);
+      if (isST)
+        ag_rectopa(pc,ctl->x+agdp3,ctl->y+i+add_t_y,ctl->w-agdpX,1,acfg()->textbg,alph);
+      if (isSB)
+        ag_rectopa(pc,ctl->x+agdp3,((ctl->y+ctl->h)-(add_t_y))-(i+1),ctl->w-agdpX,1,acfg()->textbg,alph);
+    }
+    
+    //-- Scrollbar
+    int newh = ctl->h - agdp6;
+    float scrdif    = ((float) newh) / ((float) d->client.h);
+    int  scrollbarH = round(scrdif * newh);
+    int  scrollbarY = round(scrdif * d->scrollY) + agdp3;
+    if (d->scrollY<0){
+      scrollbarY = agdp3;
+      int alp = (1.0 - (((float) abs(d->scrollY)) / (((float) ctl->h)/4))) * 255;
+      if (alp<0) alp = 0;
+      ag_rectopa(pc,(ctl->w-agdp()-2)+ctl->x,scrollbarY+ctl->y,agdp(),scrollbarH,acfg()->scrollbar, alp);
+    }
+    else if (d->scrollY>d->maxScrollY){
+      scrollbarY = round(scrdif * d->maxScrollY) + agdp3;
+      int alp = (1.0 - (((float) abs(d->scrollY-d->maxScrollY)) / (((float) ctl->h)/4))) * 255;
+      if (alp<0) alp = 0;
+      ag_rectopa(pc,(ctl->w-agdp()-2)+ctl->x,scrollbarY+ctl->y,agdp(),scrollbarH,acfg()->scrollbar, alp);
+    }
+    else{
+      ag_rect(pc,(ctl->w-agdp()-2)+ctl->x,scrollbarY+ctl->y,agdp(),scrollbarH,acfg()->scrollbar);
+    }
+  }
+}
+dword acopt_oninput(void * x,int action,ATEV * atev){
+  ACONTROLP ctl= (ACONTROLP) x;
+  ACOPTDP d  = (ACOPTDP) ctl->d;
+  dword msg = 0;
+  switch (action){
+    case ATEV_MOUSEDN:
+      {
+        d->prevTouchY  = atev->y;
+        akinetic_downhandler(&d->akin,atev->y);
+        
+        int touchpos = atev->y - ctl->y + d->scrollY;
+        int i;
+        for (i=0;i<d->itemn;i++){
+          if ((touchpos>=d->items[i]->y)&&(touchpos<d->items[i]->y+d->items[i]->h)){
+            ac_regpushwait(
+              ctl,&d->prevTouchY,&d->invalidDrawItem,i
+            );
+            break;
+          }
+        }
+      }
+      break;
+    case ATEV_MOUSEUP:
+      {
+        if ((d->prevTouchY!=-50)&&(abs(d->prevTouchY-atev->y)<agdp()*5)){
+          d->prevTouchY=-50;
+          int touchpos = atev->y - ctl->y + d->scrollY;
+          
+          int i;
+          for (i=0;i<d->itemn;i++){
+            if ((!d->items[i]->isTitle)&&(touchpos>=d->items[i]->y)&&(touchpos<d->items[i]->y+d->items[i]->h)){
+              if ((d->touchedItem != -1)&&(d->touchedItem!=i)){
+                int tmptouch=d->touchedItem;
+                d->touchedItem = -1;
+                acopt_redrawitem(ctl,tmptouch);
+              }
+              
+              int grp = d->items[i]->group;
+              if ((d->selectedIndexs[grp] != -1)&&(d->selectedIndexs[grp]!=i)){
+                int tmpsidx=d->selectedIndexs[grp];
+                d->selectedIndexs[grp] = -1;
+                acopt_redrawitem(ctl,tmpsidx);
+              }
+              
+              int prevfocus               = d->focusedItem;
+              d->focusedItem              = i;
+              d->touchedItem              = i;
+              d->selectedIndexs[grp]  = i;
+              if ((prevfocus!=-1)&&(prevfocus!=i)){
+                acopt_redrawitem(ctl,prevfocus);
+              }
+              
+              acopt_redrawitem(ctl,i);
+              ctl->ondraw(ctl);
+              aw_draw(ctl->win);
+              vibrate(30);
+              break;
+            }
+          }
+          if ((d->scrollY<0)||(d->scrollY>d->maxScrollY)){
+            ac_regbounce(ctl,&d->scrollY,d->maxScrollY);
+          }
+        }
+        else{
+          if (akinetic_uphandler(&d->akin,atev->y)){
+            ac_regfling(ctl,&d->akin,&d->scrollY,d->maxScrollY);
+          }
+          else if ((d->scrollY<0)||(d->scrollY>d->maxScrollY)){
+            ac_regbounce(ctl,&d->scrollY,d->maxScrollY);
+          }
+        }
+        if (d->touchedItem != -1){
+          usleep(30);
+          int tmptouch=d->touchedItem;
+          d->touchedItem = -1;
+          acopt_redrawitem(ctl,tmptouch);
+          ctl->ondraw(ctl);
+          msg=aw_msg(0,1,0,0);
+        }
+      }
+      break;
+    case ATEV_MOUSEMV:
+      {
+        byte allowscroll=1;
+        if (atev->y!=0){
+          if (d->prevTouchY!=-50){
+            if (abs(d->prevTouchY-atev->y)>=agdp()*5){
+              d->prevTouchY=-50;
+              if (d->touchedItem != -1){
+                int tmptouch=d->touchedItem;
+                d->touchedItem = -1;
+                acopt_redrawitem(ctl,tmptouch);
+                ctl->ondraw(ctl);
+                aw_draw(ctl->win);
+              }
+            }
+            else
+              allowscroll=0;
+          }
+          if (allowscroll){
+            int mv = akinetic_movehandler(&d->akin,atev->y);
+            if (mv!=0){
+              if ((d->scrollY<0)&&(mv<0)){
+                float dumpsz = 0.6-(0.6*(((float) abs(d->scrollY))/(ctl->h/4)));
+                d->scrollY+=floor(mv*dumpsz);
+              }
+              else if ((d->scrollY>d->maxScrollY)&&(mv>0)){
+                float dumpsz = 0.6-(0.6*(((float) abs(d->scrollY-d->maxScrollY))/(ctl->h/4)));
+                d->scrollY+=floor(mv*dumpsz);
+              }
+              else
+                d->scrollY+=mv;
+  
+              if (d->scrollY<0-(ctl->h/4)) d->scrollY=0-(ctl->h/4);
+              if (d->scrollY>d->maxScrollY+(ctl->h/4)) d->scrollY=d->maxScrollY+(ctl->h/4);
+              msg=aw_msg(0,1,0,0);
+              ctl->ondraw(ctl);
+            }
+          }
+        }
+      }
+      break;
+      case ATEV_SELECT:
+      {
+        if ((d->focusedItem>-1)&&(d->draweditemn>0)){
+          if (atev->d){
+            if ((d->touchedItem != -1)&&(d->touchedItem!=d->focusedItem)){
+              int tmptouch=d->touchedItem;
+              d->touchedItem = -1;
+              acopt_redrawitem(ctl,tmptouch);
+            }
+            vibrate(30);
+            d->touchedItem=d->focusedItem;
+            acopt_redrawitem(ctl,d->focusedItem);
+            ctl->ondraw(ctl);
+            msg=aw_msg(0,1,0,0);
+          }
+          else{
+            if ((d->touchedItem != -1)&&(d->touchedItem!=d->focusedItem)){
+              int tmptouch=d->touchedItem;
+              d->touchedItem = -1;
+              acopt_redrawitem(ctl,tmptouch);
+            }
+            int grp = d->items[d->focusedItem]->group;
+            if ((d->selectedIndexs[grp] != -1)&&(d->selectedIndexs[grp]!=d->focusedItem)){
+              int tmpsidx=d->selectedIndexs[grp];
+              d->selectedIndexs[grp] = -1;
+              acopt_redrawitem(ctl,tmpsidx);
+            }
+            d->selectedIndexs[grp] = d->focusedItem;
+            d->touchedItem=-1;
+            acopt_redrawitem(ctl,d->focusedItem);
+            ctl->ondraw(ctl);
+            msg=aw_msg(0,1,0,0);
+          }
+        }
+      }
+      break;
+      case ATEV_DOWN:
+        {
+          if ((d->focusedItem<d->itemn-1)&&(d->draweditemn>0)){
+            int prevfocus = d->focusedItem;
+            d->focusedItem++;
+            while(d->items[d->focusedItem]->isTitle){
+              d->focusedItem++;
+              if (d->focusedItem>d->itemn-1){
+                d->focusedItem = prevfocus;
+                return 0;
+              }
+            }
+            
+            acopt_redrawitem(ctl,prevfocus);
+            acopt_redrawitem(ctl,d->focusedItem);
+            ctl->ondraw(ctl);
+            msg=aw_msg(0,1,1,0);
+            
+            int reqY = d->items[d->focusedItem]->y - round((ctl->h/2) - (d->items[d->focusedItem]->h/2));
+            ac_regscrollto(
+              ctl,
+              &d->scrollY,
+              d->maxScrollY,
+              reqY,
+              &d->focusedItem,
+              d->focusedItem
+            );
+          }
+        }
+      break;
+      case ATEV_UP:
+        {
+          if ((d->focusedItem>0)&&(d->draweditemn>0)){
+            int prevfocus = d->focusedItem;
+            d->focusedItem--;
+            while(d->items[d->focusedItem]->isTitle){
+              d->focusedItem--;
+              if (d->focusedItem<0){
+                d->focusedItem = prevfocus;
+                return 0;
+              }
+            }
+            acopt_redrawitem(ctl,prevfocus);
+            acopt_redrawitem(ctl,d->focusedItem);
+            ctl->ondraw(ctl);
+            msg=aw_msg(0,1,1,0);
+            
+            int reqY = d->items[d->focusedItem]->y - round((ctl->h/2) - (d->items[d->focusedItem]->h/2));
+            ac_regscrollto(
+              ctl,
+              &d->scrollY,
+              d->maxScrollY,
+              reqY,
+              &d->focusedItem,
+              d->focusedItem
+            );
+          }
+        }
+      break;
+  }
+  return msg;
+}
+byte acopt_onfocus(void * x){
+  ACONTROLP   ctl= (ACONTROLP) x;
+  ACOPTDP   d  = (ACOPTDP) ctl->d;
+  
+  d->focused=1;
+  
+  if ((d->focusedItem==-1)&&(d->itemn>0)){
+    d->focusedItem=0;
+  }
+  if ((d->focusedItem!=-1)&&(d->draweditemn>0)){
+    acopt_redrawitem(ctl,d->focusedItem);
+  }
+  ctl->ondraw(ctl);
+  return 1;
+}
+void acopt_onblur(void * x){
+  ACONTROLP   ctl= (ACONTROLP) x;
+  ACOPTDP   d  = (ACOPTDP) ctl->d;
+  d->focused=0;
+  if ((d->focusedItem!=-1)&&(d->draweditemn>0)){
+    acopt_redrawitem(ctl,d->focusedItem);
+  }
+  ctl->ondraw(ctl);
+}
+ACONTROLP acopt(
+  AWINDOWP win,
+  int x,
+  int y,
+  int w,
+  int h
+){
+  //-- Validate Minimum Size
+  if (h<agdp()*16) h=agdp()*16;
+  if (w<agdp()*20) w=agdp()*20;
+
+  //-- Initializing Text Data
+  ACOPTDP d        = (ACOPTDP) malloc(sizeof(ACOPTD));
+  memset(d,0,sizeof(ACOPTD));
+  
+  //-- Set Signature
+  d->acheck_signature = 136;
+  
+  //-- Initializing Canvas
+  ag_canvas(&d->control,w,h);
+  ag_canvas(&d->control_focused,w,h);
+  
+  /*
+  printf("MEM control: %x\n",(long) d->control.data);
+  printf("MEM control_focused: %x\n",(long) d->control_focused.data);
+  */
+  
+  
+  int minpadding = max(acfg()->roundsz,4);
+  
+  //-- Initializing Client Size
+  d->clientWidth  = w - (agdp()*minpadding*2);
+  d->clientTextW  = d->clientWidth - (agdp()*18) - (agdp()*acfg()->btnroundsz*2);
+  d->clientTextX  = (agdp()*18) + (agdp()*acfg()->btnroundsz*2);
+  
+  d->client.data=NULL;
+  
+  //-- Draw Control
+  ag_draw_ex(&d->control,&win->c,0,0,x,y,w,h);
+  ag_roundgrad(&d->control,0,0,w,h,acfg()->border,acfg()->border_g,(agdp()*acfg()->roundsz));
+  ag_roundgrad(&d->control,1,1,w-2,h-2,acfg()->textbg,acfg()->textbg,(agdp()*acfg()->roundsz)-1);
+  
+  //-- Draw Focused Control
+  ag_draw_ex(&d->control_focused,&win->c,0,0,x,y,w,h);
+  ag_roundgrad(&d->control_focused,0,0,w,h,acfg()->selectbg,acfg()->selectbg_g,(agdp()*acfg()->roundsz));
+  ag_roundgrad(&d->control_focused,agdp(),agdp(),w-(agdp()*2),h-(agdp()*2),acfg()->textbg,acfg()->textbg,(agdp()*(acfg()->roundsz-1)));
+  
+  //-- Set Scroll Value
+  d->scrollY     = 0;
+  d->maxScrollY  = 0;
+  d->prevTouchY  =-50;
+  d->invalidDrawItem = -1;
+  //-- Set Data Values
+  d->items       = NULL;
+  d->itemn       = 0;
+  d->touchedItem = -1;
+  d->focusedItem = -1;
+  d->nextY       = agdp()*minpadding;
+  d->draweditemn = 0;
+  
+  int i;
+  for (i=0;i<ACOPT_MAX_GROUP;i++) d->selectedIndexs[i]=-1;
+  d->groupCounts   = 0;
+  d->groupCurrId   = -1;
+  
+  
+  ACONTROLP ctl  = malloc(sizeof(ACONTROL));
+  ctl->ondestroy= &acopt_ondestroy;
+  ctl->oninput  = &acopt_oninput;
+  ctl->ondraw   = &acopt_ondraw;
+  ctl->onblur   = &acopt_onblur;
+  ctl->onfocus  = &acopt_onfocus;
+  ctl->win      = win;
+  ctl->x        = x;
+  ctl->y        = y;
+  ctl->w        = w;
+  ctl->h        = h;
+  ctl->forceNS  = 0;
+  ctl->d        = (void *) d;
+  aw_add(win,ctl);
+  return ctl;
+}

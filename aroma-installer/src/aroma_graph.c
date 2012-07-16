@@ -461,7 +461,7 @@ void ag32fbufcopy(dword * bfbz){
       }
     }
   }
-}
+}/*
 void ag16fbufcopy(word * bfbz){
   int x,y;
   for (y=0;y<ag_fbv.yres;y++){
@@ -471,6 +471,19 @@ void ag16fbufcopy(word * bfbz){
       int xy = yp+x;
       int dxy= yd+x;
       ag_fbuf[dxy]=bfbz[xy];
+    }
+  }
+}*/
+void ag16fbufcopy(word * bfbz){
+  int x,y;
+  for (y=0;y<ag_fbv.yres;y++){
+    int yp    = y * ag_fbv.xres;
+    int ypos  = y * ag_fbf.line_length;
+    for (x=0;x<ag_fbv.xres;x++){
+      int xy = yp+x;
+      int xp = ypos + (x * agclp);
+      word * fbf = (word *) (((byte *) ag_fbuf) +xp);
+      *fbf = bfbz[xy];
     }
   }
 }

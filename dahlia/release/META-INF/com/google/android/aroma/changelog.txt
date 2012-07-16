@@ -1,3 +1,6 @@
+<b><#selectbg_g>DAHLIA - 2.00</#></b>
+<*>Fix Installation Save Logs</*>
+
 <b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120414-010</#></b>
 <*>Fix framebuffer mmap size</*>
 <*>Fix status 0 error</*>

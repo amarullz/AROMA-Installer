@@ -1,0 +1,14 @@
+﻿Детали о следующем поколении планшетов компании Archos попали в сеть до того, как сам производитель успел их анонсировать. Третье поколение планшетов будет работать под управлением ОС Google Android 4.0 Ice Cream Sandwich (ICS), а вместо доступа к официальному магазину Google Android Market в них будет AppsLib Market.
+
+<@fill>Вместе с китайской компанией Huawei, не менее известная компания под названием ZTE анонсировала на MWC свои смартфоны с операционной системой Android, в том числе и четырехъядерный. По окончании выставки в сети появилась информация о еще одной модели, которую по иронии судьбы назвали ZTE Optimus Barcelona. Официальной информации о нем пока мало - компания не анонсировала его, но некоторые данные уже появились для сертификации в Bluetooth SIG и Wi-Fi Alliance.</@>
+
+<@right>Компания Novero представила гибрид, попытавшись объединить в одном корпусе сразу два типа популярных устройств. Получившаяся новинка называется Solana и очень похожа на виденный нами ранее аналогичный гибрид Dell Inspiron Duo - её экран разворачивается точно так же: в одном положении мы получаем ноутбук с Windows 7 (готовый к Windows 8), а в другом планшет с операционной системой Android.</@>
+
+Hoy os traemos una nueva aplicación creada por nosotros que se suma a nuestra lista de aplicaciones. Y con esta, ya son 6 las aplicaciones que ponemos a vuestra disposición de manera totalmente gratuita a través del Android Market.
+
+En esta ocasión se trata de "Mis notas y préstamos", una aplicación que destaca por su cuidado diseño (al estilo Ice Cream Sandwich) y que te permitirá gestionar de una manera sencilla e intuitiva tus notas y préstamos personales.
+
+Podrás anotar cualquier tipo de información, y en un futuro próximo, incluso dibujar tus notas.
+
+Además, si realizas algún préstamo a un amigo, familiar o conocido, ¡anótalo para que no caiga en el olvido!
+

@@ -113,10 +113,10 @@
 # Initializing Rom Information
 #
 ini_set("rom_name",             "AROMA Test Zip");
-ini_set("rom_version",          "2.00 NIGHTLY A7");
+ini_set("rom_version",          "2.00");
 ini_set("rom_author",           "amarullz");
 ini_set("rom_device",           "Any Device");
-ini_set("rom_date",             "Apr, 14 2012");
+ini_set("rom_date",             "Apr, 25 2012");
 
 
 ##

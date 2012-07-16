@@ -76,7 +76,7 @@
 //
 #define AROMA_NAME        "AROMA INSTALLER"
 #define AROMA_VERSION     "2.00"
-#define AROMA_BUILD       "120414-010"
+#define AROMA_BUILD       "120425-020"
 #define AROMA_BUILD_CN    "Dahlia"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -140,6 +140,7 @@ typedef struct {
   byte *  b;       // Blue Channel
   byte *  a;       // Alpha Channel
 } PNGCANVAS, * PNGCANVASP;
+
 
 
 //
@@ -644,6 +645,7 @@ int     atmsg();
 //
 // AROMA System Library Functions
 //
+byte alib_copy(char * src, char * dst);
 int * ai_rtrimw(int * chr,int len);
 char * ai_rtrim(char * chr);
 char * ai_trim(char * chr);
@@ -694,6 +696,7 @@ char *      atheme_key(int id);
 byte        atheme_id_draw(int id, CANVAS * _b, int x, int y, int w, int h);
 byte        atheme_draw(char * key, CANVAS * _b, int x, int y, int w, int h);
 
+                     
 //
 // AROMA Window Management System Functions
 //
