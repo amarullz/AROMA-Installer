@@ -915,6 +915,7 @@ Value* AROMA_IIF(const char* name, State* state, int argc, Expr* argv[]) {
 //* calibrate
 //*
 Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
+/*
   if ((argc != 4)&&(argc != 5)) {
     return ErrorAbort(state, "%s() expects 4 or 5 args (div-x, add-x, div-y, add-y, usehack), got %d", name, argc);
   }
@@ -939,7 +940,7 @@ Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
   
   //-- Release Arguments
   _FREEARGS();
-
+*/
   //-- Return
   return StringValue(strdup(""));
 }
@@ -948,6 +949,7 @@ Value* AROMA_CALIBRATE(const char* name, State* state, int argc, Expr* argv[]) {
 //* calibrate_matrix
 //*
 Value* AROMA_CALIBRATE_MATRIX(const char* name, State* state, int argc, Expr* argv[]) {
+/*
   if (argc != 8) {
     return ErrorAbort(state, "%s() expects 8 args, got %d", name, argc);
   }
@@ -972,7 +974,7 @@ Value* AROMA_CALIBRATE_MATRIX(const char* name, State* state, int argc, Expr* ar
 
   //-- Release Arguments
   _FREEARGS();
-
+*/
   //-- Return
   return StringValue(strdup(""));
 }
@@ -2288,11 +2290,13 @@ Value* AROMA_INSTALL(const char* name, State* state, int argc, Expr* argv[]) {
 //* calibtool
 //*
 Value* AROMA_CALIBTOOL(const char* name, State* state, int argc, Expr* argv[]) {
+  /*
   int func_pos = argv[0]->start; 
   if (func_pos<aparse_startpos){
     return StringValue(strdup(""));
   }
   aw_calibtools(NULL);
+  */
   return StringValue(strdup(""));
 }
 

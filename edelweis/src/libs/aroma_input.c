@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2012 Ahmad Amarullah ( http://amarullz.com/ )
+ * Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,43 +30,35 @@
 #include <pthread.h>
 #include "../aroma.h"
 
-//-- DEFINED
-#define MAX_DEVICES 16
-#define MAX_MISC_FDS 16
-#define BITS_PER_LONG (sizeof(unsigned long) * 8)
-#define BITS_TO_LONGS(x) (((x) + BITS_PER_LONG - 1) / BITS_PER_LONG)
-#define test_bit(bit, array) ((array)[(bit)/BITS_PER_LONG] & (1 << ((bit) % BITS_PER_LONG)))
+//-- Input Device
+#include "input/input_device.c"
 
 //-- GLOBAL EVENT VARIABLE
-static  struct    pollfd ev_fds[MAX_DEVICES + MAX_MISC_FDS];
-static  unsigned  ev_count        = 0;
-static  unsigned  ev_dev_count    = 0;
-static  unsigned  ev_misc_count   = 0;
 static  char      key_pressed[KEY_MAX + 1];
-
-//-- AROMA EVENT DATA
-static  byte      evthread_active = 1;
-static  byte      evtouch_state   = 0;  //-- 0: Up, 1: Down, 2: Move
-static  byte      evtouch_alreadyu= 1;  //-- Already UP
-static  int       evtouch_rx      = 0;  //-- RAW X
-static  int       evtouch_ry      = 0;  //-- RAW Y
-static  int       evtouch_sx      = 0;  //-- Saved X
-static  int       evtouch_sy      = 0;  //-- Saved Y
-static  int       evtouch_x       = 0;  //-- Translated X (Ready to use)
-static  int       evtouch_y       = 0;  //-- Translated Y (Ready to use)
-static  int       evtouch_code    = 888;//-- Touch Virtual Code
-static  int       evtouch_tx      = 0;  //-- Temporary Translated X
-static  int       evtouch_ty      = 0;  //-- Temporary Translated Y
-static  byte      evtouch_locked  = 0;
-
-//-- AROMA RELATIVE EVENT DATA
-static  int       evrel_key       = -1;
-static  int       evrel_val       = 0;
-static  int       evrel_size      = 0;
 
 //-- AROMA CUSTOM MESSAGE
 static  dword     atouch_winmsg[64];
 static  byte      atouch_winmsg_n = 0;
+static  int       atouch_message_code = 889;
+
+//-- KEY QUEUE
+static  int       key_queue[256];
+static  int       key_queue_len = 0;
+static pthread_mutex_t key_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t key_queue_cond = PTHREAD_COND_INITIALIZER;
+
+//-- TOUCH SCREEN VAR
+static  byte      evthread_active = 1;
+static  int       evtouch_state   = 0;  //-- Touch State
+static  int       evtouch_x       = 0;  //-- Translated X (Ready to use)
+static  int       evtouch_y       = 0;  //-- Translated Y (Ready to use)
+static  int       evtouch_code    = 888;//-- Touch Virtual Code
+
+//-- PASS TOUCH STATE FUNCTIONS
+int touchX()  { return evtouch_x; }
+int touchY()  { return evtouch_y; }
+int ontouch() { return ((evtouch_state==0)?0:1); }
+  
 dword atouch_winmsg_get(byte cleanup){
   dword out=0;
   if (atouch_winmsg_n>0){
@@ -88,19 +80,6 @@ byte atouch_winmsg_push(dword msg){
   }
   return 0;
 }
-// static  dword     atouch_message_value = 0;
-static  int       atouch_message_code       = 889;
-
-//-- KEY QUEUE
-static  int       key_queue[256];
-static  int       key_queue_len = 0;
-static pthread_mutex_t key_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t key_queue_cond = PTHREAD_COND_INITIALIZER;
-
-//-- PASS TOUCH STATE FUNCTIONS
-int touchX()  { return evtouch_x; }
-int touchY()  { return evtouch_y; }
-int ontouch() { return ((evtouch_state==0)?0:1); }
 
 //-- VIBRATE FUNCTION
 int vibrate(int timeout_ms){
@@ -124,92 +103,6 @@ int ui_key_pressed(int key){
 void set_key_pressed(int key,char val){
   key_pressed[key]=val;
 }
-int atmsg(){ return evtouch_code; }
-
-//-- TOUCH CALIBRATION
-float touch_div_x =7.90; float touch_div_y =7.90; int touch_add_x =20; int touch_add_y =20; //-- Used
-float ttouch_div_x=7.90; float ttouch_div_y=7.90; int ttouch_add_x=20; int ttouch_add_y=20; //-- Temporary
-
-AW_CALIBMATRIX  atouch_calib_matrix_tmp;
-AW_CALIBMATRIX  atouch_calib_matrix;
-byte            atouch_use_calib_matrix_tmp = 0;
-byte            atouch_use_calib_matrix = 0;
-
-AW_CALIBMATRIXP atouch_getcalibmatrix(){
-  return &atouch_calib_matrix;
-}
-byte atouch_usematrix(){
-  return atouch_use_calib_matrix;
-}
-//-- NON TRANSLATED CALIBRATING
-void atouch_plaincalibrate(){
-  ttouch_div_x = touch_div_x;
-  ttouch_div_y = touch_div_y;
-  ttouch_add_x = touch_add_x;
-  ttouch_add_y = touch_add_y;
-  memcpy(&atouch_calib_matrix_tmp,&atouch_calib_matrix,sizeof(AW_CALIBMATRIX));
-  atouch_use_calib_matrix_tmp = atouch_use_calib_matrix;
-  touch_div_x = 1;
-  touch_div_y = 1;
-  touch_add_x = 0;
-  touch_add_y = 0;
-  atouch_use_calib_matrix = 0;
-}
-
-//-- RESTORE CALIBRATION DATA
-void atouch_restorecalibrate(){
-  memcpy(&atouch_calib_matrix,&atouch_calib_matrix_tmp,sizeof(AW_CALIBMATRIX));
-  atouch_use_calib_matrix = atouch_use_calib_matrix_tmp;
-  touch_div_x = ttouch_div_x;
-  touch_div_y = ttouch_div_y;
-  touch_add_x = ttouch_add_x;
-  touch_add_y = ttouch_add_y;
-}
-
-//-- SET CALIBRATION DATA
-void atouch_set_calibrate(float dx, int ax, float dy, int ay){
-  touch_div_x = dx;
-  touch_div_y = dy;
-  touch_add_x = ax;
-  touch_add_y = ay;
-  
-  atouch_use_calib_matrix     = 0;
-  atouch_use_calib_matrix_tmp = 0;
-  
-  ttouch_div_x = touch_div_x;
-  ttouch_div_y = touch_div_y;
-  ttouch_add_x = touch_add_x;
-  ttouch_add_y = touch_add_y;
-}
-
-//
-void atouch_matrix_calibrate(AW_CALIBMATRIXP matrix){
-  memcpy(&atouch_calib_matrix,matrix,sizeof(AW_CALIBMATRIX));
-  atouch_use_calib_matrix = 1;
-}
-//-- TRANSLATE RAW COORDINATE INTO TRANSLATED COORDINATE
-void atouch_translate_raw(){
-  if ((atouch_calib_matrix.Divider!=0) && (atouch_use_calib_matrix)){
-    if ((evtouch_rx!=0)&&(evtouch_ry!=0)){
-      float fevtouch_rx = ((float) evtouch_rx)/2;
-      float fevtouch_ry = ((float) evtouch_ry)/2;
-      evtouch_tx = round((((atouch_calib_matrix.An * fevtouch_rx) +   
-                        (atouch_calib_matrix.Bn * fevtouch_ry) +   
-                         atouch_calib_matrix.Cn   
-                      ) / atouch_calib_matrix.Divider) * 2) ;  
-      evtouch_ty = round((( (atouch_calib_matrix.Dn * fevtouch_rx) +   
-                        (atouch_calib_matrix.En * fevtouch_ry) +   
-                         atouch_calib_matrix.Fn   
-                      ) / atouch_calib_matrix.Divider)*2) ;
-      if (evtouch_tx<=0) evtouch_tx=1;
-      if (evtouch_ty<=0) evtouch_ty=1;
-    }
-  }
-  else{
-    evtouch_tx = max(round(((float) evtouch_rx)/touch_div_x)-touch_add_x,0);
-    evtouch_ty = max(round(((float) evtouch_ry)/touch_div_y)-touch_add_y,0);
-  }
-}
 
 //-- INPUT EVENT POST MESSAGE
 void ev_post_message(int key, int value){
@@ -223,232 +116,32 @@ void ev_post_message(int key, int value){
   pthread_mutex_unlock(&key_queue_mutex);
 }
 
-//-- TOUCH HACK
-static  int      evtouch_thack   = 0;
-static  long      evtouch_lastick = 0;
-static void *ev_input_thack(void *cookie){
-  while(evtouch_thack){
-    if (evtouch_state!=0){
-      if (evtouch_lastick<alib_tick()-5){
-        evtouch_locked  = 1;
-        evtouch_alreadyu= 1;
-        evtouch_state   = 0;
-        evtouch_sx      = 0;
-        evtouch_sy      = 0;
-        evtouch_rx      = 0;
-        evtouch_ry      = 0;
-        ev_post_message(evtouch_code,0);
-      }
-    }
-    if (evtouch_thack<1) evtouch_thack=1;
-    usleep(((evtouch_thack-1)*5000) + 5); // 5);
-  }
-}
-int atouch_gethack(){
-  return evtouch_thack;
-}
-void atouch_sethack(int t){
-  if (t!=evtouch_thack){
-    if ((t)&&(!evtouch_thack)){
-      evtouch_lastick = alib_tick();
-      evtouch_thack   = t;
-      pthread_t hack_thread_t;
-      pthread_create(&hack_thread_t, NULL, ev_input_thack, NULL);
-      pthread_detach(hack_thread_t);
-    }
-    else if (t){
-      evtouch_lastick = alib_tick();
-    }
-  }
-  evtouch_thack=t;
-}
-
 //-- INPUT CALLBACK
-byte evtouch_mt_syn = 0;
-void ev_input_callback(int fd, short revents){
-  if (revents&POLLIN) {
-    struct input_event ev;
-    int         r = read(fd, &ev, sizeof(ev));
-    if (r == sizeof(ev)){
-      //-- OK ITS READY FOR HANDLING
-      
-      switch (ev.type){
-        //-- Real Key Input Event
-        case EV_KEY:{
-          if ((ev.code==330)&&(evtouch_alreadyu==0)&&(ev.value==0)){
-            if (!evtouch_thack){
-              evtouch_alreadyu=1;
-              evtouch_locked=1;
-              evtouch_state=0;
-              evtouch_sx = 0;
-              evtouch_sy = 0;
-              evtouch_rx = 0;
-              evtouch_ry = 0;
-              evtouch_mt_syn=0;
-              ev_post_message(evtouch_code,0);
-            }
-          }
-          else
-            ev_post_message(ev.code,ev.value);
-        }
-        break;
-        
-        //-- Relative Input Event
-        case EV_REL:{
-          if (evrel_key!=ev.code){
-            evrel_key = ev.code;
-            evrel_size= 0;
-          }
-          int evt=((ev.value<0)?-1:1);
-          if (evrel_val!=evt){
-            evrel_val = evt;
-            evrel_size= 0;
-          }
-          if (ev.code==REL_Y) {
-            evrel_size += ev.value;
-            if (evrel_size>8) {
-              //-- DOWN
-              ev_post_message(KEY_DOWN,0);
-              evrel_size=0;
-            }
-            else if (evrel_size<-8) {
-              //-- UP
-              ev_post_message(KEY_UP,0);
-              evrel_size=0;
-            }
-          }
-          else if (ev.code == REL_X) {
-            evrel_size += ev.value;
-            if (evrel_size>8) {
-              //-- RIGHT
-              ev_post_message(KEY_RIGHT,0);
-              evrel_size=0;
-            }
-            else if (evrel_size<-8) {
-              //-- LEFT
-              ev_post_message(KEY_LEFT,0);
-              evrel_size=0;
-            }
-          }
-        }
-        break;
-        
-        case EV_SYN:{
-          if (ev.code==SYN_MT_REPORT){
-            if (evtouch_state>0){
-              if (evtouch_mt_syn==2){
-                evtouch_mt_syn=1;
-              }
-              else if(evtouch_mt_syn==1){
-                evtouch_mt_syn=0;
-                if (evtouch_alreadyu==0){
-                  if (!evtouch_thack){
-                    evtouch_locked=1;
-                    evtouch_alreadyu=1;
-                    evtouch_state = 0;
-                    evtouch_sx = 0;
-                    evtouch_sy = 0;
-                    evtouch_rx = 0;
-                    evtouch_ry = 0;
-                    ev_post_message(evtouch_code,0);
-                  }
-                }
-              }
-            }
-            else if (evtouch_state==0){
-              if (evtouch_mt_syn==3){
-                evtouch_mt_syn=1;
-                atouch_translate_raw();
-                evtouch_locked=1;
-                evtouch_alreadyu=0;
-                evtouch_x=evtouch_tx;
-                evtouch_y=evtouch_ty;
-                evtouch_state = 1;
-                evtouch_sx = evtouch_x;
-                evtouch_sy = evtouch_y;
-                ev_post_message(evtouch_code,1);
-              }
-            }
-          }
-        }break;
-        
-        //-- Touch Input Event
-        case EV_ABS:{
-          evtouch_lastick = alib_tick();
-          
-          if (ev.code==ABS_MT_TOUCH_MAJOR){
-            evtouch_mt_syn = 2;
-            if ((evtouch_rx>0)&&(evtouch_ry>0)){              
-              byte tmptouch  = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);              
-              if (tmptouch!=3){
-                atouch_translate_raw(); //-- Translate RAW
-                //-- TOUCH DOWN
-                if (tmptouch==1){
-                  evtouch_locked=1;
-                  evtouch_alreadyu=0;
-                  evtouch_x=evtouch_tx;
-                  evtouch_y=evtouch_ty;
-                  evtouch_state = 1;
-                  evtouch_sx = evtouch_x;
-                  evtouch_sy = evtouch_y;
-                  ev_post_message(evtouch_code,1);
-                }
-                //-- TOUCH MOVE
-                else if ((tmptouch==2)&&(evtouch_alreadyu==0)){
-                  int agdp2=ceil(((float) agdp())/2.0); //*2;
-                  //-- SNAP TOUCH MOVE
-                  if ((abs(evtouch_sx-evtouch_tx)>=agdp2)||(abs(evtouch_sy-evtouch_ty)>=agdp2)){
-                    //-- IT MOVE MORE THAN DEVICE PIXELATE
-                    evtouch_locked=1;
-                    evtouch_x=evtouch_tx;
-                    evtouch_y=evtouch_ty;
-                    evtouch_state = 2;
-                    evtouch_sx = evtouch_x;
-                    evtouch_sy = evtouch_y;
-                    ev_post_message(evtouch_code,2);
-                    
-                    //evtouch_thack
-                  }
-                }
-                //-- TOUCH UP
-                else if ((tmptouch==0)&&(evtouch_alreadyu==0)){
-                  if (!evtouch_thack){
-                    evtouch_locked=1;
-                    evtouch_alreadyu=1;
-                    evtouch_state = 0;
-                    evtouch_sx = 0;
-                    evtouch_sy = 0;
-                    evtouch_rx = 0;
-                    evtouch_ry = 0;
-                    evtouch_mt_syn=0;
-                    ev_post_message(evtouch_code,0);
-                  }
-                }
-              }
-            }
-            else{
-              byte tmptouch  = (ev.value>0)?((evtouch_state==0)?1:2):((evtouch_state==0)?3:0);
-              if ((tmptouch!=0)&&(tmptouch!=3)){
-                evtouch_mt_syn=3;
-                evtouch_locked=0;
-              }
-            }
-          }
-          else if ((ev.code==ABS_MT_POSITION_X)||(ev.code==ABS_X)){
-            //-- GOT RAW TOUCH X COORDINATE
-            if (!evtouch_locked){
-              if (ev.value>0) evtouch_rx = ev.value;
-            }
-          }
-          else if ((ev.code==ABS_MT_POSITION_Y)||(ev.code==ABS_Y)){
-            //-- GOT RAW TOUCH Y COORDINATE
-            if (!evtouch_locked){
-              if (ev.value>0) evtouch_ry = ev.value;
-            }
-          }
-        }
-        break;
+void ev_input_callback(struct input_event * ev){
+  if (ev->type==EV_KEY){
+    ev_post_message(ev->code,ev->value);
+  }
+  else if (ev->type == EV_ABS) {
+    evtouch_x = ev->value >> 16;
+    evtouch_y = ev->value & 0xFFFF;
+    
+    if ((evtouch_x>0)&&(evtouch_y>0)){
+      if (ev->code==0){
+        evtouch_state = 0;
       }
+      else if (evtouch_state==0){
+        evtouch_state = 1;
+      }
+      else{
+        evtouch_state = 2;
+      }
+      ev_post_message(evtouch_code,evtouch_state);
+    }
+    else{
+      //-- False Event
+      evtouch_state = 0;
+      evtouch_x = 0;
+      evtouch_y = 0;
     }
   }
 }
@@ -457,54 +150,19 @@ void ev_input_callback(int fd, short revents){
 static void *ev_input_thread(void *cookie){
   //-- Loop for Input
   while (evthread_active){
-    //-- Wait For Input Event
-    int r = poll(ev_fds, ev_count, -1);
-    if (r >= 0){
-      //-- New Key Event
-      unsigned n;
-      for (n=0; n<ev_count; n++) {
-          if (ev_fds[n].revents & ev_fds[n].events)
-            ev_input_callback(ev_fds[n].fd, ev_fds[n].revents);
-      }
+    struct input_event ev;
+    byte res=aipGetInput(&ev, 0);
+    if (res){
+      ev_input_callback(&ev);
     }
   }
 }
-
 //-- INIT INPUT DEVICE
 void ui_init(){
   ev_init();
 }
 int ev_init(){
-  DIR *dir;
-  struct dirent *de;
-  int fd;
-  dir = opendir("/dev/input");
-  if(dir != 0) {
-    while((de = readdir(dir))) {
-      unsigned long ev_bits[BITS_TO_LONGS(EV_MAX)];
-      if(strncmp(de->d_name,"event",5)) continue;
-      fd = openat(dirfd(dir), de->d_name, O_RDONLY);
-      if(fd < 0) continue;
-      
-      /* read the evbits of the input device */
-      if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) < 0) {
-          close(fd);
-          continue;
-      }
-
-      /* ABS, KEY & REL */
-      if (!test_bit(EV_ABS, ev_bits) && !test_bit(EV_SYN, ev_bits) && !test_bit(EV_KEY, ev_bits) && !test_bit(EV_REL, ev_bits)) {
-          close(fd);
-          continue;
-      }
-      
-      ev_fds[ev_count].fd       = fd;
-      ev_fds[ev_count].events   = POLLIN;
-      ev_count++;
-      ev_dev_count++;
-      if(ev_dev_count == MAX_DEVICES) break;
-    }
-  }
+  aipInit();
   
   //-- Create Watcher Thread
   evthread_active = 1;
@@ -512,19 +170,13 @@ int ev_init(){
   pthread_create(&input_thread_t, NULL, ev_input_thread, NULL);
   pthread_detach(input_thread_t);
   
-  // atouch_sethack(1);
   return 0;
 }
 
 //-- RELEASE INPUT DEVICE
 void ev_exit(void){
-  evtouch_thack   = 0;
   evthread_active = 0;
-  while (ev_count > 0) {
-      close(ev_fds[--ev_count].fd);
-  }
-  ev_misc_count = 0;
-  ev_dev_count = 0;
+  aipRelease();
 }
 
 //-- SEND ATOUCH CUSTOM MESSAGE
@@ -539,14 +191,12 @@ byte atouch_send_message(dword msg){
 //-- Clear Queue
 void ui_clear_key_queue_ex(){
   pthread_mutex_lock(&key_queue_mutex);
-  evtouch_locked=0;
   key_queue_len = 0;
   pthread_mutex_unlock(&key_queue_mutex);
   atouch_winmsg_n=0;
 }
 void ui_clear_key_queue() {
   pthread_mutex_lock(&key_queue_mutex);
-  evtouch_locked=0;
   key_queue_len = 0;
   pthread_mutex_unlock(&key_queue_mutex);
   if (atouch_winmsg_n>0) ev_post_message(atouch_message_code,0);
@@ -571,19 +221,17 @@ int atouch_wait(ATEV *atev){
 int atouch_wait_ex(ATEV *atev, byte calibratingtouch){
   atev->x = -1;
   atev->y = -1;
-  // if (prev_was_key) ui_clear_key_queue();
+  
   while (1){
     int key = ui_wait_key();
     
     //-- Custom Message
     if (key==atouch_message_code){
-      atev->msg = atouch_winmsg_get(1); // atouch_message_value;
+      atev->msg = atouch_winmsg_get(1);
       atev->d   = 0;
       atev->x   = 0;
       atev->y   = 0;
       atev->k   = 0;
-      // ui_clear_key_queue();
-      // atouch_message_value = 0;
       return ATEV_MESSAGE;
     }
     
@@ -592,51 +240,14 @@ int atouch_wait_ex(ATEV *atev, byte calibratingtouch){
     
     if (key==evtouch_code){
       if ((evtouch_x>0)&&(evtouch_y>0)){
-        //-- GENERIC TOUCH SCREEN INPUT EVENT
-        if (((evtouch_x<=agw())&&(evtouch_y<=agh()))||(calibratingtouch)){
-          atev->x = evtouch_x;
-          atev->y = evtouch_y;
-          evtouch_locked=0;
-          switch(evtouch_state){
-            case 1:  return ATEV_MOUSEDN; break;
-            case 2:  return ATEV_MOUSEMV; break;
-            default: return ATEV_MOUSEUP; break;
-          }
-        }
-        //-- CAPIATIVE KEY INPUT EVENT
-        else if(evtouch_y>(agh()+(agdp()*10))){
-          int capiative_btnsz = agw()/4;
-          if (evtouch_state==0){
-            atev->d = 0;
-            if (evtouch_x<capiative_btnsz){
-              vibrate(30);
-              atev->k = KEY_HOME;
-              evtouch_locked=0;
-              return ATEV_SELECT;
-            }
-            else if (evtouch_x<(capiative_btnsz*2)){
-              vibrate(30);
-              atev->k = KEY_MENU;
-              evtouch_locked=0;
-              return ATEV_MENU;
-            }
-            else if (evtouch_x<(capiative_btnsz*3)){
-              vibrate(30);
-              atev->k = KEY_BACK;
-              evtouch_locked=0;
-              return ATEV_BACK;
-            }
-            else if (evtouch_x<(capiative_btnsz*4)){
-              vibrate(30);
-              atev->k = KEY_SEARCH;
-              evtouch_locked=0;
-              return ATEV_MENU;
-            }
-          }
-          // home,menu,back,search
+        atev->x = evtouch_x;
+        atev->y = evtouch_y;
+        switch(evtouch_state){
+          case 1:  return ATEV_MOUSEDN; break;
+          case 2:  return ATEV_MOUSEMV; break;
+          default: return ATEV_MOUSEUP; break;
         }
       }
-      evtouch_locked=0;
     }
     else if ((key!=0)&&(key==acfg()->ckey_up))      return ATEV_UP;
     else if ((key!=0)&&(key==acfg()->ckey_down))    return ATEV_DOWN;

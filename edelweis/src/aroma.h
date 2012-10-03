@@ -75,8 +75,8 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "2.50"
-#define AROMA_BUILD       "120716-025"
+#define AROMA_VERSION     "2.55"
+#define AROMA_BUILD       "121003-030"
 #define AROMA_BUILD_CN    "Edelweis"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -637,11 +637,15 @@ byte ag_text_exl(CANVAS *_b,int maxwidth,int x,int y, const char *s, color cl_de
 //         Copyright (C) 2007 The Android Open Source Project
 //         Licensed under the Apache License
 //
+/*
 int atouch_gethack();
 void atouch_sethack(int t);
+*/
 struct  input_event;
+/*
 void    atouch_set_calibrate(float dx, int ax, float dy, int ay);
 void    atouch_matrix_calibrate(AW_CALIBMATRIXP matrix);
+*/
 int     atouch_wait(ATEV *atev);
 int     atouch_wait_ex(ATEV *atev, byte calibratingtouch);
 byte    atouch_send_message(dword msg);

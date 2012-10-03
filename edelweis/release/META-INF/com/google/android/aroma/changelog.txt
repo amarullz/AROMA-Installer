@@ -1,3 +1,10 @@
+<b><#selectbg_g>EDELWEIS - 2.55</#></b>
+<*>Completely new Input/Touchscreen Handler</*>
+<*>Remove all calibration need. calibtool(), calibrate() and calibrate_matrix() won't do anything now. :)</*>
+
+<b><#selectbg_g>EDELWEIS - 2.51</#></b>
+<*>Add Support for Galaxy Nexus</*>
+
 <b><#selectbg_g>EDELWEIS - 2.50</#></b>
 <*>Add Calibration Matrix for More Accurate Touch screen calibration</*>
 <*>Set ROBOTO as Default True Type Font</*>

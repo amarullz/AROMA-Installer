@@ -52,7 +52,7 @@ static void *ac_scrolltothread(void *cookie){
     aw_draw(dt->ctl->win);
     if (dt->requestHandler[0]!=dt->requestValue) break;
     if (!dt->ctl->win->isActived) break;
-    if (ui_key_pressed(atmsg())){
+    if (ontouch()){
       ACONTROLP nctl = (ACONTROLP) dt->ctl->win->controls[dt->ctl->win->touchIndex];
       if (nctl==dt->ctl)
         break;
@@ -167,7 +167,7 @@ static void *ac_bouncethread(void *cookie){
     aw_draw(dt->ctl->win);
     
     if (!dt->ctl->win->isActived) break;
-    if (ui_key_pressed(atmsg())){
+    if (ontouch()){
       ACONTROLP nctl = (ACONTROLP) dt->ctl->win->controls[dt->ctl->win->touchIndex];
       if (nctl==dt->ctl)
         break;
@@ -233,7 +233,7 @@ static void *ac_flingthread(void *cookie){
     
     if (!dt->ctl->win->isActived) break;
     if ((dt->scrollY[0]<0-(dt->ctl->h/4))||(dt->scrollY[0]>dt->maxScrollY+(dt->ctl->h/4))) break;
-    if (ui_key_pressed(atmsg())){
+    if (ontouch()){
       ACONTROLP nctl = (ACONTROLP) dt->ctl->win->controls[dt->ctl->win->touchIndex];
       if (nctl==dt->ctl)
         break;

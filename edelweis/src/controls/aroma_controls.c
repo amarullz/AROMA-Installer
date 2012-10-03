@@ -1246,7 +1246,16 @@ byte aw_calibmatrix(AW_CALIBPOINTP displayPtr, AW_CALIBPOINTP screenPtr, AW_CALI
     return retValue; 
   
 } /* end of setCalibrationMatrix() */  
+
 byte aw_calibtools(AWINDOWP parent){
+  aw_alert(parent,
+      "No Need Calibration",
+      "This version doesn't need any calibration data...",
+      NULL,
+      NULL);
+  return 1;
+}
+byte aw_calibtools_(AWINDOWP parent){
   int USE_HACK = aw_confirm(
       parent,
       "Use alternative touch",

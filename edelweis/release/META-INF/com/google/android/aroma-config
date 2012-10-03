@@ -16,12 +16,12 @@
 #
 ### FILE INFO:
 #
-# AROMA Installer 2.00 - AROMA Installer Test Script Configuration
+# AROMA Installer 2.51 - AROMA Installer Test Script Configuration
 #       (c) 2011-2012 by Ahmad Amarullah
 #           amarullz - xda-developers
 #           http://www.amarullz.com/
 #
-#       Binary Version  : 2.50
+#       Binary Version  : 2.55
 #       Binary Codename : Edelweis
 #
 ### INFO:
@@ -70,7 +70,9 @@
 # ini_set("dp","5");
 #
 
-##[ REQUIRED ]
+#### NOTE >> THIS VERSION DOESN'T NEED ANY CALIBRATION DATA :)
+
+##[ DEPRECATED - WONT DO ANYTHING FOR THIS VERSION ]
 # Calibrate Touchscreen - MATRIX METHOD
 #
 # For other device, run the installer, then press "menu"
@@ -84,10 +86,10 @@
 #
 # Current calibration was for HTC Sensation/XE/4G Devices:
 #
-calibrate_matrix(
-  "63052.50",  "840.00",     "-903390.00", "-1680.00",
-  "125895.00", "-371670.00", "120021.25",  "0"
-);
+#calibrate_matrix(
+#  "63052.50",  "840.00",     "-903390.00", "-1680.00",
+#  "125895.00", "-371670.00", "120021.25",  "0"
+#);
 
 ##[ DEPRECATED ]
 # Calibrate Touchscreen
@@ -127,10 +129,10 @@ calibrate_matrix(
 # Initializing Rom Information
 #
 ini_set("rom_name",             "AROMA Test Zip");
-ini_set("rom_version",          "2.50");
+ini_set("rom_version",          "2.55");
 ini_set("rom_author",           "amarullz");
 ini_set("rom_device",           "Any Device");
-ini_set("rom_date",             "Apr, 25 2012");
+ini_set("rom_date",             "Oct, 03 2012");
 
 
 ##
@@ -160,11 +162,11 @@ anisplash(
     "splash/a6", 30
 );
 
-##
+##[DEPRECATED]
 # Show Calibrating Tools Directly before show any UI
 #
 #--- Remove this calibtool if you already know the calibrate data
-calibtool("");
+# calibtool("");
 
 #
 # Set Small Font to Support all fonts
