@@ -277,6 +277,7 @@ typedef struct  {
   char  text_calibrating[32]; // Calibration Tools
   char  text_quit[32];        // Quit
   char  text_quit_msg[64];   // Quit Message
+  char  text_save_logs[32];   // Save Logs
   
   // ROM Text
   char rom_name[64];          // ROM Name
