@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #ifndef _AROMA_NODEBUG
-#include <sys/statvfs.h>
+#include <sys/statfs.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <string.h>
