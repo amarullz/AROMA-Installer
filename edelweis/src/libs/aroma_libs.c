@@ -22,7 +22,7 @@
  */
 
 #include <sys/times.h>
-#include <sys/statvfs.h>
+#include <sys/vfs.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -212,8 +212,8 @@ int remove_directory(const char *path)
 }
 //-- GET DISK USAGE
 int alib_diskusage(const char * path){
-  struct statvfs fiData;
-  if((statvfs(path,&fiData))<0) {
+  struct statfs fiData;
+  if((statfs(path,&fiData))<0) {
     return -1;
   } else {
     int perc = round(( ((float) fiData.f_bfree) / ((float) fiData.f_blocks) ) * 100);
@@ -221,8 +221,8 @@ int alib_diskusage(const char * path){
   } 
 }
 byte alib_disksize(const char * path, unsigned long * ret, int division){
-  struct statvfs fiData;
-  if((statvfs(path,&fiData))<0) {
+  struct statfs fiData;
+  if((statfs(path,&fiData))<0) {
     return 0;
   } else {
     if (ret!=NULL){
@@ -238,8 +238,8 @@ byte alib_disksize(const char * path, unsigned long * ret, int division){
   }
 }
 byte alib_diskfree(const char * path, unsigned long * ret, int division){
-  struct statvfs fiData;
-  if((statvfs(path,&fiData))<0) {
+  struct statfs fiData;
+  if((statfs(path,&fiData))<0) {
     return 0;
   } else {
     if (ret!=NULL){

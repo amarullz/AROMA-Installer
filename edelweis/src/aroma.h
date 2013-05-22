@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <minutf8.h>
+#include <pthread.h>
 
 //
 // Freetype Headers
