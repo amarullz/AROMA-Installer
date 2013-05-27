@@ -588,7 +588,7 @@ int aroma_start_install(
         // Show Dump Button
         acbutton(
           hWin,
-          pad,py,(cw/2)-(agdp()*2),ph,"Save Logs",0,
+          pad,py,(cw/2)-(agdp()*2),ph,acfg()->text_save_logs,0,
           8
         );
         

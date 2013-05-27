@@ -87,6 +87,7 @@ void acfg_init_ex(byte themeonly){
     snprintf(acfg_var.text_calibrating,31,"Calibrating Tools");
     snprintf(acfg_var.text_quit,31,"Quit Installation");
     snprintf(acfg_var.text_quit_msg,63,"Are you sure to quit the installer?");
+    snprintf(acfg_var.save_logs,31,"Save Logs");
     
     snprintf(acfg_var.rom_name,63,AROMA_NAME);
     snprintf(acfg_var.rom_version,63,AROMA_VERSION);
