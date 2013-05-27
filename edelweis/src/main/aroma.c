@@ -21,7 +21,6 @@
  *
  */
 #include <sys/reboot.h>
-#include <mcheck.h>
 #include "../aroma.h"
 
 //* 
