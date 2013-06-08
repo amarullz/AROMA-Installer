@@ -37,7 +37,7 @@ static void *ac_scrolltothread(void *cookie){
     dt->ctl->win->threadnum++;
   else{
     free(dt);
-    return;
+    return NULL;
   }
   dt->ctl->forceNS = 1;
   while (dt->scrollY[0]!=dt->requestY){
@@ -61,6 +61,7 @@ static void *ac_scrolltothread(void *cookie){
   dt->ctl->forceNS = 0;
   dt->ctl->win->threadnum--;
   free(dt);
+  return NULL;
 }
 void ac_regscrollto(
   ACONTROLP       ctl,
@@ -98,7 +99,7 @@ static void *ac_pushwaitthread(void *cookie){
     dt->ctl->win->threadnum++;
   else{
     free(dt);
-    return;
+    return NULL;
   }
   int  waitsz  = 0;
   byte isvalid = 1;
@@ -114,6 +115,7 @@ static void *ac_pushwaitthread(void *cookie){
   }
   dt->ctl->win->threadnum--;
   free(dt);
+  return NULL;
 }
 void ac_regpushwait(
   ACONTROLP     ctl,
@@ -144,7 +146,7 @@ static void *ac_bouncethread(void *cookie){
     dt->ctl->win->threadnum++;
   else{
     free(dt);
-    return;
+    return NULL;
   }
   int bouncesz    = 0;
   byte bouncetype = 0;
@@ -177,6 +179,7 @@ static void *ac_bouncethread(void *cookie){
   }
   dt->ctl->win->threadnum--;
   free(dt);
+  return NULL;
 }
 void ac_regbounce(
   ACONTROLP       ctl,
@@ -205,7 +208,7 @@ static void *ac_flingthread(void *cookie){
     dt->ctl->win->threadnum++;
   else{
     free(dt);
-    return;
+    return NULL;
   }
   int mz  = akinetic_fling(dt->akin);
   float vz=0.0;
@@ -252,6 +255,7 @@ static void *ac_flingthread(void *cookie){
   }
   dt->ctl->win->threadnum--;
   free(dt);
+  return NULL;
 }
 
 void ac_regfling(

@@ -117,4 +117,5 @@ byte aarray_free(AARRAYP a){
   
   free(a->items);
   free(a);
+  return 0;
 }

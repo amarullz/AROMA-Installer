@@ -210,7 +210,7 @@ static void *aroma_install_package(void *cookie){
   int res = az_extract(AROMA_ORIB,AROMA_TMP "/update-binary");
   if (res==0){
     aw_post(aw_msg(15,0,0,0));
-    return;
+    return NULL;
   }
   
   //-- Create Pipe
@@ -377,6 +377,7 @@ static void *aroma_install_package(void *cookie){
   //-- Reopen Zip
   az_init(getArgv(1));
   aw_post(aw_msg(15,0,0,0));
+  return NULL;
 }
 static void *ac_progressthread(void *cookie){
   //-- COLORS
@@ -522,6 +523,7 @@ static void *ac_progressthread(void *cookie){
     aw_draw(ai_win);
     usleep(160);
   }
+  return NULL;
 }
 void aroma_init_install(
   CANVAS * bg,

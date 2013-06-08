@@ -156,6 +156,7 @@ static void *ev_input_thread(void *cookie){
       ev_input_callback(&ev);
     }
   }
+  return NULL;
 }
 //-- INIT INPUT DEVICE
 void ui_init(){

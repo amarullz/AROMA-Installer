@@ -307,6 +307,7 @@ static void *ag_thread(void *cookie){
       ag_refreshrate();
     }
   }
+  return NULL;
 }
 
 
@@ -661,7 +662,8 @@ static void *ag_sync_fade_thread(void * cookie){
   }
   ag_refreshlock = 0;
   ag_sync_locked = 0;
-  ag_sync();  
+  ag_sync(); 
+ return NULL; 
 }
 void ag_sync_fade_wait(int frame){
   ag_sync_fade_thread((void *) frame);
@@ -955,6 +957,7 @@ byte ag_spixel(CANVAS *_b,float x, float y, color cl){
   ag_subpixel(_b, fx+1  ,fy,   cl,  (byte) (((ax+(1-ay))      * 255) / 4));
   ag_subpixel(_b, fx    ,fy+1, cl,  (byte) ((((1-ax)+ay)      * 255) / 4));
   ag_subpixel(_b, fx+1  ,fy+1, cl,  (byte) (((ax+ay)          * 255) / 4));
+return 0;
 }
 
 //-- SubPixel
@@ -1422,7 +1425,7 @@ byte ag_check_escape(int * soff, const char ** ssource, char * buf, byte realesc
           if (strcmp(tb,ag_colorsets[ci])==0){
             if (buf!=NULL){
               if (realescape){
-                snprintf(buf,15,tb);
+                snprintf(buf,15,"%s",tb);
               }
               else{
                 color ccolor=ag_getcolorset(ci);
