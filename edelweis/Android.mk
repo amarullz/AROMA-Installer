@@ -3,6 +3,9 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := aroma
+
+LOCAL_FORCE_STATIC_EXECUTABLE := true
+
 LOCAL_SRC_FILES := 	\
   libs/png/png.c \
   libs/png/pngerror.c \
@@ -71,12 +74,14 @@ LOCAL_SRC_FILES := 	\
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
 #LOCAL_LDLIBS := -lz
-
-LOCAL_STATIC_LIBRARIES := libz 
+LOCAL_STATIC_LIBRARIES := libz \
+       	libc \
+	libstdc++ \
+	libm  
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_CFLAGS := -Os -static -fdata-sections \
+LOCAL_CFLAGS := -Os -fdata-sections \
   -ffunction-sections -fno-short-enums \
   -Wl,--gc-sections \
   -fPIC -DPIC \
@@ -85,8 +90,9 @@ LOCAL_CFLAGS := -Os -static -fdata-sections \
   -D_GLIBCXX_DEBUG \
   -D_AROMA_NODEBUG \
   -DFT2_BUILD_LIBRARY=1 \
-  -DDARWIN_NO_CARBON
-
+  -DDARWIN_NO_CARBON \
+  -static  
+		
 deploy:
 		adb push libs/armeabi/aroma /data/data/
 
