@@ -170,6 +170,7 @@ char * aui_readfromtmp(char * name){
   char path[256];
   snprintf(path,256,"%s/%s",AROMA_TMP,name);
   aui_readfromfs(path);
+  return NULL;
 }
 
 //* 
@@ -659,7 +660,7 @@ Value* AROMA_PLEASEWAIT(const char* name, State* state, int argc, Expr* argv[]) 
   
   //-- Set Busy Text
   char txt[32];
-  snprintf(txt,32,args[0]);
+  snprintf(txt,32,"%s",args[0]);
   ag_setbusy_withtext(txt);
   
   //-- Release Arguments
@@ -880,7 +881,8 @@ Value* AROMA_CAL(const char* name, State* state, int argc, Expr* argv[]) {
   //-- Return
   char retstr[64];
   snprintf(retstr,64,"%ld",ret);
-  StringValue(strdup(retstr));
+ // StringValue(strdup(retstr));
+ return StringValue(strdup(retstr));
 }
 
 //* 
@@ -1116,22 +1118,22 @@ Value* AROMA_INI_SET(const char* name, State* state, int argc, Expr* argv[]) {
   else if (strcmp(args[0],"window_roundsize") == 0)   acfg()->winroundsz=valint;
   else if (strcmp(args[0],"transition_frame") == 0)   acfg()->fadeframes=valint;
 
-  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,64,args[1]);
-  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,64,args[1]);
-  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,64,args[1]);
+  else if (strcmp(args[0],"text_ok") == 0)            snprintf(acfg()->text_ok,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_next") == 0)          snprintf(acfg()->text_next,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_back") == 0)          snprintf(acfg()->text_back,64,"%s",args[1]);
 
-  else if (strcmp(args[0],"text_yes") == 0)           snprintf(acfg()->text_yes,64,args[1]);
-  else if (strcmp(args[0],"text_no") == 0)            snprintf(acfg()->text_no,64,args[1]);
-  else if (strcmp(args[0],"text_about") == 0)         snprintf(acfg()->text_about,64,args[1]);
-  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(acfg()->text_calibrating,64,args[1]);
-  else if (strcmp(args[0],"text_quit") == 0)          snprintf(acfg()->text_quit,64,args[1]);
-  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(acfg()->text_quit_msg,128,args[1]);
+  else if (strcmp(args[0],"text_yes") == 0)           snprintf(acfg()->text_yes,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_no") == 0)            snprintf(acfg()->text_no,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_about") == 0)         snprintf(acfg()->text_about,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_calibrating") == 0)   snprintf(acfg()->text_calibrating,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_quit") == 0)          snprintf(acfg()->text_quit,64,"%s",args[1]);
+  else if (strcmp(args[0],"text_quit_msg") == 0)      snprintf(acfg()->text_quit_msg,128,"%s",args[1]);
     
-  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,128,args[1]);
-  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,128,args[1]);
-  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,128,args[1]);
-  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,128,args[1]);
-  else if (strcmp(args[0],"rom_date") == 0)           snprintf(acfg()->rom_date,128,args[1]);
+  else if (strcmp(args[0],"rom_name") == 0)           snprintf(acfg()->rom_name,128,"%s",args[1]);
+  else if (strcmp(args[0],"rom_version") == 0)        snprintf(acfg()->rom_version,128,"%s",args[1]);
+  else if (strcmp(args[0],"rom_author") == 0)         snprintf(acfg()->rom_author,128,"%s",args[1]);
+  else if (strcmp(args[0],"rom_device") == 0)         snprintf(acfg()->rom_device,128,"%s",args[1]);
+  else if (strcmp(args[0],"rom_date") == 0)           snprintf(acfg()->rom_date,128,"%s",args[1]);
   
   
   else if (strcmp(args[0],"customkeycode_up")==0)     acfg()->ckey_up=valkey;
@@ -1439,7 +1441,7 @@ Value* AROMA_VIEWBOX(const char* name, State* state, int argc, Expr* argv[]) {
   char save_var_name[256];
   if (argc==6){
     //-- Save Variable Name
-    snprintf(save_var_name,256,args[5]);
+    snprintf(save_var_name,256,"%s",args[5]);
   }
             
   //-- Release Arguments
@@ -2670,7 +2672,7 @@ done:
 //*
 void aui_langloadsave(char * dest, int max, char * key){
   char * val = alang_get(key);
-  if (val!=NULL) snprintf(dest,max,val);
+  if (val!=NULL) snprintf(dest,max,"%s",val);
 }
 Value* AROMA_LOADLANG(const char* name, State* state, int argc, Expr* argv[]) {
   if (argc != 1) {

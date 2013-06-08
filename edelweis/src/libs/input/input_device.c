@@ -48,6 +48,9 @@
  *
  */
 
+
+#include "../../aroma.h"
+
 /* Input Define */
 #define AIP_DEVICE  "/dev/input"
 #define AIP_MAXDEV              16
@@ -76,6 +79,7 @@
 #define AIP_TRANS_KEY           0x1
 #define AIP_TRANS_TOUCH         0x2
 #define AIP_TRANS_NONE          0x3
+
 
 /* Position Structure */
 typedef struct {

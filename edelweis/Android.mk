@@ -44,13 +44,37 @@ LOCAL_SRC_FILES := 	\
   libs/freetype/sfnt/sfnt.c \
   libs/freetype/smooth/smooth.c \
   libs/freetype/truetype/truetype.c \
-  $(wildcard src/edify/*.c) \
-  $(wildcard src/libs/*.c) \
-  $(wildcard src/controls/*.c) \
-  $(wildcard src/main/*.c)
+  src/controls/aroma_control_button.c \
+  src/controls/aroma_control_check.c \
+  src/controls/aroma_control_checkbox.c \
+  src/controls/aroma_control_menubox.c \
+  src/controls/aroma_control_optbox.c \
+  src/controls/aroma_controls.c \
+  src/controls/aroma_control_textbox.c \
+  src/controls/aroma_control_threads.c \
+  src/edify/expr.c \
+  src/edify/lex.yy.c \
+  src/edify/parser.c \
+  src/libs/aroma_array.c \
+  src/libs/aroma_freetype.c \
+  src/libs/aroma_graph.c \
+  src/libs/aroma_input.c \
+  src/libs/aroma_languages.c \
+  src/libs/aroma_libs.c \
+  src/libs/aroma_memory.c \
+  src/libs/aroma_png.c \
+  src/libs/aroma_zip.c \
+  src/main/aroma.c \
+  src/main/aroma_installer.c \
+  src/main/aroma_ui.c 
+   # src/libs/input/input_device.c
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
-LOCAL_LDLIBS := -lz
+#LOCAL_LDLIBS := -lz
+
+LOCAL_STATIC_LIBRARIES := libz 
+
+LOCAL_MODULE_TAGS := optional
 
 LOCAL_CFLAGS := -Os -static -fdata-sections \
   -ffunction-sections -fno-short-enums \
