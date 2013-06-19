@@ -1,0 +1,72 @@
+﻿###################################################################################################################
+#
+# SHOW LANGUAGE SELECTION
+#
+selectbox(
+  #-- Title
+    "Select Language",
+  
+  #-- Sub Title
+    "Please select installer language that you want to use in this installation test:",
+  
+  #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
+    "@default",
+  
+  #-- Will be saved in /tmp/aroma/theme.prop
+    "lang.prop",
+  
+  #---------------------------------[ Selectbox Without Group ]----------------------------------#
+  # TITLE            |  SUBTITLE                                                 | Initial Value #
+  #------------------+-----------------------------------------------------------+---------------#
+
+    "English",            "Welcome to Installer",                                        1,      #-- selected.0 = 1
+    "Indonesian",         "Selamat datang di Installer",                                 0,      #-- selected.0 = 2
+    "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
+    "Simplified Chinesse","欢迎到安装",                                                   0,      #-- selected.0 = 4  
+    "French",             "Bienvenue dans l'installateur",                               0,      #-- selected.0 = 5
+    "Russian",            "Добро пожаловать в установщик",                               0,      #-- selected.0 = 6
+  	"Italian",            "Benvenuti Installer",                                         0,      #-- selected.0 = 7
+  	"Germany",            "Willkommen bei Installer",									                   0, 		 #-- selected.0 = 8
+  	"Hebrew",             "ברוכים הבאים להתקנה",										                          0		 #-- selected.0 = 9
+  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+);
+
+##
+# SET LANGUAGE & FONT FAMILY
+#
+if prop("lang.prop","selected.0")=="1" then
+  loadlang("langs/en.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="2" then
+  loadlang("langs/id.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="3" then
+  loadlang("langs/es.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="4" then
+  loadlang("langs/cn.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="5" then
+  loadlang("langs/fr.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="6" then
+  loadlang("langs/ru.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="7" then
+  loadlang("langs/it.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="8" then
+  loadlang("langs/de.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="9" then
+  loadlang("langs/he.lang");
+endif;
+

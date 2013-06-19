@@ -1,0 +1,184 @@
+<b><#selectbg_g>FLAMBOYAN BETA - 2.70B1-B4</#></b>
+<*><b>B4</b></*>
+<*>Fix Icon Themes Error</*>
+<*>Change Transition Animation - Slides for next/back - Smoother than alpha blend animation</*>
+<*>Remove any transition effect for Dialog Window</*>
+<*>Use Bold Text for Navigation Button</*>
+<*>Fix Installer UI for text log position</*>
+<*>Add ini_set/ini_get for Vibrate Intensity (0-10). ini_set("vibrate","5") = Half Intensity, ini_set("vibrate","0") = No Vibrate At All</*>
+<*>Add ini_set/ini_get for icon_back and icon_next. ini_set("icon_next","@install"), ini_set("icon_back","icons/back")</*>
+<*>Fix Installer Freeze on (pthread_detach) - Compileable for Android Build Environment</*>
+<*><b>BUILD WITH ANDROID BUILD ENVIRONMENT</b> - Binary Size Reduce By ~60% - BUILD COMMAND: make aroma_installer; make aroma_installer.zip</*>
+<*>Add zip build command in building the source</*>
+<*>Rewrite building script for windows and linux with Android Build Environment</*>
+<*>Modify aroma-config in demo zip to includes some new features</*>
+<*>Change <b>update-binary-installer</b> from Galaxy Nexus binary. Sensation user should replace it binary with sensation binary</*>
+<*>Beautifier Source Code. Add beautifier tools in source code tree</*>
+
+<*><b>B3</b></*>
+<*>Fix Include Back Error</*>
+<*>Improve Back Sequence Capability</*>
+<*>ADD EVAL Function to execute the script inline from string</*>
+<*>ADD GOTO Function to jump back into GOTO Label. gotolabel(), goto().</*>
+<*>Update More Demo in Example Zip</*>
+<*>Improving Efficiency processes when loading and reloading themes</*>
+
+<*><b>B2</b></*>
+<*>Fix color handling on themes</*>
+<*>Using bilinear scaling in png.9p</*>
+<*>Re-add hebrew support</*>
+<*>Add <i>Italic</i> Support with tag \<i>Italic\</i></*>
+<*>ADD include function, to include script from different file. look at new aroma-config file and language_select.edify file</*>
+
+<*><b>B1</b></*>
+<*>reboot("now","recovery"); and reboot("now","fastbot");</*>
+<*>Refresh look and feel</*>
+<*>Remove RTL and Arabic Support (For faster and freeing resource, because the features still unusable)</*>
+<*>Subpixel rendering for Fonts (Clear Type Like)</*>
+<*>Improve performance with NEON here and there.</*>
+<*>Tweaks some input driver</*>
+<*>May fix some colorspace issue</*>
+<*>Bilinear scaling for png icons, Now it look smooth even if it resized</*>
+<*>FIX MANY BACK SEQUENCE BUGS</*>
+<*>Font will only loaded if the font is really changed - Faster-faster performance improvement</*>
+<*>Change Navigation Bar Buttons. Now next and back can be using Icons </*>
+<*>Add Menu Button for buttonless devices.</*>
+
+
+<b><#selectbg_g>EDELWEIS - 2.55</#></b>
+<*>Completely new Input/Touchscreen Handler</*>
+<*>Remove all calibration need. calibtool(), calibrate() and calibrate_matrix() won't do anything now. :)</*>
+
+<b><#selectbg_g>EDELWEIS - 2.51</#></b>
+<*>Add Support for Galaxy Nexus</*>
+
+<b><#selectbg_g>EDELWEIS - 2.50</#></b>
+<*>Add Calibration Matrix for More Accurate Touch screen calibration</*>
+<*>Set ROBOTO as Default True Type Font</*>
+
+<b><#selectbg_g>DAHLIA - 2.00</#></b>
+<*>Fix Installation Save Logs</*>
+
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120414-010</#></b>
+<*>Fix framebuffer mmap size</*>
+<*>Fix status 0 error</*>
+
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 1203dd-00x</#></b>
+<*>Add support for French (Thanks to MyUI Team)</*>
+<b><#selectbg_g>DAHLIA - 2.00 - NIGHTLY BUILD 120307-002</#></b>
+<*>Add Multilanguage functions</*>
+<*>Change list bullet drawing method</*>
+<*>Add support for kerning font when use TrueType/OpenType</*>
+<*>Add AROMA Memory management and memory debuging build (COMPILE FROM SOURCE ONLY)</*>
+<*>Add more limit size for AROMA texts</*>
+<*>Add font glyph cache for faster freetype drawing & processing</*>
+<*>Add support for Modern Standard Arabic</*>
+<*>Add support for RTL</*>
+<*>Add support for TrueType and OpenType fonts</*>
+<*>Add support for UTF8 encoding in aroma-config and all AMS text. For updater-script use NO-BOM UTF8</*>
+<*>Fix Memory leaks</*>
+<*>Add ini_set("force_colorspace","rgba");</*>
+<*>Add support for atmel_maxtouch - Asus Transformer Touch Screen</*>
+
+<b><#selectbg_g>CEMPAKA - 1.60 - BUILD 120227-26</#></b>
+<*>Add msb_right check for Endianess video memory</*>
+<*>Fix Installer text log drawing</*>
+<*>Add ini_get</*>
+<*>Add rom_date in ini_get</*>
+<*>Fix reboot and back function</*>
+<*>Add more and recreate Icons for themes and generic</*>
+<*>Rewrite text handler</*>
+<*>Add alignment, indentation and list in AROMA Markup String</*>
+<*>Change temp directory to /tmp/aroma, /tmp/aroma-data stil works</*>
+<*>Add Theme Support</*>
+<*>Add AROMA Markup for \<b> Bold</*>
+<*>Add More Colorset</*>
+<*>Add More Text to Customize</*>
+<*>Add PNG Icon Load From Theme (Default Icons)</*>
+<*>Add Tab support in AROMA Markup String</*>
+<*>Change int to long for partition info, now support big storage information</*>
+<*>Config Init All/Theme Only</*>
+<*>Recreate new example (release) for binary release</*>
+<*>Customizable Font Runtime</*>
+<*>Reformat About Dialog</*>
+<*>Add show progress per time in installer (now support by files and by time).</*>
+<*>Themeable Progressbar</*>
+<*>Enhance Exec Functions to return exit status and autosave buffer into variable</*>
+<*>Fix glibc error in ag_close - Need workaround</*>
+<*>Move ai_trim to system libs</*>
+<*>Add Stretch function for png</*>
+<*>Add 9 Patch drawing function for png</*>
+<*>Fix Reboot Function</*>
+<*>Add Alternative Touch Method</*>
+<*>Add ziptotmp & restotmp</*>
+<*>Add support for mxt224 touch screen (SYN_MT_REPORT event)</*>
+
+<b><#selectbg_g>BOUGENVILLE - 1.10 - BUILD 120208-13</#></b>
+<*>Add Alternative Touch Method</*>
+<*>Added New Functions <#textfg_gray>
+  <*>anisplash - ANIMATED SPLASH SCREEN</*>
+  <*>prop - GET PROP FROM AROMA TMP</*>
+  <*>zipprop - GET PROP FROM ZIP</*>
+  <*>resprop - GET PROP FROM AROMA RESOURCE ZIP</*>
+  <*>sysprop - GET RECOVERY PROP</*>
+  <*>property_get - GET RECOVERY PROP</*>
+  <*>write - WRITE STRING INTO FILESYSTEM</*>
+  <*>readtmpfile - READ TEMPORARY FILE AS STRING</*>
+  <*>read - READ FILESYSTEM AS STRING</*>
+  <*>zipread - Read String From Zip</*>
+  <*>resread - Read Strinf From Resource</*>
+  <*>zipexec - Exec Program From Zip</*>
+  <*>resexec - Exec Program From Resource</*>
+  <*>run_program - Run Program/Exec</*>
+  <*>exec - Run Prohram/Exec</*>
+  <*>back - BACK TO PREVIOUS WIZARD</*>
+  <*>reboot - REBOOT DEVICE</*></#></*>
+<*><u>Deprecated Functions</u><#textfg_gray>
+  <*>readfile - Will Renamed to zipread</*>
+  <*>readfile_aroma - Will Renamed to resread</*></#></*>
+<*>Add Some Fix in Touch Up Handler</*>
+<*>Prop parsing, File Handling & Zip Handling has been managed in efficient functions</*>
+<*>Remove CERT.SA - Not Needed</*>
+<*>Add Licence Headers in all aroma source code Apache 2.0</*>
+<*>Add More Comments & Documentation in Souce Code</*>
+<*>Renamed functions for fit needs</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120204-011</#></b>
+<*>Fix calibrating function not working when set in aroma-config</*>
+<*>Update and fix firmware command from update-binary-installer into recovery.</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120202-10</#></b>
+<*>Improve touch handler compatibility. Now more accurate in every devices</*>
+<*>Add more chars into ROM Infos from only 31 to 63max</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120201-009</#></b>
+<*>Stride/Pitch/Padding Framebuffer support for non multiply 8 screen size like qhd on sensation and evo3d</*>
+<*>Rewrite input handler, better keys & touch screen compatibility.</*>
+<*>Change calibration division data from integer to float, more accurate calibrating</*>
+<*>Improve fling and scrolling engine</*>
+<*>Add support for all possible screen bit depth 32/24/16bit. ARGB, ABGR, RGBA, BGRA. No problem now.</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120129-005</#></b>
+<*>Remove Signature Check - Now You don't need to sign aroma-config and updater-script</*>
+<*>Calibration Tool now show before anything, so you can directly do calibration. you can disabled it in aroma-config by deleting calibtool(""); command.</*>
+<*>Fix some touch screen input handler</*>
+<*>Add 229 in menu keycode (F2 used in emulator as menu key)</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120128-004</#></b>
+<*>Open Source - Binary No Released</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120126-003</#></b>
+<*>Refer to defy recovery source code found HERE (Thanks walter79 for github source code) I add some keycode into input reader : Read Here</*>
+<*>Add confirmation if calibrated data will be used in current process (After Calibrating) - So you can try touchscreen without editing aroma-config after you calibrate it.</*>
+<*>Remove precision calculation in scrolling thread (Natural calculation but less fluid)... Feel faster now.</*>
+<*>Add function for aroma-config to define custom key code for up/down/select/back/menu, just like calibrate() function. with format like this: ini_set("customkeycode_up",130); or ini_set("customkeycode_select",13);, the keycode can be capture by aroma-keycapture-flashable.zip</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120125-002</#></b>
+<*>Add Home & Power Button To Select Items</*>
+<*>Unsigned Script Now Not Terminated Installer, but just show Alert That the script should be signed to pass install ui</*>
+<*>Add More Documentation in aroma-config</*>
+
+<b><#selectbg_g>ANGGREK - 1.00 - BUILD:120124-001</#></b>
+<*>Initial Release ( AROMA UI, AROMA Touch Handler, AROMA Markup String )</*>
+<*>Customizable ( Custom Theme Colors, Customizable Fonts and Images )</*>
+<*>Optimized Build ( Static, -o2, remove unused functions, remove png-write and zlib deflate functions )</*>

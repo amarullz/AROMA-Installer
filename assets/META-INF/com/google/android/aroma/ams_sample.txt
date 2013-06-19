@@ -1,0 +1,82 @@
+<b><#selectbg_g>AROMA Markup String Demo</#></b>
+
+You can learn about <i>formatting text in AROMA Installer</i> by reading this file at <b>META-INF/com/google/android/aroma/ams_sample.txt</b>.
+
+<b>AROMA Installer</b> use <u>tag base</u> string to markup the string <u>just like HTML</u>, but with fewer, simpler and different markup.
+
+
+<b><#selectbg_g>FORMATTING TEXT</#></b>
+
+To make the text <b>bolded</b>, use \<b>Bold Text\</b>, to make it <i>italic</i>, use \<i>Italic\</i>, it will look like this: <b>Bold Text</b>.
+To add underline in the text, use \<u>Underlined Text\</u>, it will look like this: <u>Underlined Text</u>.
+
+<b><#selectbg_g>COLORING TEXT</#></b>
+
+You can use hex color or colorset to coloring your text. Hex color supported <b>6</b> or <b>3</b> chars hex in RRGGBB or RGB format. Start with sign "#" characters.
+
+<b>Sintax:</b>
+  <b>\<#RRGGBB>6 Chars Hex Color\</#>
+  <b>\<#RGB>3 Chars Hex Color\</#>
+  <b>\<#COLORSETNAME>Colorset\</#>
+
+<b>Example ( 3 Char Hex ):</b>
+  <#000>\<#000></#> = Black
+  <#fff>\<#fff></#> = White
+  <#888>\<#888></#> = Gray
+  <#f00>\<#f00></#> = Red
+  <#0f0>\<#0f0></#> = Green
+  <#00f>\<#00f></#> = Blue
+  <#ff0>\<#ff0></#> = Yellow
+  <#0ff>\<#0ff></#> = Cyan
+  <#f0f>\<#f0f></#> = Magenta
+  <#469>\<#469></#> = Navy
+  
+<b>Example ( 6 Char Hex ):</b>
+  <#000000>\<#000000></#> = Black
+  <#ffffff>\<#ffffff></#> = White
+  <#888888>\<#888888></#> = Gray
+  <#ff0000>\<#ff0000></#> = Red
+  <#00ff00>\<#00ff00></#> = Green
+  <#0000ff>\<#0000ff></#> = Blue
+  <#ffff00>\<#ffff00></#> = Yellow
+  <#00ffff>\<#00ffff></#> = Cyan
+  <#ff00ff>\<#ff00ff></#> = Magenta
+  <#446699>\<#446699></#> = Navy
+  <#85afcc>\<#85afcc></#> = Other Color Example
+
+<b>Example ( Colorset ):</b> - This Color depend on theme colorset.
+  <#winbg>\<#winbg></#> = winbg
+  <#winbg_g>\<#winbg_g></#> = winbg_g
+  <#winfg>\<#winfg></#> = winfg
+  <#winfg_gray>\<#winfg_gray></#> = winfg_gray
+  <#dialogbg>\<#dialogbg></#> = dialogbg
+  <#dialogbg_g>\<#dialogbg_g></#> = dialogbg_g
+  <#dialogfg>\<#dialogfg></#> = dialogfg
+  <#textbg>\<#textbg></#> = textbg
+  <#textfg>\<#textfg></#> = textfg
+  <#textfg_gray>\<#textfg_gray></#> = textfg_gray
+  <#controlbg>\<#controlbg></#> = controlbg
+  <#controlbg_g>\<#controlbg_g></#> = controlbg_g
+  <#controlfg>\<#controlfg></#> = controlfg
+  <#selectbg>\<#selectbg></#> = selectbg
+  <#selectbg_g>\<#selectbg_g></#> = selectbg_g
+  <#selectfg>\<#selectfg></#> = selectfg
+  <#titlebg>\<#titlebg></#> = titlebg
+  <#titlebg_g>\<#titlebg_g></#> = titlebg_g
+  <#titlefg>\<#titlefg></#> = titlefg
+  <#dlgtitlebg>\<#dlgtitlebg></#> = dlgtitlebg
+  <#dlgtitlebg_g>\<#dlgtitlebg_g></#> = dlgtitlebg_g
+  <#dlgtitlefg>\<#dlgtitlefg></#> = dlgtitlefg
+  <#scrollbar>\<#scrollbar></#> = scrollbar
+  <#navbg>\<#navbg></#> = navbg
+  <#navbg_g>\<#navbg_g></#> = navbg_g
+  <#border>\<#border></#> = border
+  <#border_g>\<#border_g></#> = border_g
+  <#progressglow>\<#progressglow></#> = progressglow
+
+<b><#selectbg_g>Other Info</#></b>
+
+You can also combine the tags like:
+<b>Bold with <u>underline and <i>italic</i> and <#080>dark green color</#></u></b>.
+
+To write tag in text without accepting the format, you can use backslash to escape the string like this: \\<b>

@@ -1,0 +1,69 @@
+﻿### LICENSE:
+#
+# Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+### LANGUAGE STRING RESOURCE FILE
+#
+#   Language  : German
+#   By        : Kalashnikitty (Midian666)
+#
+
+#
+#--- COMMON SYSTEM STRING RESOURCE
+#
+text_ok=OK
+text_next=Weiter
+text_back=Zurück
+text_yes=Ja
+text_no=Nein
+text_about=Über
+text_calibrating=Kalibrierung
+text_quit=Installation beenden
+text_quit_msg=Installer wirklich beenden?
+
+#
+#-- CUSTOM STRING RESOURCE
+#
+common.for=für
+
+langtest.title=Sprach Test
+langtest.multiline=Dieser Text ist in/de.lang\
+Benutze Backslash, bevor du eine neue Zeile beginnst \
+\
+Möglich sind auch <b> Formatierungen </b> innerhalb eines Textes.\
+\
+Danke das du den AROMA Installer benutzt.
+
+#-- End of string without any backslash for multiline text
+
+
+themes.title=Thema wählen
+themes.desc=Bitte wähle das Installations Thema, welches du während der Installation testen möchtest:
+
+welcome.title=Willkommen
+welcome.text1=Du bist dabei zu Installieren
+welcome.text2=Der AROMA Installer war das erste und das einzige anpassbare Touch Installer für ANDROID der Welt.
+welcome.version=VERSION
+welcome.codename=CODENAME
+welcome.updated=AKTUALISIERT
+welcome.next=Weiter drücken, um mit der Installation fortzufahren...
+
+terms.title=AGB
+terms.desc=Bitte lese dir die AGB für den AROMA Installer genau durch.
+terms.check=Ich stimme den AGBs zu...
+terms.confirm=Eingabe überprüfen...
+
+changelog.title=Changelog
+changelog.desc=AROMA Installer Changelog
