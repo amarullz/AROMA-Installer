@@ -256,6 +256,7 @@ int ui_wait_key() {
 int atouch_wait(ATEV * atev) {
   return atouch_wait_ex(atev, 0);
 }
+static int volume_down_pressed = 0;
 int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
   atev->x = -1;
   atev->y = -1;
@@ -312,6 +313,11 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
       return ATEV_MENU;
     }
     else {
+      if (key==KEY_VOLUMEDOWN){
+        if (volume_down_pressed!=2){
+          volume_down_pressed=atev->d;
+        }
+      }
       /* DEFINED KEYS */
       switch (key) {
           /* RIGHT */
@@ -328,7 +334,14 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
         case KEY_DOWN:
         case KEY_CAPSLOCK:
         case KEY_VOLUMEDOWN:
-          return ATEV_DOWN;
+          {
+            if (volume_down_pressed!=2){
+              return ATEV_DOWN;
+            }
+            else if (atev->d==0){
+              volume_down_pressed=0;
+            }
+          }
           break;
           
           /* UP */
@@ -349,7 +362,22 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
         case KEY_F21:
         case KEY_SEND:
         case KEY_END:
-          return ATEV_SELECT;
+          {
+            if (volume_down_pressed){
+              if (atev->d){
+                printf("PRINT SCREEN\n");
+                vibrate(30);
+                usleep(100000);
+                vibrate(30);
+                usleep(100000);
+                vibrate(30);
+                volume_down_pressed=2;
+              }
+            }
+            else{
+              return ATEV_SELECT;
+            }
+          }
           break;
           
           /* SHOW MENU */

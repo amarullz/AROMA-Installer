@@ -179,11 +179,7 @@ fontresload( "1", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "16" ); #
 # INCLUDE EXAMPLE = Language Selection
 #
 include("language_select.edify");
-
-#
-# EVAL EXAMPLE
-#
-eval("alert(\"On Eval Function\",\"This Alert was executed from Eval Function...\", \"@info\");");
+alert(\"On Eval Function\",\"This Alert was executed from Eval Function...\", \"@info\");");
 
 ###################################################################################################################
 #

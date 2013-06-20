@@ -127,6 +127,7 @@ static  int     aparse_history[APARSE_MAXHISTORY];
 static  int     aparse_history_pos = 0;
 static  int     aparse_current_position = 0;
 static  byte    aparse_is_back_request = 0;
+static  int     aparse_last_back_view = 0;
 //*
 //* MACROS
 //*
@@ -139,7 +140,9 @@ static  byte    aparse_is_back_request = 0;
     aparse_backpos = func_pos; \
     return StringValue(strdup("")); \
   } \
-  byte is_back_request  = aparse_is_back_request; \
+  byte is_back_request  = (aparse_last_back_view==func_pos)?4:aparse_is_back_request+2; \
+  if (aparse_last_back_view==0) { if (!aparse_is_back_request) { is_back_request = 5; }} \
+  aparse_last_back_view = func_pos; \
   aparse_is_back_request = 0;
 
 #define _FINISHBACK() \
@@ -1809,7 +1812,7 @@ Value * AROMA_VIEWBOX(const char * name, State * state, int argc, Expr * argv[])
   //-- Release Arguments
   _FREEARGS();
   //-- Dispatch Message
-  aw_show_ex(hWin, (is_back_request) ? 3 : 2, 0, menubtn);
+  aw_show_ex(hWin, is_back_request, 0, menubtn);
   /*
   aw_show(hWin);
   aw_setfocus(hWin, menubtn);
@@ -2011,7 +2014,7 @@ Value * AROMA_TEXTBOX(const char * name, State * state, int argc, Expr * argv[])
   //-- Release Arguments
   _FREEARGS();
   //-- Dispatch Message
-  aw_show_ex(hWin, (is_back_request) ? 3 : 2, 0, menubtn);
+  aw_show_ex(hWin, is_back_request, 0, menubtn);
   /*
     aw_show(hWin);
     aw_setfocus(hWin, menubtn);
@@ -2204,7 +2207,7 @@ Value * AROMA_CHECKBOX(const char * name, State * state, int argc, Expr * argv[]
   //-- Release Arguments
   _FREEARGS();
   //-- Dispatch Message
-  aw_show_ex(hWin, (is_back_request) ? 3 : 2, 0, menubtn);
+  aw_show_ex(hWin, is_back_request, 0, menubtn);
   /*
     aw_show(hWin);
     aw_setfocus(hWin, menubtn);
@@ -2404,7 +2407,7 @@ Value * AROMA_SELECTBOX(const char * name, State * state, int argc, Expr * argv[
   //-- Release Arguments
   _FREEARGS();
   //-- Dispatch Message
-  aw_show_ex(hWin, (is_back_request) ? 3 : 2, 0, menubtn);
+  aw_show_ex(hWin, is_back_request, 0, menubtn);
   /*
     aw_show(hWin);
     aw_setfocus(hWin, menubtn);
@@ -2569,7 +2572,7 @@ Value * AROMA_MENUBOX(const char * name, State * state, int argc, Expr * argv[])
   //-- Release Arguments
   _FREEARGS();
   //-- Dispatch Message
-  aw_show_ex(hWin, (is_back_request) ? 3 : 2, 0, backbtn);
+  aw_show_ex(hWin, is_back_request, 0, backbtn);
   /*
     aw_show(hWin);
     if (backbtn != NULL) {

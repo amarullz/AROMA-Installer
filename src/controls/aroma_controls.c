@@ -374,9 +374,50 @@ void aw_redraw_ex(AWINDOWP win, byte syncnow) {
 void aw_redraw(AWINDOWP win) {
   aw_redraw_ex(win, 1);
 }
-
+//-- STRETCH
+byte ag_draw_strecth(
+  CANVAS * d,
+  CANVAS * s,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  int sx,
+  int sy,
+  int sw,
+  int sh
+) {
+  if (d == NULL) {
+    d = agc();
+  }
+  if (s == NULL) {
+    return 0;
+  }
+  if ((dh < 1) || (dw < 1) || (sh < 1) || (sw < 1)) {
+    return 0;
+  }
+  
+  //-- Different Scale
+  float xscale = ((float) sw) / ((float) dw);
+  float yscale = ((float) sh) / ((float) dh);
+  int x, y;
+  
+  for (y = 0; y < dh; y++) {
+    for (x = 0; x < dw; x++) {
+      int   xpos = (x * xscale);
+      int   ypos = (y * yscale);
+      int   dpx  = x + dx;
+      int   dpy  = y + dy;
+      color * sl = agxy(s, sx+xpos, sy+ypos);
+      if (sl) {
+        ag_setpixel(d,dx+x,dy+y,*sl);
+      }
+    }
+  }
+  return 1;
+}
 //-- Show Window
-void aw_show_ex(AWINDOWP win, byte anitype, int pos, ACONTROLP firstFocus) {
+void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONTROLP firstFocus) {
   win->threadnum    = 0;
   win->isActived    = 1;
   
@@ -474,6 +515,42 @@ void aw_show_ex(AWINDOWP win, byte anitype, int pos, ACONTROLP firstFocus) {
       ag_draw(NULL, &win->c, 0, 0);
       ag_sync();
     }
+    else if (anitype == 5) {
+      //-- Scale
+      ag_sync();
+      aw_redraw_ex(win, 0);
+      CANVAS cbg;
+      ag_canvas(&cbg, agw(), agh());
+      ag_draw(&cbg, agc(), 0, 0);
+      int xc = w/2;
+      int yc = h/2;
+      int anisz = floor(((float) w) / acfg()->fadeframes);
+      int i;
+      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS)*acfg()->fadeframes);
+      memset(tmpb,0,sizeof(CANVAS)*acfg()->fadeframes);
+      for (i = 1; i <= acfg()->fadeframes; i++) {
+        float scale = ((float) i ) / ((float) acfg()->fadeframes);
+        int wtarget = round(((float) w) * scale);
+        int htarget = round(((float) h) * scale);
+        ag_canvas(&tmpb[i-1],w,h);
+        ag_draw_ex(&tmpb[i-1], &cbg, 0, 0, x, pos, w, h);
+        ag_draw_strecth(
+          &tmpb[i-1],
+          &win->c,
+          xc-wtarget/2,yc-htarget/2,wtarget,htarget,
+          x,pos,w,h
+        );
+      }
+      ag_ccanvas(&cbg);
+      for (i=0;i<acfg()->fadeframes; i++) {
+        ag_draw(NULL,&tmpb[i],x,pos);
+        ag_ccanvas(&tmpb[i]);
+        ag_sync();
+      }
+      free(tmpb);
+      ag_draw(NULL, &win->c, 0, 0);
+      ag_sync();
+    }
     else {
       //-- No Effect
       aw_redraw(win);
@@ -488,7 +565,9 @@ void aw_show_ex(AWINDOWP win, byte anitype, int pos, ACONTROLP firstFocus) {
   
   ui_clear_key_queue_ex();
 }
-
+void aw_show_ex(AWINDOWP win, byte anitype, int pos, ACONTROLP firstFocus) {
+  aw_show_ex2(win,anitype,0,pos,agw(),agh(),firstFocus);
+}
 //-- Show Window
 void aw_show(AWINDOWP win) {
   aw_show_ex(win, 0, 0, NULL);
@@ -790,7 +869,10 @@ void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) 
   //-- Set Mask
   on_dialog_window = 1;
   ag_rectopa(agc(), 0, 0, agw(), agh(), 0x0000, 180);
-  ag_sync();
+  
+  //ag_sync();
+  //ag_sync_fade(acfg_var.fadeframes);
+  
   char title[64];
   snprintf(title, 64, "%s", titlev);
   int pad   = agdp() * 4;
@@ -870,7 +952,8 @@ void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) 
   AWINDOWP hWin   = aw(&alertbg);
   actext(hWin, txtX, txtY, txtW, txtH, text, 0);
   ACONTROLP okbtn = acbutton(hWin, btnX, btnY, btnW, btnH, (ok_text == NULL ? acfg_var.text_ok : ok_text), 0, 5);
-  aw_show_ex(hWin, 4, 0, okbtn);
+  // aw_show_ex(hWin, 5, 0, okbtn);
+  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,okbtn);
   /*
   aw_show(hWin);
   aw_setfocus(hWin, okbtn);
@@ -897,7 +980,8 @@ void aw_alert(AWINDOWP parent, char * titlev, char * textv, char * img, char * o
   //-- Set Mask
   on_dialog_window = 1;
   ag_rectopa(agc(), 0, 0, agw(), agh(), 0x0000, 180);
-  ag_sync();
+  //ag_sync();
+  //ag_sync_fade(acfg_var.fadeframes);
   char title[32];
   char text[512];
   snprintf(title, 32, "%s", titlev);
@@ -1006,7 +1090,8 @@ void aw_alert(AWINDOWP parent, char * titlev, char * textv, char * img, char * o
   ag_text(&alertbg, txtW, txtX, txtY, text, acfg_var.dialogfg, 0);
   AWINDOWP hWin   = aw(&alertbg);
   acbutton(hWin, btnX, btnY, btnW, btnH, (ok_text == NULL ? acfg_var.text_ok : ok_text), 0, 5);
-  aw_show_ex(hWin, 4, 0, NULL);
+  // aw_show_ex(hWin, 5, 0, NULL);
+  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,NULL);
   /*
   aw_show(hWin);
   */
@@ -1032,7 +1117,8 @@ byte aw_confirm(AWINDOWP parent, char * titlev, char * textv, char * img, char *
   //-- Set Mask
   on_dialog_window = 1;
   ag_rectopa(agc(), 0, 0, agw(), agh(), 0x0000, 180);
-  ag_sync();
+  //ag_sync();
+  //ag_sync_fade(acfg_var.fadeframes);
   char title[64];
   char text[512];
   snprintf(title, 64, "%s", titlev);
@@ -1143,7 +1229,8 @@ byte aw_confirm(AWINDOWP parent, char * titlev, char * textv, char * img, char *
   AWINDOWP hWin   = aw(&alertbg);
   acbutton(hWin, btnX, btnY, btnW, btnH, (yes_text == NULL ? acfg_var.text_yes : yes_text), 0, 6);
   acbutton(hWin, btnX2, btnY, btnW, btnH, (no_text == NULL ? acfg_var.text_no : no_text), 0, 5);
-  aw_show_ex(hWin, 4, 0, NULL);
+  //aw_show_ex(hWin, 5, 0, NULL);
+  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,NULL);
   byte ondispatch = 1;
   byte res = 0;
   
@@ -1676,7 +1763,8 @@ byte aw_showmenu(AWINDOWP parent) {
   //-- Set Mask
   on_dialog_window = 2;
   ag_rectopa(agc(), 0, 0, agw(), agh(), 0x0000, 180);
-  ag_sync();
+  //ag_sync();
+  //ag_sync_fade(acfg_var.fadeframes);
   int btnH  = agdp() * 20;
   int pad   = agdp() * 2;
   int vpad  = agdp() * 1;

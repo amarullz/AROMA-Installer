@@ -907,7 +907,7 @@ byte apng_stretch_(
         int   spos = ((ypos + sy) * p->w) + (xpos + sx);
         int   dpx  = x + dx;
         int   dpy  = y + dy;
-        int   sx = y * p->w + x;
+        //int   sx = y * p->w + x;
         // int   qx = ((y * dw) + x) * 3;
         int   qx = (qp * dw + x) * 3;
         

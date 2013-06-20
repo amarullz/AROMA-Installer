@@ -455,26 +455,16 @@ long ag_lastbusy = 0;
 //-- Refresh Thread
 static void * ag_thread(void * cookie) {
   while (ag_isrun) {
-    if (ag_isbusy != 2) {
-      usleep(332000);
-      
-      if (!ag_isrun) {
-        break;
-      }
-      
+    if (ag_isbusy != 2){
       if (!ag_refreshlock) {
         ag_caret[3] = (ag_caret[3]) ? 0 : 1;
         ag_refreshrate();
       }
+      usleep(132800);
     }
     else {
-      usleep(16600);
-      
-      if (!ag_isrun) {
-        break;
-      }
-      
       ag_refreshrate();
+      usleep(66400);
     }
   }
   
@@ -558,6 +548,9 @@ void ag_setbusy_withtext(char * text) {
   ag_isbusy = 2;
 }
 void ag_busyprogress() {
+  if (!ag_isbusy){
+    return;
+  }
   ag_busypos--; //=agdp();
   
   if (ag_busypos < 0) {
@@ -648,6 +641,9 @@ void ag_busyprogress() {
         }
       }
     }
+  }
+  if (!ag_isbusy){
+    ag_sync();
   }
 }
 
@@ -794,7 +790,7 @@ void ag_refreshrate() {
       ag32fbufcopy(ag_bz32);
       ag_busyprogress();
     }
-    else if (ag_lastbusy < alib_tick() - 50) {
+    else if (ag_lastbusy < alib_tick() - 26) {
       ag_copybusy("Please Wait...");
       ag_isbusy = 2;
     }
@@ -824,7 +820,7 @@ void ag_refreshrate() {
       
       ag_busyprogress();
     }
-    else if (ag_lastbusy < alib_tick() - 50) {
+    else if (ag_lastbusy < alib_tick() - 26) {
       ag_copybusy("Please Wait...");
       ag_isbusy = 2;
     }
@@ -840,7 +836,6 @@ byte ag_sync_locked = 0;
 //-- Sync Display
 void ag_sync() {
   //-- Always On Footer
-  // ag_draw_foot();
   ag_isbusy = 0;
   
   if (!ag_sync_locked) {
