@@ -90,13 +90,15 @@ void a_splash(char * spipe) {
   acmd_pipe   = fdopen(fd, "wb");
   setlinebuf(acmd_pipe);
   //#-- Print Info Into Recovery
+  /*
   fprintf(apipe(), "ui_print\n");
   fprintf(apipe(), "ui_print Starting " AROMA_NAME " version " AROMA_VERSION "\n");
   fprintf(apipe(), "ui_print\n");
   fprintf(apipe(), "ui_print " AROMA_COPY "\n");
   fprintf(apipe(), "ui_print\n");
   fprintf(apipe(), "ui_print\n");
-  usleep(1500000);
+  usleep(200000);
+  */
 }
 
 //*
@@ -122,6 +124,7 @@ void a_release_all() {
   ag_close();       //-- Release Graph Engine
   LOGS("Graph Released\n");
 }
+
 
 //*
 //* AROMA Installer Main Executable
@@ -158,48 +161,39 @@ int main(int argc, char ** argv) {
     return 2;
   }
   
+  //-- Init Pipe & Show Splash Info
+  a_splash(argv[2]);
+  //-- Mute Parent Thread
+  if (parent_pid) {
+    LOGS("Mute Parent\n");
+    aroma_memory_parentpid(parent_pid);
+    kill(parent_pid, 19);
+  }
+  usleep(400000);
+  
   //-- Save to Argument
   LOGS("Saving Arguments\n");
   snprintf(currArgv[0], 255, "%s", argv[1]);
   snprintf(currArgv[1], 255, "%s", argv[3]);
-  //-- Init Pipe & Show Splash Info
-  a_splash(argv[2]);
+  
   //-- Init Zip
   LOGS("Open Archive\n");
-  
   if (az_init(argv[3])) {
     //-- Initializing All Resources
     LOGS("Initializing Resource\n");
     a_init_all();
     
-    //-- Mute Parent Thread
-    if (parent_pid) {
-      LOGS("Mute Parent\n");
-      aroma_memory_parentpid(parent_pid);
-      kill(parent_pid, 19);
-    }
-    
     //-- Starting AROMA Installer UI
     LOGS("Starting Interface\n");
     
     if (aui_start()) {
-      fprintf(apipe(), "ui_print\n");
-      fprintf(apipe(), "ui_print " AROMA_NAME " Finished...\n");
-      fprintf(apipe(), "ui_print\n");
+      fprintf(apipe(), "ui_print " AROMA_NAME " Finished...\nui_print\nui_print\n");
       retval = 0;
     }
     
     //-- Close Graph Thread
     LOGS("Close Graph Thread\n");
     ag_close_thread();
-    //-- Wait Thread Exit
-    usleep(300000);
-    
-    //-- Unmute Parent
-    if (parent_pid) {
-      LOGS("Unmute Parent\n");
-      kill(parent_pid, 18);
-    }
     
     //-- Wait Until Clean Up
     usleep(200000);
@@ -211,9 +205,14 @@ int main(int argc, char ** argv) {
     LOGE("Cannot Open Archive\n");
   }
   
+  //-- Unmute Parent
+  if (parent_pid) {
+    LOGS("Unmute Parent\n");
+    kill(parent_pid, 18);
+  }
+  
   //-- REMOVE AROMA TEMPORARY
   LOGS("Cleanup Temporary\n");
-  usleep(500000);
   unlink(AROMA_TMP_S);
   remove_directory(AROMA_TMP);
   //-- Check Reboot Request

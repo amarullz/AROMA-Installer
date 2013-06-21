@@ -605,6 +605,18 @@ byte      ag_roundgrad(CANVAS * _b, int x, int y, int w, int h,       // Draw Ro
 byte      ag_roundgrad_ex(CANVAS * _b, int x, int y, int w, int h,    // Draw Rounded & Gradient Rectangle
                           color cl1, color cl2, int roundsz, byte tlr,              // With Extra Arguments
                           byte trr, byte blr, byte brr);
+byte ag_draw_strecth(
+  CANVAS * d,
+  CANVAS * s,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  int sx,
+  int sy,
+  int sw,
+  int sh
+);
 void ag_dither(byte * qe, int qp, int qx, int dthx, int dthy, int dthw, int dthh, byte r, byte g, byte b);
 color ag_dodither(int x, int y, dword col);
 color ag_dodither_rgb(int x, int y, byte sr, byte sg, byte sb);
@@ -883,6 +895,25 @@ ACONTROLP acmenu(
 );
 byte acmenu_add(ACONTROLP ctl, char * title, char * desc, char * img);
 int acmenu_getselectedindex(ACONTROLP ctl);
+
+/* CHECKBOX + OPTIONBOX HYBRID */
+ACONTROLP acchkopt(
+  AWINDOWP win,
+  int x,
+  int y,
+  int w,
+  int h
+);
+byte acchkopt_add(ACONTROLP ctl, char * id, char * title, char * desc, byte checked, byte type);
+byte acchkopt_addgroup(ACONTROLP ctl, char * id, char * title, char * desc);
+int acchkopt_itemcount(ACONTROLP ctl);
+byte acchkopt_ischecked(ACONTROLP ctl, int index);
+byte acchkopt_isgroup(ACONTROLP ctl, int index);
+int acchkopt_getgroup(ACONTROLP ctl, int index);
+int acchkopt_getgroupid(ACONTROLP ctl, int index);
+char * acchkopt_getitemiid(ACONTROLP ctl, int index);
+int acchkopt_getselectedindex(ACONTROLP ctl, int group);
+byte acchkopt_itemtype(ACONTROLP ctl, int index);
 
 //**********[ AROMA LOGGING ]**********//
 #define _AROMA_DEBUG_TAG "aroma"

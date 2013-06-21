@@ -2073,6 +2073,224 @@ Value * AROMA_TEXTBOX(const char * name, State * state, int argc, Expr * argv[])
 }
 
 //*
+//* checkbox & optionbox hybrid
+//*
+Value * AROMA_CHECKOPT(const char * name, State * state, int argc, Expr * argv[]) {
+  _INITBACK();
+  
+  if (argc < 8) {
+    return ErrorAbort(state, "%s() expects more than 7 args, got %d", name, argc);
+  }
+  else if ((argc - 4) % 4 != 0) {
+    return ErrorAbort(state, "%s() expects 4 args + 4 args per items, got %d", name, argc);
+  }
+  
+  //-- Set Busy before everythings ready
+  ag_setbusy();
+  //-- Get Arguments
+  _INITARGS();
+  //-- Variable Def
+  int i;
+  //-- Init Background
+  aui_setbg(args[0]);
+  //-- Init Strings
+  char path[256];
+  char text[256];
+  snprintf(path, 256, "%s/%s", AROMA_TMP, args[3]);
+  snprintf(text, 256, "%s", args[1]);
+  //-- Drawing Data
+  int pad         = agdp() * 4;
+  int chkW        = agw() - (pad * 2);
+  int bntH        = agdp() * 20;
+  int chkH        = agh() - ( aui_minY + bntH + (pad * 4));
+  int chkY        = aui_minY + pad;
+  int btnY        = chkY + chkH + (pad * 2);
+  //-- Draw Navigation Bar
+  aui_drawnav(&aui_win_bg, 0, btnY - pad, agw(), bntH + (pad * 2));
+  //-- Load Icon
+  PNGCANVAS ap;
+  byte imgE       = 0;
+  int  imgA       = 0;
+  int  imgW       = 0;
+  int  imgH       = 0;
+  int  tifX       = pad * 2;
+  int  imgX       = pad;
+  int  tifY       = chkY;
+  int  imgY       = chkY;
+  
+  if (apng_load(&ap, args[2])) {
+    imgE  = 1;
+    imgW  = min(ap.w, agdp() * 30);
+    imgH  = min(ap.h, agdp() * 30);
+    imgA  = imgW;
+    tifX += imgA;
+  }
+  
+  int txtH        = ag_txtheight(chkW - ((pad * 2) + imgA), text, 0);
+  
+  if (imgE) {
+    if (txtH < imgH) {
+      tifY += (imgH - txtH) / 2;
+      txtH = imgH;
+    }
+    
+    apng_draw_ex(&aui_win_bg, &ap, imgX, imgY, 0, 0, imgW, imgH);
+    apng_close(&ap);
+  }
+  
+  //-- Draw Text
+  ag_textf(&aui_win_bg, chkW - ((pad * 2) + imgA), tifX + 1, tifY + 1, text, acfg()->winbg, 0);
+  ag_text(&aui_win_bg, chkW - ((pad * 2) + imgA), tifX, tifY, text, acfg()->winfg, 0);
+  //-- Resize Checkbox Size & Pos
+  chkY += txtH + pad;
+  chkH -= txtH + pad;
+  //-- Create Window
+  AWINDOWP hWin   = aw(&aui_win_bg);
+  //-- Check Box
+  ACONTROLP chk1  = acchkopt(hWin, 0, chkY, chkW + (pad * 2), chkH + pad);
+  
+  int nPad    = agdp() * 2;
+  int nHeight = bntH + agdp() * 4;
+  int nWidth  = floor((agw() - (nPad * 2) - nHeight) / 2);
+  int nY      = btnY - agdp() * 2;
+  
+  if ((aparse_backpos > 0) && (aparse_backpos > aparse_installpos)) {
+    imgbtn(hWin, nPad, nY, nWidth, nHeight, aui_back_icon(), acfg()->text_back, 4, 5);
+  }
+  
+  ACONTROLP nxtbtn = imgbtn(hWin, nPad + nWidth + nHeight, nY, nWidth, nHeight, aui_next_icon(), acfg()->text_next, 5, 6);
+  ACONTROLP menubtn = imgbtn(hWin, nPad + nWidth, nY, nHeight, nHeight, aui_menu_icon(), NULL, 4, 200);
+  //-- Populate Checkbox Items
+  char propkey[64];
+  char groupiid[64][32];
+  int idx = 0;
+  int group_id = 0;
+  snprintf(groupiid[0],32,"root");
+  
+  for (i = 4; i < argc; i += 4) {
+    char * vtype = args[i + 3];
+    if (strcmp("group",vtype)==0) {
+      if (group_id<63){
+        if (acchkopt_addgroup(chk1, args[i], args[i + 1], args[i + 2])) {
+          group_id++;
+          snprintf(groupiid[group_id],32,"%s",args[i]);
+          idx = 0;
+        }
+      }
+    }
+    else if (strcmp("hide",vtype)!=0) {
+      byte itemtype=0;
+      byte itemcheck=0;
+      if (strcmp("select",vtype)==0){
+        itemtype=1;
+      }
+      else if (strcmp("select.selected",vtype)==0){
+        itemtype=1;
+        itemcheck=1;
+      }
+      else if (strcmp("check.checked",vtype)==0){
+        itemcheck=1;
+      }
+      byte defchk = itemcheck;
+      idx++;
+      if (itemtype){
+        char * savedsel = aui_parseprop(path, groupiid[group_id]);
+        if (savedsel != NULL) {
+          defchk = (strcmp(savedsel, args[i]) == 0) ? 1 : 0;
+          free(savedsel);
+        }
+        acchkopt_add(chk1, args[i], args[i + 1], args[i + 2], defchk, 1);
+      }
+      else{
+        char * res = aui_parseprop(path, args[i]);
+        if (res != NULL) {
+          defchk = (strcmp(res, "1") == 0) ? 1 : 0;
+          free(res);
+        } 
+        acchkopt_add(chk1, args[i], args[i + 1], args[i + 2], defchk, 0);
+      }
+    }
+  }
+  
+  //-- Release Arguments
+  _FREEARGS();
+  //-- Dispatch Message
+  aw_show_ex(hWin, is_back_request, 0, menubtn);
+  /*
+    aw_show(hWin);
+    aw_setfocus(hWin, menubtn);
+  */
+  byte ondispatch = 1;
+  
+  while (ondispatch) {
+    dword msg = aw_dispatch(hWin);
+    
+    switch (aw_gm(msg)) {
+      case 6:
+        ondispatch = 0;
+        break;
+        
+      case 5: {
+          //-- BACK
+          if ((aparse_backpos > 0) && (aparse_backpos > aparse_installpos)) {
+            aparse_startpos = aparse_backpos;
+            aparse_backpos  = 0;
+            aparse_isback   = 1;
+            ondispatch      = 0;
+          }
+        }
+        break;
+        
+      case 4: {
+          //-- EXIT
+          func_pos        = -4;
+          ondispatch      = 0;
+        }
+        break;
+    }
+  }
+  
+  //-- Collecting Items:
+  FILE * fp = fopen(path, "wb");
+  
+  if (fp != NULL) {
+    int itemcnt = acchkopt_itemcount(chk1);
+    
+    //-- CHECK BOX ITEM
+    for (i = 0; i < itemcnt; i++) {
+      if (!acchkopt_isgroup(chk1, i)) {
+        if (!acchkopt_itemtype(chk1, i)){
+          byte state = acchkopt_ischecked(chk1, i);
+          snprintf(propkey, 64, "%s=%d\n", acchkopt_getitemiid(chk1,i), state);
+          fwrite(propkey, 1, strlen(propkey), fp);
+        }
+      }
+    }
+    //-- OPTIONBOX ITEM
+    for (i = 0; i <= group_id; i++) {
+      int selidx   = acchkopt_getselectedindex(chk1, i);
+      if (selidx != -1) {
+        snprintf(propkey, 64, "%s=%s\n", groupiid[i], acchkopt_getitemiid(chk1,selidx));
+        fwrite(propkey, 1, strlen(propkey), fp);
+      }
+    }
+    
+    fclose(fp);
+  }
+  
+  //-- Destroy Window
+  aw_destroy(hWin);
+  
+  //-- Finish
+  if (aparse_isback) {
+    return NULL;
+  }
+  
+  _FINISHBACK();
+  return StringValue(strdup(""));
+}
+
+//*
 //* checkbox
 //*
 Value * AROMA_CHECKBOX(const char * name, State * state, int argc, Expr * argv[]) {
@@ -3410,14 +3628,14 @@ void RegisterAroma() {
   //-- CONFIG FUNCTIONS
   RegisterFunction("setcolor",      AROMA_SETCOLOR);      //-- SET AROMA COLORSET
   RegisterFunction("ini_set",       AROMA_INI_SET);       //-- SET INI CONFIGURATION
-  RegisterFunction("ini_get",       AROMA_INI_GET);       //-- SET INI CONFIGURATION
+  RegisterFunction("ini_get",       AROMA_INI_GET);       //-- GET INI CONFIGURATION
   RegisterFunction("calibrate",     AROMA_CALIBRATE);     //-- SET CALIBRATION DATA
   RegisterFunction("calibrate_matrix",     AROMA_CALIBRATE_MATRIX); //-- SET CALIBRATION MATRIX
   RegisterFunction("calibtool",     AROMA_CALIBTOOL);     //-- SHOW CALIBRATING TOOL
   //-- SET THEME
-  RegisterFunction("theme",         AROMA_THEME);         //-- SHOW CALIBRATING TOOL
-  RegisterFunction("fontload",      AROMA_FONT);          //-- SHOW CALIBRATING TOOL
-  RegisterFunction("fontresload",   AROMA_FONT);          //-- SHOW CALIBRATING TOOL
+  RegisterFunction("theme",         AROMA_THEME);         //-- SET THEME
+  RegisterFunction("fontload",      AROMA_FONT);          //-- LOAD FONTS
+  RegisterFunction("fontresload",   AROMA_FONT);          //-- LOAD FONTS
   //-- LANGUAGE FUNCTIONS
   RegisterFunction("loadlang",      AROMA_LOADLANG);       //-- Load Language File
   RegisterFunction("lang",          AROMA_LANG);           //-- Get Language Words
@@ -3455,6 +3673,7 @@ void RegisterAroma() {
   RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
   RegisterFunction("splash",        AROMA_SPLASH);        //-- SPLASH SCREEN
   RegisterFunction("checkbox",      AROMA_CHECKBOX);      //-- CHECKBOX
+  RegisterFunction("custombox",      AROMA_CHECKOPT);      //-- CHECKBOX
   RegisterFunction("selectbox",     AROMA_SELECTBOX);     //-- SELECTBOX
   RegisterFunction("textbox",       AROMA_TEXTBOX);       //-- TEXTBOX
   RegisterFunction("viewbox",       AROMA_VIEWBOX);       //-- VIEWBOX
@@ -3584,16 +3803,13 @@ byte aui_start() {
     byte res = 0;
     
     if (state.errmsg == NULL) {
-      fprintf(apipe(), "ui_print\n");
-      fprintf(apipe(), "ui_print AROMA Installer Terminated...\n");
-      fprintf(apipe(), "ui_print\n");
+      fprintf(apipe(), "ui_print AROMA Installer Terminated...\nui_print\n");
       res = 1;
     }
     else {
       vibrate(50);
-      fprintf(apipe(), "ui_print\n");
-      fprintf(apipe(), "ui_print ERROR!!! aroma-config: %s\n", state.errmsg);
-      fprintf(apipe(), "ui_print\n");
+      fprintf(apipe(), "ui_print ERROR!!! aroma-config: %s\nui_print\n", state.errmsg);
+      
       usleep(200000);
       vibrate(50);
     }

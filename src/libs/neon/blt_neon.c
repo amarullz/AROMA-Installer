@@ -8,9 +8,9 @@ void aBlt32_neon(int n, dword * dst, const word * src, byte clset) {
   if (n < 8) {
     if (clset) {
       for (i = 0; i < n; i++) {
-        dst[i] = (ag_r(src[i]) << ag_fbv.red.offset)  |
-                 (ag_g(src[i]) << ag_fbv.green.offset) |
-                 (ag_b(src[i]) << ag_fbv.blue.offset);
+        dst[i] = (ag_r(src[i]) << colorspace_positions[0]) |
+                 (ag_g(src[i]) << colorspace_positions[1]) |
+                 (ag_b(src[i]) << colorspace_positions[2]) ;
       }
     }
     else {
@@ -25,9 +25,9 @@ void aBlt32_neon(int n, dword * dst, const word * src, byte clset) {
   int rps, gps, bps;
   
   if (clset) {
-    rps = ag_fbv.red.offset >> 3;
-    gps = ag_fbv.green.offset >> 3;
-    bps = ag_fbv.blue.offset >> 3;
+    rps = colorspace_positions[0] >> 3;
+    gps = colorspace_positions[1] >> 3;
+    bps = colorspace_positions[2] >> 3;
   }
   else {
     rps = 2;
@@ -85,16 +85,16 @@ void aMemcpyColorPos_neon(dword * dst, dword * src, int n, byte pos_src) {
       
       if (pos_src) {
         dst[i] = ag_rgb32(
-                   (byte) ((cl >> ag_fbv.red.offset) & 0xff),
-                   (byte) ((cl >> ag_fbv.green.offset) & 0xff),
-                   (byte) ((cl >> ag_fbv.blue.offset) & 0xff)
+                   (byte) ((cl >> colorspace_positions[0]) & 0xff),
+                   (byte) ((cl >> colorspace_positions[1]) & 0xff),
+                   (byte) ((cl >> colorspace_positions[2]) & 0xff)
                  );
       }
       else {
         dst[i] = (
-                   ((ag_r32(cl) & 0xff) << ag_fbv.red.offset) |
-                   ((ag_g32(cl) & 0xff) << ag_fbv.green.offset) |
-                   ((ag_b32(cl) & 0xff) << ag_fbv.blue.offset)
+                   ((ag_r32(cl) & 0xff) << colorspace_positions[0]) |
+                   ((ag_g32(cl) & 0xff) << colorspace_positions[1]) |
+                   ((ag_b32(cl) & 0xff) << colorspace_positions[2])
                  );
       }
     }
@@ -102,9 +102,9 @@ void aMemcpyColorPos_neon(dword * dst, dword * src, int n, byte pos_src) {
     return;
   }
   
-  int rps = ag_fbv.red.offset >> 3;
-  int gps = ag_fbv.green.offset >> 3;
-  int bps = ag_fbv.blue.offset >> 3;
+  int rps = colorspace_positions[0] >> 3;
+  int gps = colorspace_positions[1] >> 3;
+  int bps = colorspace_positions[2] >> 3;
   /* Change Types */
   uint8_t * u_dst   = (uint8_t *) dst;
   uint8_t * u_src   = (uint8_t *) src;
@@ -137,16 +137,16 @@ void aMemcpyColorPos_neon(dword * dst, dword * src, int n, byte pos_src) {
         
         if (pos_src) {
           dst[i] = ag_rgb32(
-                     (byte) ((cl >> ag_fbv.red.offset) & 0xff),
-                     (byte) ((cl >> ag_fbv.green.offset) & 0xff),
-                     (byte) ((cl >> ag_fbv.blue.offset) & 0xff)
+                     (byte) ((cl >> colorspace_positions[0]) & 0xff),
+                     (byte) ((cl >> colorspace_positions[1]) & 0xff),
+                     (byte) ((cl >> colorspace_positions[2]) & 0xff)
                    );
         }
         else {
           dst[i] = (
-                     ((ag_r32(cl) & 0xff) << ag_fbv.red.offset) |
-                     ((ag_g32(cl) & 0xff) << ag_fbv.green.offset) |
-                     ((ag_b32(cl) & 0xff) << ag_fbv.blue.offset)
+                     ((ag_r32(cl) & 0xff) << colorspace_positions[0]) |
+                     ((ag_g32(cl) & 0xff) << colorspace_positions[1]) |
+                     ((ag_b32(cl) & 0xff) << colorspace_positions[2])
                    );
         }
       }
