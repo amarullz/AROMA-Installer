@@ -365,11 +365,12 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
           {
             if (volume_down_pressed){
               if (atev->d){
-                printf("PRINT SCREEN\n");
                 vibrate(30);
-                usleep(100000);
+                LOGS("PRINT SCREEN...\n");
+                ag_takescreenshoot();
+                usleep(200000);
                 vibrate(30);
-                usleep(100000);
+                usleep(200000);
                 vibrate(30);
                 volume_down_pressed=2;
               }

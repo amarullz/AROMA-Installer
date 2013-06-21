@@ -1628,7 +1628,7 @@ byte aw_calibmatrix(AW_CALIBPOINTP displayPtr, AW_CALIBPOINTP screenPtr, AW_CALI
                     (screenPtr[1].x * displayPtr[0].y - screenPtr[0].x * displayPtr[1].y) * screenPtr[2].y ;
   }
   
-  return retValue;
+  return retValue; */
 } /* end of setCalibrationMatrix() */
 
 byte aw_calibtools(AWINDOWP parent) {

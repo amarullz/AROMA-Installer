@@ -28,6 +28,11 @@
 #include <fcntl.h>
 #include "../aroma.h"
 
+byte file_exists(const char * file){
+  struct stat st;
+  return ((stat(file,&st) == 0)?1:0);
+}
+
 //-- COPY FILE
 byte alib_copy(char * src, char * dst) {
   int      iFd, oFd, oFlags;

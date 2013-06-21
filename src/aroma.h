@@ -271,6 +271,9 @@ byte ag_a32(dword rgb);
 #define ag_rgbto16(rgb)     (ag_rgb(ag_r32(rgb),ag_g32(rgb),ag_b32(rgb)))
 
 
+void ag_takescreenshoot();
+byte file_exists(const char * file);
+
 //
 // AROMA Touch Event Code
 //
