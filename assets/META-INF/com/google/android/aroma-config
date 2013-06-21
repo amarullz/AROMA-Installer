@@ -70,39 +70,6 @@
 # ini_set("dp","5");
 #
 
-#### NOTE >> THIS VERSION DOESN'T NEED ANY CALIBRATION DATA :)
-
-##[ DEPRECATED - WONT DO ANYTHING FOR THIS VERSION ]
-# Calibrate Touchscreen - MATRIX METHOD
-#
-# For other device, run the installer, then press "menu"
-# and select Calibrating Tools. Follow Instructions, and make
-# sure the touch screen has been valid in the testing step.
-#
-# In the end, there will be alert dialog with calibration data
-# ( green ), replace this calibrate_matrix() function with that data.
-#
-#-------- Change the value with your device calibration data:
-#
-# Current calibration was for HTC Sensation/XE/4G Devices:
-#
-#calibrate_matrix(
-#  "63052.50",  "840.00",     "-903390.00", "-1680.00",
-#  "125895.00", "-371670.00", "120021.25",  "0"
-#);
-
-##[ DEPRECATED ]
-# Calibrate Touchscreen
-#  defaut: HTC Desire Touch Screen Calibrate Data [7.90,20,7.90,20]
-#
-# In the end, there will be alert dialog with calibration data
-# ( green ), replace this calibrate() function with that data.
-#
-#-------- Uncomment This to insert calibrating data:
-# calibrate("7.90","20","7.90","20");
-#
-
-
 ##
 # Custom Key Code - Usefull For Some Device which not used
 #                   Standard key code for up/down/select/back/menu
@@ -162,25 +129,18 @@ anisplash(
     "splash/a6", 30
 );
 
-##[DEPRECATED]
-# Show Calibrating Tools Directly before show any UI
-#
-#--- Remove this calibtool if you already know the calibrate data
-# calibtool("");
-
 #
 # Set Small Font to Support all fonts
 #
 fontresload( "0", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "12" ); #-- Use sets of font (Font Family)
-fontresload( "1", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "16" ); #-- Use sets of font (Font Family)
-
+fontresload( "1", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "14" ); #-- Use sets of font (Font Family)
 
 #
-# INCLUDE EXAMPLE = Language Selection
+# INCLUDE EXAMPLE = Language Selection & Form Example
 #
 include("language_select.edify");
 include("custombox_test.edify");
-eval("alert(\"On Eval Function\",\"This Alert was executed from Eval Function...\", \"@info\");");
+
 
 ###################################################################################################################
 #
@@ -196,6 +156,8 @@ viewbox(
   #-- Icon
     "@info"
 );
+
+eval("alert(\"On Eval Function\",\"This Alert was executed from Eval Function...\", \"@info\");");
 
 
 ###################################################################################################################
@@ -323,7 +285,7 @@ textbox(
 alert("Back To English","OK, Multilanguage demo ends here... It will use english now...", "@info");
 loadlang("langs/en.lang");
 fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
-fontresload( "1", "ttf/Roboto-Regular.ttf", "16" );
+fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
 ##
 ##
 
@@ -935,7 +897,7 @@ if prop("demo.prop","selected")=="7" then
 endif;
 
 # fontresload("0","droid.ttf","12");
-# fontresload("1","droid.ttf","16");
+# fontresload("1","droid.ttf","14");
 ##--------------------------------------
 #
 # FONTS & UNICODE DEMO
@@ -988,7 +950,7 @@ if prop("demo.prop","selected")=="8" then
 		#-- Font File
 		  "META-INF/com/google/android/aroma/ttf/Roboto-Regular.ttf",
 		#-- Font Size ( 0 = png font, >0 = font size )
-		  "16"
+		  "14"
 	  );
 	  
 	endif;
@@ -1012,7 +974,7 @@ if prop("demo.prop","selected")=="8" then
 		#-- Font File
 		  "ttf/DroidSerif-Regular.ttf",
 		#-- Font Size ( 0 = png font, >0 = font size )
-		  "16"
+		  "14"
 	  );
 	  
 	endif;
@@ -1057,7 +1019,7 @@ if prop("demo.prop","selected")=="8" then
 	
     #-- Load Chinesse Fonts
     fontresload( "0", "ttf/DroidSansFallback.ttf;ttf/Roboto-Regular.ttf", "12" );
-	  fontresload( "1", "ttf/DroidSansFallback.ttf;ttf/Roboto-Regular.ttf", "16" );
+	  fontresload( "1", "ttf/DroidSansFallback.ttf;ttf/Roboto-Regular.ttf", "14" );
 	
 	#-- Show License
 	textbox(
@@ -1099,7 +1061,7 @@ if prop("demo.prop","selected")=="8" then
 	
     #-- Load Chinesse Fonts
     fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
-	fontresload( "1", "ttf/Roboto-Regular.ttf", "16" );
+	fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
 	
 	#-- Show License
 	textbox(

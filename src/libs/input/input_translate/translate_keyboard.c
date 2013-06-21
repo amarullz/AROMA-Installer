@@ -28,8 +28,7 @@
 byte INDR_translate_keyboard(AINPUTP me, INDR_DEVICEP dev,
                              AINPUT_EVENTP dest_ev, struct input_event * ev) {
   /* DUMP RAW EVENTS */
-  ALOGRT("INDR RAW KEY: T=%i, C=%i, V=%i", ev->type, ev->code, ev->value);
-  
+  //ALOGRT("INDR RAW KEY: T=%i, C=%i, V=%i",ev->type,ev->code,ev->value);
   if (ev->type == EV_KEY) {
     /* Fill Destination Event */
     dest_ev->type   = AINPUT_EV_TYPE_KEY;

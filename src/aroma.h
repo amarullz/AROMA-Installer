@@ -76,8 +76,8 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "2.70B4"
-#define AROMA_BUILD       "130619-034B"
+#define AROMA_VERSION     "2.70B5"
+#define AROMA_BUILD       "130622-038B"
 #define AROMA_BUILD_CN    "Flamboyan-Beta"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
@@ -620,6 +620,28 @@ byte ag_draw_strecth(
   int sw,
   int sh
 );
+byte ag_draw_strecth_ex(
+  CANVAS * d,
+  CANVAS * s,
+  int dx,
+  int dy,
+  int dw,
+  int dh,
+  int sx,
+  int sy,
+  int sw,
+  int sh,
+  byte alpha,
+  byte withdest
+);
+byte ag_draw_opa(
+  CANVAS * d,
+  CANVAS * s,
+  int dx,
+  int dy,
+  byte alpha,
+  byte withdest
+);
 void ag_dither(byte * qe, int qp, int qx, int dthx, int dthy, int dthw, int dthh, byte r, byte g, byte b);
 color ag_dodither(int x, int y, dword col);
 color ag_dodither_rgb(int x, int y, byte sr, byte sg, byte sb);
@@ -711,6 +733,8 @@ void  alib_exec(char * cmd, char * arg);
 void  create_directory(const char * path);
 int   remove_directory(const char * path);
 long  alib_tick();
+long aTick();
+void aSleep(long ms);
 
 //
 // AROMA Kinetic Calculator Functions

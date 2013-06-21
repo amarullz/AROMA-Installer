@@ -476,36 +476,130 @@ void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONT
     }
     else if (anitype == 5) {
       //-- Scale
+      byte fadesz = acfg()->fadeframes;
       ag_sync();
       aw_redraw_ex(win, 0);
       CANVAS cbg;
       ag_canvas(&cbg, agw(), agh());
       ag_draw(&cbg, agc(), 0, 0);
-      int xc = w/2;
-      int yc = h/2;
+      int xc = w / 2;
+      int yc = h / 2;
       int i;
-      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS)*acfg()->fadeframes);
-      memset(tmpb,0,sizeof(CANVAS)*acfg()->fadeframes);
-      for (i = 1; i <= acfg()->fadeframes; i++) {
-        float scale = ((float) i) / ((float) acfg()->fadeframes);
-        scale = scale*(2-scale);
-        int wtarget = round(((float) w) * scale);
-        int htarget = round(((float) h) * scale);
-        ag_canvas(&tmpb[i-1],w,h);
-        ag_draw_ex(&tmpb[i-1], &cbg, 0, 0, x, pos, w, h);
-        ag_draw_strecth(
-          &tmpb[i-1],
+      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS) * fadesz);
+      memset(tmpb, 0, sizeof(CANVAS)*fadesz);
+      
+      for (i = 1; i <= fadesz; i++) {
+        /* Calculating Scale */
+        byte scale  = (i * 0xff) / fadesz;
+        scale = (scale * (0x200 - scale)) >> 8;
+        byte scale2 = ((scale * 0x80) >> 8) + 0x80;
+        int wtarget = (w * scale2) >> 8;
+        int htarget = (h * scale2) >> 8;
+        ag_canvas(&tmpb[i - 1], w, h);
+        ag_draw_ex(&tmpb[i - 1], &cbg, 0, 0, x, pos, w, h);
+        ag_draw_strecth_ex(
+          &tmpb[i - 1],
           &win->c,
-          xc-wtarget/2,yc-htarget/2,wtarget,htarget,
-          x,pos,w,h
+          xc - wtarget / 2, yc - htarget / 2, wtarget, htarget,
+          x, pos, w, h, scale, 1
         );
       }
+      
       ag_ccanvas(&cbg);
-      for (i=0;i<acfg()->fadeframes; i++) {
-        ag_draw(NULL,&tmpb[i],x,pos);
+      
+      for (i = 0; i < fadesz; i++) {
+        ag_draw(NULL, &tmpb[i], x, pos);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
+        usleep(1600);
       }
+      
+      free(tmpb);
+      ag_draw(NULL, &win->c, 0, 0);
+      ag_sync();
+    }
+    else if (anitype == 6) {
+      //-- Stack Right to Left
+      int fadesz = acfg()->fadeframes;
+      ag_sync();
+      aw_redraw_ex(win, 0);
+      CANVAS cbg;
+      ag_canvas(&cbg, agw(), agh());
+      ag_draw(&cbg, agc(), 0, 0);
+      int xc = w / 2;
+      int yc = h / 2;
+      int i;
+      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS) * fadesz);
+      memset(tmpb, 0, sizeof(CANVAS)*fadesz);
+      
+      for (i = 1; i <= fadesz; i++) {
+        byte scale  = (i * 0xff) / fadesz;
+        byte scale2 = ((scale * 0x80) >> 8) + 0x80;
+        int wtarget = (w * scale2) >> 8;
+        int htarget = (h * scale2) >> 8;
+        int xtarget = (w * scale) >> 8;
+        ag_canvas(&tmpb[i - 1], w, h);
+        ag_draw_strecth_ex(
+          &tmpb[i - 1],
+          &win->c,
+          w - wtarget, yc - htarget / 2, wtarget, htarget,
+          x, pos, w, h, scale, 0
+        );
+        ag_draw_ex(&tmpb[i - 1], &cbg, 0, 0, x + xtarget, pos, w - xtarget, h);
+      }
+      
+      ag_ccanvas(&cbg);
+      
+      for (i = 0; i < fadesz; i++) {
+        ag_draw(NULL, &tmpb[i], x, pos);
+        ag_ccanvas(&tmpb[i]);
+        ag_sync();
+        usleep(1600);
+      }
+      
+      free(tmpb);
+      ag_draw(NULL, &win->c, 0, 0);
+      ag_sync();
+    }
+    else if (anitype == 7) {
+      //-- Stack Right to Left
+      int fadesz = acfg()->fadeframes;
+      ag_sync();
+      aw_redraw_ex(win, 0);
+      CANVAS cbg;
+      ag_canvas(&cbg, agw(), agh());
+      ag_draw(&cbg, agc(), 0, 0);
+      int xc = w / 2;
+      int yc = h / 2;
+      int i;
+      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS) * fadesz);
+      memset(tmpb, 0, sizeof(CANVAS)*fadesz);
+      
+      for (i = 1; i <= fadesz; i++) {
+        byte scale  = (i * 0xff) / fadesz;
+        byte scale2 = ((scale * 0x80) >> 8) + 0x80;
+        int wtarget = (w * scale2) >> 8;
+        int htarget = (h * scale2) >> 8;
+        int xtarget = (w * scale) >> 8;
+        ag_canvas(&tmpb[i - 1], w, h);
+        ag_draw_strecth_ex(
+          &tmpb[i - 1],
+          &cbg,
+          w - wtarget, yc - htarget / 2, wtarget, htarget,
+          x, pos, w, h, scale, 0
+        );
+        ag_draw_ex(&tmpb[i - 1], &win->c, 0, 0, x + xtarget, pos, w - xtarget, h);
+      }
+      
+      ag_ccanvas(&cbg);
+      
+      for (i = fadesz - 1; i >= 0; i--) {
+        ag_draw(NULL, &tmpb[i], x, pos);
+        ag_ccanvas(&tmpb[i]);
+        ag_sync();
+        usleep(1600);
+      }
+      
       free(tmpb);
       ag_draw(NULL, &win->c, 0, 0);
       ag_sync();
@@ -525,7 +619,7 @@ void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONT
   ui_clear_key_queue_ex();
 }
 void aw_show_ex(AWINDOWP win, byte anitype, int pos, ACONTROLP firstFocus) {
-  aw_show_ex2(win,anitype,0,pos,agw(),agh(),firstFocus);
+  aw_show_ex2(win, anitype, 0, pos, agw(), agh(), firstFocus);
 }
 //-- Show Window
 void aw_show(AWINDOWP win) {
@@ -805,7 +899,7 @@ CANVAS * aw_muteparent(AWINDOWP win) {
     return NULL;
   }
 }
-CANVAS * aw_maskparent(){
+CANVAS * aw_maskparent() {
   CANVAS * tmpbg = (CANVAS *) malloc(sizeof(CANVAS));
   ag_canvas(tmpbg, agw(), agh());
   ag_draw(tmpbg, agc(), 0, 0);
@@ -828,71 +922,83 @@ void aw_unmuteparent(AWINDOWP win, CANVAS * p) {
       ag_ccanvas(p);
       free(p);
     }
+    
     win->isActived = 1;
     ag_draw(NULL, &win->c, 0, 0);
     //ag_sync_fade(acfg_var.fadeframes);
     ag_sync();
   }
 }
-void aw_unmaskparent(AWINDOWP win, CANVAS * p, CANVAS * maskc,int x, int y, int w, int h){
-  if (maskc!=NULL){
+void aw_unmaskparent(AWINDOWP win, CANVAS * p, CANVAS * maskc, int x, int y, int w, int h) {
+  if (maskc != NULL) {
     CANVAS * wincanvas = NULL;
-    if (win==NULL){
-      if (p!=NULL){
-        wincanvas=p;
+    
+    if (win == NULL) {
+      if (p != NULL) {
+        wincanvas = p;
       }
-      else{
-        if (maskc!=NULL){
+      else {
+        if (maskc != NULL) {
           ag_ccanvas(maskc);
           free(maskc);
         }
-        aw_unmuteparent(win,p);
+        
+        aw_unmuteparent(win, p);
         return;
       }
     }
-    else{
-      wincanvas=&win->c;
+    else {
+      wincanvas = &win->c;
     }
-    int fadesz=round(((float) acfg()->fadeframes)/2);
-    if (fadesz>0){
+    
+    int fadesz = acfg()->fadeframes;
+    
+    if (fadesz > 0) {
       //-- Current Canvas
       CANVAS cbg;
       ag_canvas(&cbg, agw(), agh());
       ag_draw(&cbg, agc(), 0, 0);
-      
-      int xc    = w/2;
-      int yc    = h/2;
+      int xc    = w / 2;
+      int yc    = h / 2;
       int i;
-      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS)*fadesz);
-      memset(tmpb,0,sizeof(CANVAS)*fadesz);
+      CANVAS * tmpb = (CANVAS *) malloc(sizeof(CANVAS) * fadesz);
+      memset(tmpb, 0, sizeof(CANVAS)*fadesz);
+      
       for (i = 1; i <= fadesz; i++) {
-        float scale = ((float) i) / ((float) fadesz);
-        scale = 1-scale;
-        int wtarget = round(((float) w) * scale);
-        int htarget = round(((float) h) * scale);
-        ag_canvas(&tmpb[i-1],w,h);
-        ag_draw_ex(&tmpb[i-1], maskc, 0, 0, x, y, w, h);
-        ag_draw_strecth(
-          &tmpb[i-1],
+        /* Calculating Scale */
+        byte scale  = (i * 0xff) / fadesz;
+        scale = (scale * (0x200 - scale)) >> 8;
+        byte scale2 = ((scale * 0x80) >> 8) + 0x80;
+        int wtarget = (w * scale2) >> 8;
+        int htarget = (h * scale2) >> 8;
+        ag_canvas(&tmpb[i - 1], w, h);
+        ag_draw_ex(&tmpb[i - 1], maskc, 0, 0, x, y, w, h);
+        ag_draw_strecth_ex(
+          &tmpb[i - 1],
           &cbg,
-          xc-wtarget/2,yc-htarget/2,wtarget,htarget,
-          x,y,w,h
+          xc - wtarget / 2, yc - htarget / 2, wtarget, htarget,
+          x, y, w, h, scale, 1
         );
       }
+      
       ag_ccanvas(&cbg);
-      for (i=0;i<fadesz; i++) {
-        ag_draw(NULL,&tmpb[i],x,y);
+      
+      for (i = fadesz - 1; i >= 0; i--) {
+        ag_draw(NULL, &tmpb[i], x, y);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
+        usleep(1600);
       }
+      
       free(tmpb);
     }
+    
     ag_ccanvas(maskc);
     free(maskc);
-    aw_unmuteparent(win,p);
+    aw_unmuteparent(win, p);
   }
-  else{
-    aw_unmuteparent(win,p);
+  else {
+    aw_unmuteparent(win, p);
   }
 }
 void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) {
@@ -900,11 +1006,9 @@ void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) 
   CANVAS * tmpc = aw_muteparent(parent);
   //-- Set Mask
   on_dialog_window = 1;
-  CANVAS * maskc=aw_maskparent();
-  
+  CANVAS * maskc = aw_maskparent();
   //ag_sync();
   //ag_sync_fade(acfg_var.fadeframes);
-  
   char title[64];
   snprintf(title, 64, "%s", titlev);
   int pad   = agdp() * 4;
@@ -985,7 +1089,7 @@ void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) 
   actext(hWin, txtX, txtY, txtW, txtH, text, 0);
   ACONTROLP okbtn = acbutton(hWin, btnX, btnY, btnW, btnH, (ok_text == NULL ? acfg_var.text_ok : ok_text), 0, 5);
   // aw_show_ex(hWin, 5, 0, okbtn);
-  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,okbtn);
+  aw_show_ex2(hWin, 5, winX - 1, winY - 1, winW + 2, winH + 2, okbtn);
   /*
   aw_show(hWin);
   aw_setfocus(hWin, okbtn);
@@ -1005,14 +1109,13 @@ void aw_textdialog(AWINDOWP parent, char * titlev, char * text, char * ok_text) 
   aw_destroy(hWin);
   ag_ccanvas(&alertbg);
   on_dialog_window = 0;
-  aw_unmaskparent(parent, tmpc,maskc,winX-1,winY-1,winW+2,winH+2);
+  aw_unmaskparent(parent, tmpc, maskc, winX - 1, winY - 1, winW + 2, winH + 2);
 }
 void aw_alert(AWINDOWP parent, char * titlev, char * textv, char * img, char * ok_text) {
   CANVAS * tmpc = aw_muteparent(parent);
   //-- Set Mask
   on_dialog_window = 1;
-  CANVAS * maskc=aw_maskparent();
-  
+  CANVAS * maskc = aw_maskparent();
   //ag_sync();
   //ag_sync_fade(acfg_var.fadeframes);
   char title[32];
@@ -1124,7 +1227,7 @@ void aw_alert(AWINDOWP parent, char * titlev, char * textv, char * img, char * o
   AWINDOWP hWin   = aw(&alertbg);
   acbutton(hWin, btnX, btnY, btnW, btnH, (ok_text == NULL ? acfg_var.text_ok : ok_text), 0, 5);
   // aw_show_ex(hWin, 5, 0, NULL);
-  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,NULL);
+  aw_show_ex2(hWin, 5, winX - 1, winY - 1, winW + 2, winH + 2, NULL);
   /*
   aw_show(hWin);
   */
@@ -1143,14 +1246,13 @@ void aw_alert(AWINDOWP parent, char * titlev, char * textv, char * img, char * o
   aw_destroy(hWin);
   ag_ccanvas(&alertbg);
   on_dialog_window = 0;
-  aw_unmaskparent(parent, tmpc,maskc,winX-1,winY-1,winW+2,winH+2);
+  aw_unmaskparent(parent, tmpc, maskc, winX - 1, winY - 1, winW + 2, winH + 2);
 }
 byte aw_confirm(AWINDOWP parent, char * titlev, char * textv, char * img, char * yes_text, char * no_text) {
   CANVAS * tmpc = aw_muteparent(parent);
   //-- Set Mask
   on_dialog_window = 1;
-  CANVAS * maskc=aw_maskparent();
-  
+  CANVAS * maskc = aw_maskparent();
   //ag_sync();
   //ag_sync_fade(acfg_var.fadeframes);
   char title[64];
@@ -1264,7 +1366,7 @@ byte aw_confirm(AWINDOWP parent, char * titlev, char * textv, char * img, char *
   acbutton(hWin, btnX, btnY, btnW, btnH, (yes_text == NULL ? acfg_var.text_yes : yes_text), 0, 6);
   acbutton(hWin, btnX2, btnY, btnW, btnH, (no_text == NULL ? acfg_var.text_no : no_text), 0, 5);
   //aw_show_ex(hWin, 5, 0, NULL);
-  aw_show_ex2(hWin, 5, winX-1,winY-1,winW+2,winH+2,NULL);
+  aw_show_ex2(hWin, 5, winX - 1, winY - 1, winW + 2, winH + 2, NULL);
   byte ondispatch = 1;
   byte res = 0;
   
@@ -1286,7 +1388,7 @@ byte aw_confirm(AWINDOWP parent, char * titlev, char * textv, char * img, char *
   aw_destroy(hWin);
   ag_ccanvas(&alertbg);
   on_dialog_window = 0;
-  aw_unmaskparent(parent, tmpc,maskc,winX-1,winY-1,winW+2,winH+2);
+  aw_unmaskparent(parent, tmpc, maskc, winX - 1, winY - 1, winW + 2, winH + 2);
   return res;
 }
 void aw_help_dialog(AWINDOWP parent) {
@@ -1363,7 +1465,7 @@ byte aw_calibdraw(CANVAS * c,
     int y  = ypos[id];
     rx     = x - (sz / 2);
     ry     = y - (sz / 2);
-    
+  
     if (id > 0) {
       int prx = xpos[id - 1];
       int pry = ypos[id - 1];
@@ -1372,7 +1474,7 @@ byte aw_calibdraw(CANVAS * c,
       int i;
       int addx = floor((rx - prx) / 10.0);
       int addy = floor((ry - pry) / 10.0);
-      
+  
       for (i = 0; i < 9; i++) {
         usleep(5000);
         ag_draw(agc(), &bg, 0, 0);
@@ -1384,11 +1486,11 @@ byte aw_calibdraw(CANVAS * c,
                      sz / 2);
         ag_sync();
       }
-      
+  
       usleep(50000);
       ag_draw(agc(), &bg, 0, 0);
     }
-    
+  
     ag_roundgrad(
       agc(), rx, ry, sz, sz,
       0xffff,
@@ -1416,11 +1518,11 @@ byte aw_calibdraw(CANVAS * c,
     ATEV atev;
     // ui_clear_key_queue();
     int action = atouch_wait_ex(&atev, 1);
-    
+  
     switch (action) {
       case ATEV_MOUSEDN: {
           onp = 1;
-          
+  
           if ((id == -1) || (id == -2)) {
             ag_draw(agc(), &bg, 0, 0);
             int vz = agdp() * 30;
@@ -1435,7 +1537,7 @@ byte aw_calibdraw(CANVAS * c,
             ag_rect(agc(), 0, atev.y, agw(), 1, 0xffff);
             ag_rect(agc(), atev.x, 0, 1, agh(), 0xffff);
             ag_roundgrad(agc(), vx, vy, vz, vz, 0xffff, ag_rgb(180, 180, 180), (vz / 2));
-            
+  
             if (id == -2) {
               snprintf(txt3, 256, "<b>Fine Tuning Value : %i</b>", *xpos);
               ty3 = agh() - (ag_fontheight(0) + (agdp() * 6));
@@ -1443,7 +1545,7 @@ byte aw_calibdraw(CANVAS * c,
               tx3 = (agw() / 2) - (tw3 / 2);
               ag_text(agc(), tw3, tx3, ty3, txt3, 0xffff, 0);
             }
-            
+  
             ag_sync();
           }
           else {
@@ -1470,7 +1572,7 @@ byte aw_calibdraw(CANVAS * c,
           }
         }
         break;
-        
+  
       case ATEV_MOUSEMV: {
           if (onp) {
             if ((id != -1) && (id != -2)) {
@@ -1491,7 +1593,7 @@ byte aw_calibdraw(CANVAS * c,
               ag_rect(agc(), 0, atev.y, agw(), 1, 0xffff);
               ag_rect(agc(), atev.x, 0, 1, agh(), 0xffff);
               ag_roundgrad(agc(), vx, vy, vz, vz, 0xffff, ag_rgb(180, 180, 180), (vz / 2));
-              
+  
               if (id == -2) {
                 snprintf(txt3, 256, "<b>Fine Tuning Value : %i</b>", *xpos);
                 ty3 = agh() - (ag_fontheight(0) + (agdp() * 6));
@@ -1499,20 +1601,20 @@ byte aw_calibdraw(CANVAS * c,
                 tx3 = (agw() / 2) - (tw3 / 2);
                 ag_text(agc(), tw3, tx3, ty3, txt3, 0xffff, 0);
               }
-              
+  
               ag_sync();
             }
           }
         }
         break;
-        
+  
       case ATEV_MOUSEUP: {
           if ((id != -1) && (id != -2)) {
             if (onp) {
               if ((xtch[id] > 0) && (ytch[id] > 0)) {
                 ond = 0;
               }
-              
+  
               onp = 0;
             }
           }
@@ -1527,7 +1629,7 @@ byte aw_calibdraw(CANVAS * c,
             int tw3 = ag_txtwidth(txt3, 0);
             int tx3 = (agw() / 2) - (tw3 / 2);
             ag_text(agc(), tw3, tx3, ty3, txt3, 0xffff, 0);
-            
+  
             if (id == -2) {
               snprintf(txt3, 256, "<b>Fine Tuning Value : %i</b>", *xpos);
               ty3 = agh() - (ag_fontheight(0) + (agdp() * 6));
@@ -1535,21 +1637,21 @@ byte aw_calibdraw(CANVAS * c,
               tx3 = (agw() / 2) - (tw3 / 2);
               ag_text(agc(), tw3, tx3, ty3, txt3, 0xffff, 0);
             }
-            
+  
             // ag_roundgrad(agc(),vx,vy,vz,vz,0xffff,ag_rgb(180,180,180),(vz/2));
             ag_sync();
           }
         }
         break;
-        
+  
       case ATEV_DOWN: {
           if (id == -2) {
             *xpos -= 1;
-            
+  
             if (*xpos < 1) {
               *xpos = 1;
             }
-            
+  
             atouch_sethack(*xpos);
             ag_draw(agc(), &bg, 0, 0);
             char txt3[256];
@@ -1562,15 +1664,15 @@ byte aw_calibdraw(CANVAS * c,
           }
         }
         break;
-        
+  
       case ATEV_UP: {
           if (id == -2) {
             *xpos += 1;
-            
+  
             if (*xpos > 100) {
               *xpos = 100;
             }
-            
+  
             atouch_sethack(*xpos);
             ag_draw(agc(), &bg, 0, 0);
             char txt3[256];
@@ -1583,7 +1685,7 @@ byte aw_calibdraw(CANVAS * c,
           }
         }
         break;
-        
+  
       case ATEV_SELECT:
       case ATEV_BACK:
       case ATEV_MENU: {
@@ -1607,7 +1709,7 @@ byte aw_calibmatrix(AW_CALIBPOINTP displayPtr, AW_CALIBPOINTP screenPtr, AW_CALI
   byte retValue = 1;
   matrixPtr->Divider = ((screenPtr[0].x - screenPtr[2].x) * (screenPtr[1].y - screenPtr[2].y)) -
                        ((screenPtr[1].x - screenPtr[2].x) * (screenPtr[0].y - screenPtr[2].y)) ;
-                       
+  
   if ( matrixPtr->Divider == 0 ) {
     retValue = 0;
   }
@@ -1689,7 +1791,7 @@ byte aw_calibtools_(AWINDOWP parent) {
     if (!aw_calibdraw(&ccv, i, xpos, ypos, xtch, ytch)) {
       goto doneit;
     }
-    
+  
     dPoint[i].x = ((float) xpos[i]) / 2;
     dPoint[i].y = ((float) ypos[i]) / 2;
     tPoint[i].x = ((float) xtch[i]) / 2;
@@ -1700,14 +1802,14 @@ byte aw_calibtools_(AWINDOWP parent) {
   
   if (aw_calibmatrix(dPoint, tPoint, &matrix)) {
     atouch_matrix_calibrate(&matrix);
-    
+  
     if (new_hack_val) {
       aw_calibdraw(&ccv, -2, &new_hack_val, ypos, xtch, ytch);
     }
     else {
       aw_calibdraw(&ccv, -1, xpos, ypos, xtch, ytch);
     }
-    
+  
     isvalid       = 1;
   }
   else {
@@ -1718,7 +1820,7 @@ byte aw_calibtools_(AWINDOWP parent) {
              NULL);
   }
   
-doneit:
+  doneit:
   ag_ccanvas(&ccv);
   on_dialog_window = 0;
   aw_unmuteparent(parent, tmpc);

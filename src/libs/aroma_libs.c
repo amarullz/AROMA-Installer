@@ -28,9 +28,23 @@
 #include <fcntl.h>
 #include "../aroma.h"
 
-byte file_exists(const char * file){
+/* Micro Sleep */
+void aSleep(long ms) {
+  usleep(ms * 1000);
+}
+long aTick() {
+  struct timespec now;
+  
+  if (clock_gettime(CLOCK_MONOTONIC, &now)) {
+    return 0;
+  }
+  
+  return ((long) (now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0));
+}
+
+byte file_exists(const char * file) {
   struct stat st;
-  return ((stat(file,&st) == 0)?1:0);
+  return ((stat(file, &st) == 0) ? 1 : 0);
 }
 
 //-- COPY FILE

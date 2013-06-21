@@ -75,8 +75,9 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
   /* Get Internal Data */
   INDR_INTERNALP mi = (INDR_INTERNALP)
                       me->internal;
+                      
   /* DUMP RAW EVENTS */
-  ALOGRT("INDR RAW TOUCH: T=%i, C=%i, V=%i", ev->type, ev->code, ev->value);
+  //ALOGRT("INDR RAW TOUCH: T=%i, C=%i, V=%i",ev->type,ev->code,ev->value);
   
   /* Process EV_ABS Event */
   if (ev->type == EV_ABS) {
@@ -162,7 +163,7 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
       /* Sometime It Reported Twice, So Check This Value */
       if ((dev->p.tx == -1) || (dev->p.tx == -1)) {
         /* LOG RAW */
-        ALOGRT("INDR Got Double EV_SYN-UP Event. Ignore It.");
+        //ALOGRT("INDR Got Double EV_SYN-UP Event. Ignore It.");
         dev->p.state    &= ~INDR_POS_ST_DOWNED;
         dev->p.state    &= ~INDR_POS_ST_RLS_NEXT;
         goto return_clear_sync;
@@ -193,18 +194,18 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
         /* State Was Cancel by default */
         key_ev.value = 3;
         /* Check If Still Touch Inside Virtual Key */
-        int xd = aAbs(dev->vks[dev->p.vk].x - dest_ev->x);
-        int yd = aAbs(dev->vks[dev->p.vk].y - dest_ev->y);
+        int xd = abs(dev->vks[dev->p.vk].x - dest_ev->x);
+        int yd = abs(dev->vks[dev->p.vk].y - dest_ev->y);
         
         if ((xd < dev->vks[dev->p.vk].w / 2) && (yd < dev->vks[dev->p.vk].h / 2)) {
           /* It Still On Virtual Key. Set As UP */
           key_ev.value = 0;
           /* LOG RAW */
-          ALOGRT("INDR VIRTUALKEY UP : [%i,%i] on %ix%ipx\n", dev->p.vk, key_ev.code, xd, yd);
+          //ALOGRT("INDR VIRTUALKEY UP : [%i,%i] on %ix%ipx\n",dev->p.vk,key_ev.code,xd,yd);
         }
         else {
           /* LOG RAW */
-          ALOGRT("INDR VIRTUALKEY CANCEL : [%i,%i] on %ix%ipx\n", dev->p.vk, key_ev.code, xd, yd);
+          //ALOGRT("INDR VIRTUALKEY CANCEL : [%i,%i] on %ix%ipx\n",dev->p.vk,key_ev.code,xd,yd);
         }
         
         /* Reset Virtual Key ID */
@@ -267,8 +268,8 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
       int i;
       
       for (i = 0; i < dev->vkn; i++) {
-        int xd = aAbs(dev->vks[i].x - cx);
-        int yd = aAbs(dev->vks[i].y - cy);
+        int xd = abs(dev->vks[i].x - cx);
+        int yd = abs(dev->vks[i].y - cy);
         
         if ((xd < dev->vks[i].w / 2) && (yd < dev->vks[i].h / 2)) {
           /* Set as virtual key */
@@ -285,7 +286,7 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
           /* Key Event State = Down */
           key_ev.value = 1;
           /* LOG RAW */
-          ALOGRT("INDR VIRTUALKEY DOWN : [%i,%i] on %ix%ipx\n", i, key_ev.code, xd, yd);
+          //ALOGRT("INDR VIRTUALKEY DOWN : [%i,%i] on %ix%ipx\n",i,key_ev.code,xd,yd);
           /* If on Virtual Key - Send as keyboard event */
           return INDR_translate_keyboard(me, dev, dest_ev, &key_ev);
         }

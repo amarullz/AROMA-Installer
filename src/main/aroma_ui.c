@@ -38,7 +38,7 @@ static  byte    aui_isbgredraw    = 0;  //-- Is Background Need Redrawed
 static  int     aui_minY          = 0;  //-- Most Top Allowable UI Draw Position (Y)
 static  CANVAS  aui_bg;                 //-- Saved CANVAS for background
 static  CANVAS  aui_win_bg;             //-- Current drawed CANVAS for windows background
-
+static byte     transition_style  = 0;
 PNGCANVAS * pico_back = NULL;
 PNGCANVAS * pico_next = NULL;
 PNGCANVAS * pico_menu = NULL;
@@ -143,8 +143,12 @@ static  int     aparse_last_back_view = 0;
   byte is_back_request  = (aparse_last_back_view==func_pos)?4:aparse_is_back_request+2; \
   if (aparse_last_back_view==0) { if (!aparse_is_back_request) { is_back_request = 5; }} \
   aparse_last_back_view = func_pos; \
-  aparse_is_back_request = 0;
-
+  aparse_is_back_request = 0; \
+  if (is_back_request!=5) is_back_request+=transition_style;
+/* \
+  if (is_back_request==2){ is_back_request=6; }\
+  else if (is_back_request==3){ is_back_request=7; }
+*/
 #define _FINISHBACK() \
   if (func_pos==-4){ \
     return NULL; \
@@ -1302,6 +1306,14 @@ Value * AROMA_INI_GET(const char * name, State * state, int argc, Expr * argv[])
   if      (strcmp(args[0], "roundsize") == 0) {
     snprintf(retval, 128, "%i", acfg()->roundsz);
   }
+  else if (strcmp(args[0], "transition")) {
+    if (transition_style == 4) {
+      snprintf(retval, 128, "stack");
+    }
+    else {
+      snprintf(retval, 128, "slide");
+    }
+  }
   else if (strcmp(args[0], "button_roundsize") == 0) {
     snprintf(retval, 128, "%i", acfg()->btnroundsz);
   }
@@ -1423,6 +1435,16 @@ Value * AROMA_INI_SET(const char * name, State * state, int argc, Expr * argv[])
     
     acfg()->vibrate = valint;
     set_vibrate_rate(acfg()->vibrate);
+  }
+  else if (strcmp(args[0], "transition") == 0) {
+    LOGS("Change Transition To %s\n", args[1]);
+    
+    if (strcmp(args[1], "slide") == 0) {
+      transition_style = 0;
+    }
+    else if (strcmp(args[1], "stack") == 0) {
+      transition_style = 4;
+    }
   }
   else if (strcmp(args[0], "icon_next") == 0) {
     snprintf(acfg()->icon_next, 128, "%s", args[1]);
@@ -2148,7 +2170,6 @@ Value * AROMA_CHECKOPT(const char * name, State * state, int argc, Expr * argv[]
   AWINDOWP hWin   = aw(&aui_win_bg);
   //-- Check Box
   ACONTROLP chk1  = acchkopt(hWin, 0, chkY, chkW + (pad * 2), chkH + pad);
-  
   int nPad    = agdp() * 2;
   int nHeight = bntH + agdp() * 4;
   int nWidth  = floor((agw() - (nPad * 2) - nHeight) / 2);
@@ -2165,48 +2186,56 @@ Value * AROMA_CHECKOPT(const char * name, State * state, int argc, Expr * argv[]
   char groupiid[64][32];
   int idx = 0;
   int group_id = 0;
-  snprintf(groupiid[0],32,"root");
+  snprintf(groupiid[0], 32, "root");
   
   for (i = 4; i < argc; i += 4) {
     char * vtype = args[i + 3];
-    if (strcmp("group",vtype)==0) {
-      if (group_id<63){
+    
+    if (strcmp("group", vtype) == 0) {
+      if (group_id < 63) {
         if (acchkopt_addgroup(chk1, args[i], args[i + 1], args[i + 2])) {
           group_id++;
-          snprintf(groupiid[group_id],32,"%s",args[i]);
+          snprintf(groupiid[group_id], 32, "%s", args[i]);
           idx = 0;
         }
       }
     }
-    else if (strcmp("hide",vtype)!=0) {
-      byte itemtype=0;
-      byte itemcheck=0;
-      if (strcmp("select",vtype)==0){
-        itemtype=1;
+    else if (strcmp("hide", vtype) != 0) {
+      byte itemtype = 0;
+      byte itemcheck = 0;
+      
+      if (strcmp("select", vtype) == 0) {
+        itemtype = 1;
       }
-      else if (strcmp("select.selected",vtype)==0){
-        itemtype=1;
-        itemcheck=1;
+      else if (strcmp("select.selected", vtype) == 0) {
+        itemtype = 1;
+        itemcheck = 1;
       }
-      else if (strcmp("check.checked",vtype)==0){
-        itemcheck=1;
+      else if (strcmp("check.checked", vtype) == 0) {
+        itemcheck = 1;
       }
+      
       byte defchk = itemcheck;
       idx++;
-      if (itemtype){
+      
+      if (itemtype) {
         char * savedsel = aui_parseprop(path, groupiid[group_id]);
+        
         if (savedsel != NULL) {
           defchk = (strcmp(savedsel, args[i]) == 0) ? 1 : 0;
           free(savedsel);
         }
+        
         acchkopt_add(chk1, args[i], args[i + 1], args[i + 2], defchk, 1);
       }
-      else{
+      else {
         char * res = aui_parseprop(path, args[i]);
+        
         if (res != NULL) {
           defchk = (strcmp(res, "1") == 0) ? 1 : 0;
           free(res);
-        } 
+        }
+        
         acchkopt_add(chk1, args[i], args[i + 1], args[i + 2], defchk, 0);
       }
     }
@@ -2259,18 +2288,20 @@ Value * AROMA_CHECKOPT(const char * name, State * state, int argc, Expr * argv[]
     //-- CHECK BOX ITEM
     for (i = 0; i < itemcnt; i++) {
       if (!acchkopt_isgroup(chk1, i)) {
-        if (!acchkopt_itemtype(chk1, i)){
+        if (!acchkopt_itemtype(chk1, i)) {
           byte state = acchkopt_ischecked(chk1, i);
-          snprintf(propkey, 64, "%s=%d\n", acchkopt_getitemiid(chk1,i), state);
+          snprintf(propkey, 64, "%s=%d\n", acchkopt_getitemiid(chk1, i), state);
           fwrite(propkey, 1, strlen(propkey), fp);
         }
       }
     }
+    
     //-- OPTIONBOX ITEM
     for (i = 0; i <= group_id; i++) {
       int selidx   = acchkopt_getselectedindex(chk1, i);
+      
       if (selidx != -1) {
-        snprintf(propkey, 64, "%s=%s\n", groupiid[i], acchkopt_getitemiid(chk1,selidx));
+        snprintf(propkey, 64, "%s=%s\n", groupiid[i], acchkopt_getitemiid(chk1, selidx));
         fwrite(propkey, 1, strlen(propkey), fp);
       }
     }
@@ -3673,7 +3704,7 @@ void RegisterAroma() {
   RegisterFunction("anisplash",     AROMA_ANISPLASH);     //-- SPLASH SCREEN
   RegisterFunction("splash",        AROMA_SPLASH);        //-- SPLASH SCREEN
   RegisterFunction("checkbox",      AROMA_CHECKBOX);      //-- CHECKBOX
-  RegisterFunction("custombox",      AROMA_CHECKOPT);      //-- CHECKBOX
+  RegisterFunction("form",          AROMA_CHECKOPT);      //-- CHECKBOX
   RegisterFunction("selectbox",     AROMA_SELECTBOX);     //-- SELECTBOX
   RegisterFunction("textbox",       AROMA_TEXTBOX);       //-- TEXTBOX
   RegisterFunction("viewbox",       AROMA_VIEWBOX);       //-- VIEWBOX
@@ -3809,7 +3840,6 @@ byte aui_start() {
     else {
       vibrate(50);
       fprintf(apipe(), "ui_print ERROR!!! aroma-config: %s\nui_print\n", state.errmsg);
-      
       usleep(200000);
       vibrate(50);
     }

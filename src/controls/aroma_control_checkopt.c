@@ -107,12 +107,15 @@ int acchkopt_itemcount(ACONTROLP ctl) {
 }
 byte acchkopt_itemtype(ACONTROLP ctl, int index) {
   ACCHKOPTDP d = (ACCHKOPTDP) ctl->d;
+  
   if (d->acheck_signature != 215) {
     return 0;
   }
+  
   if (index < d->itemn) {
     return d->items[index]->type;
   }
+  
   return 0;
 }
 byte acchkopt_ischecked(ACONTROLP ctl, int index) {
@@ -132,10 +135,13 @@ int acchkopt_getselectedindex(ACONTROLP ctl, int group) {
   if ((group < 0) || (group >= ACCHKOPT_MAX_GROUP)) {
     return -1;
   }
+  
   ACCHKOPTDP d = (ACCHKOPTDP) ctl->d;
+  
   if (d->acheck_signature != 215) {
     return -1;  //-- Not Valid Signature
   }
+  
   return d->selectedIndexs[group];
 }
 byte acchkopt_isgroup(ACONTROLP ctl, int index) {
@@ -246,7 +252,7 @@ void acchkopt_redrawitem(ACONTROLP ctl, int index) {
     int minpad = 3 * agdp();
     int addpad = 6 * agdp();
     
-    if (p->type){
+    if (p->type) {
       if (p->id == d->selectedIndexs[p->group]) {
         if (index == d->touchedItem) {
           drawed = atheme_draw("img.radio.on.push", c, chkbox_x - minpad, chkbox_y - minpad, chkbox_s + addpad, chkbox_s + addpad);
@@ -270,7 +276,7 @@ void acchkopt_redrawitem(ACONTROLP ctl, int index) {
         }
       }
     }
-    else{
+    else {
       if (p->checked) {
         if (index == d->touchedItem) {
           drawed = atheme_draw("img.checkbox.on.push", c, chkbox_x - minpad, chkbox_y - minpad, chkbox_s + addpad, chkbox_s + addpad);
@@ -295,10 +301,8 @@ void acchkopt_redrawitem(ACONTROLP ctl, int index) {
       }
     }
     
-    
-    
     if (!drawed) {
-      if (p->type){
+      if (p->type) {
         ag_roundgrad(c,
                      chkbox_x,
                      chkbox_y,
@@ -328,7 +332,7 @@ void acchkopt_redrawitem(ACONTROLP ctl, int index) {
                        chkbox_s - halfdp2);
         }
       }
-      else{
+      else {
         ag_roundgrad(c,
                      chkbox_x,
                      chkbox_y,
@@ -421,7 +425,7 @@ byte acchkopt_add(ACONTROLP ctl, char * id, char * title, char * desc, byte chec
   newip->y        = d->nextY;
   d->nextY       += newip->h;
   
-  if (checked&&type) {
+  if (checked && type) {
     d->selectedIndexs[newip->group] = newip->id;
   }
   
@@ -610,7 +614,7 @@ dword acchkopt_oninput(void * x, int action, ATEV * atev) {
           
           for (i = 0; i < d->itemn; i++) {
             if ((!d->items[i]->isTitle) && (touchpos >= d->items[i]->y) && (touchpos < d->items[i]->y + d->items[i]->h)) {
-              if (d->items[i]->type){
+              if (d->items[i]->type) {
                 if ((d->touchedItem != -1) && (d->touchedItem != i)) {
                   int tmptouch = d->touchedItem;
                   d->touchedItem = -1;
@@ -640,7 +644,7 @@ dword acchkopt_oninput(void * x, int action, ATEV * atev) {
                 vibrate(30);
                 break;
               }
-              else{
+              else {
                 d->items[i]->checked = (d->items[i]->checked) ? 0 : 1;
                 
                 if ((d->touchedItem != -1) && (d->touchedItem != i)) {
@@ -764,7 +768,8 @@ dword acchkopt_oninput(void * x, int action, ATEV * atev) {
               d->touchedItem = -1;
               acchkopt_redrawitem(ctl, tmptouch);
             }
-            if (d->items[d->focusedItem]->type){              
+            
+            if (d->items[d->focusedItem]->type) {
               int grp = d->items[d->focusedItem]->group;
               
               if ((d->selectedIndexs[grp] != -1) && (d->selectedIndexs[grp] != d->focusedItem)) {
@@ -779,7 +784,7 @@ dword acchkopt_oninput(void * x, int action, ATEV * atev) {
               ctl->ondraw(ctl);
               msg = aw_msg(0, 1, 0, 0);
             }
-            else{
+            else {
               d->items[d->focusedItem]->checked = (d->items[d->focusedItem]->checked) ? 0 : 1;
               d->touchedItem = -1;
               acchkopt_redrawitem(ctl, d->focusedItem);
@@ -934,9 +939,11 @@ ACONTROLP acchkopt(
   d->nextY       = agdp() * minpadding;
   d->draweditemn = 0;
   int i;
+  
   for (i = 0; i < ACCHKOPT_MAX_GROUP; i++) {
     d->selectedIndexs[i] = -1;
   }
+  
   d->groupCounts   = 0;
   d->groupCurrId   = -1;
   ACONTROLP ctl  = malloc(sizeof(ACONTROL));

@@ -42,7 +42,7 @@ static  byte      atouch_winmsg_n = 0;
 static  int       atouch_message_code = 889;
 
 //-- KEY QUEUE
-static  int       key_queue[256];
+static  int       key_queue[512];
 static  int       key_queue_len = 0;
 static pthread_mutex_t key_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t key_queue_cond = PTHREAD_COND_INITIALIZER;
@@ -147,7 +147,23 @@ void ev_post_message(int key, int value) {
 }
 
 //-- INPUT CALLBACK
-void ev_input_callback(struct input_event * ev) {
+/* touch, key, state, x, y */
+void ev_input_callback(byte touch, int key, byte state, int x, int y) {
+  if (state == 3) {
+    state = 0;
+  }
+  
+  if (touch == 0) {
+    ev_post_message(key, state);
+  }
+  else {
+    printf("Touch %i - %i (%i)\n", x, y, state);
+    evtouch_x = x;
+    evtouch_y = y;
+    ev_post_message(evtouch_code, state);
+  }
+}
+void ev_input_callback_(struct input_event * ev) {
   if (ev->type == EV_KEY) {
     ev_post_message(ev->code, ev->value);
   }
@@ -181,11 +197,22 @@ void ev_input_callback(struct input_event * ev) {
 static void * ev_input_thread(void * cookie) {
   //-- Loop for Input
   while (evthread_active) {
-    struct input_event ev;
-    byte res = aipGetInput(&ev, 0);
+    AINPUT_EVENT e;
+    byte ret = aipGetInput(&e);
     
-    if (res) {
-      ev_input_callback(&ev);
+    if (e.state == 3) {
+      e.state = 0;
+    }
+    
+    if (ret == AINPUT_EV_RET_TOUCH) {
+      // printf("%ix%i (%i)\n",e.x,e.y,e.state);
+      evtouch_x = e.x;
+      evtouch_y = e.y;
+      evtouch_state = e.state;
+      ev_post_message(evtouch_code, evtouch_state);
+    }
+    else if (e.type == AINPUT_EV_TYPE_KEY) {
+      ev_post_message(e.key, e.state);
     }
   }
   
@@ -313,11 +340,12 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
       return ATEV_MENU;
     }
     else {
-      if (key==KEY_VOLUMEDOWN){
-        if (volume_down_pressed!=2){
-          volume_down_pressed=atev->d;
+      if (key == KEY_VOLUMEDOWN) {
+        if (volume_down_pressed != 2) {
+          volume_down_pressed = atev->d;
         }
       }
+      
       /* DEFINED KEYS */
       switch (key) {
           /* RIGHT */
@@ -333,13 +361,12 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
           /* DOWN */
         case KEY_DOWN:
         case KEY_CAPSLOCK:
-        case KEY_VOLUMEDOWN:
-          {
-            if (volume_down_pressed!=2){
+        case KEY_VOLUMEDOWN: {
+            if (volume_down_pressed != 2) {
               return ATEV_DOWN;
             }
-            else if (atev->d==0){
-              volume_down_pressed=0;
+            else if (atev->d == 0) {
+              volume_down_pressed = 0;
             }
           }
           break;
@@ -361,10 +388,9 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
         case KEY_CAMERA:
         case KEY_F21:
         case KEY_SEND:
-        case KEY_END:
-          {
-            if (volume_down_pressed){
-              if (atev->d){
+        case KEY_END: {
+            if (volume_down_pressed) {
+              if (atev->d) {
                 vibrate(30);
                 LOGS("PRINT SCREEN...\n");
                 ag_takescreenshoot();
@@ -372,10 +398,10 @@ int atouch_wait_ex(ATEV * atev, byte calibratingtouch) {
                 vibrate(30);
                 usleep(200000);
                 vibrate(30);
-                volume_down_pressed=2;
+                volume_down_pressed = 2;
               }
             }
-            else{
+            else {
               return ATEV_SELECT;
             }
           }

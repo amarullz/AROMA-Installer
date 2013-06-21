@@ -1,12 +1,12 @@
 ﻿###################################################################################################################
 #
-# CUSTOMBOX TEST
+# FORM TEST
 #
-custombox(
-    "Custombox Example",
-    "Example of usage checkbox-selectbox hybrid interface:",
+form(
+    "Form Example",
+    "Example of FORM usage checkbox-selectbox hybrid interface:",
     "@default",
-    "custombox.prop",
+    "form.prop",
   #
   # Type:
   #  - group              = Group
@@ -37,19 +37,19 @@ custombox(
 );
 
 textbox(
- "Custombox Example",
- "Custombox generated prop file",
+ "Form Example",
+ "Form generated prop file",
  "@update",
- readtmpfile("custombox.prop")
+ readtmpfile("form.prop")
 );
 
 ###################################################################################################################
 #
 # COLORSPACE
 #
-custombox(
-    "Change Colorspace",
-    "Example of usage force_colorspace (Works only for 32bit display):",
+form(
+    "Setting Example",
+    "Example of usage force_colorspace (Works only for 32bit display), and transition style:",
     "@default",
     "colorspace.prop",
   #
@@ -69,8 +69,14 @@ custombox(
       "argb",     "ARGB",           "Color Position: (8, 16, 24, 0)",           "select",
       "abgr",     "ABGR",           "Color Position: (24, 16, 8, 0)",           "select",
       "rgba",     "RGBA",           "Color Position: (0, 8, 16, 24)",           "select",
-      "bgra",     "BGRA",           "Color Position: (16, 8, 0, 24)",           "select"
+      "bgra",     "BGRA",           "Color Position: (16, 8, 0, 24)",           "select",
+    
+    "transition", "Select Transition",        "",                              "group",
+      "slide",    "Slide",        "Slide from left-right vice-vesa",           "select.selected",
+      "stack",    "Stack",        "Like Card stack in Android Stock Launcher Drawer", "select"
 );
 if prop("colorspace.prop","colorspace")!="default" then
   ini_set("force_colorspace",prop("colorspace.prop","colorspace"));
 endif;
+
+ini_set("transition",prop("colorspace.prop","transition"));

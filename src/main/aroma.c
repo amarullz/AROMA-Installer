@@ -90,15 +90,14 @@ void a_splash(char * spipe) {
   acmd_pipe   = fdopen(fd, "wb");
   setlinebuf(acmd_pipe);
   //#-- Print Info Into Recovery
-  /*
-  fprintf(apipe(), "ui_print\n");
-  fprintf(apipe(), "ui_print Starting " AROMA_NAME " version " AROMA_VERSION "\n");
-  fprintf(apipe(), "ui_print\n");
-  fprintf(apipe(), "ui_print " AROMA_COPY "\n");
-  fprintf(apipe(), "ui_print\n");
-  fprintf(apipe(), "ui_print\n");
-  usleep(200000);
-  */
+  fprintf(apipe(), "ui_print\n"
+          "ui_print Starting " AROMA_NAME " version " AROMA_VERSION "\n"
+          "ui_print\n"
+          "ui_print " AROMA_COPY "\n"
+          "ui_print\n"
+          "ui_print\n"
+         );
+  usleep(600000);
 }
 
 //*
@@ -106,8 +105,8 @@ void a_splash(char * spipe) {
 //*
 void a_init_all() {
   //-- Init
-  ui_init();                        //-- Init Event Handler
   ag_init();                        //-- Init Graphic Framebuffer
+  ui_init();                        //-- Init Event Handler
 }
 
 //*
@@ -163,26 +162,25 @@ int main(int argc, char ** argv) {
   
   //-- Init Pipe & Show Splash Info
   a_splash(argv[2]);
+  
   //-- Mute Parent Thread
   if (parent_pid) {
     LOGS("Mute Parent\n");
     aroma_memory_parentpid(parent_pid);
     kill(parent_pid, 19);
   }
-  usleep(400000);
   
   //-- Save to Argument
   LOGS("Saving Arguments\n");
   snprintf(currArgv[0], 255, "%s", argv[1]);
   snprintf(currArgv[1], 255, "%s", argv[3]);
-  
   //-- Init Zip
   LOGS("Open Archive\n");
+  
   if (az_init(argv[3])) {
     //-- Initializing All Resources
     LOGS("Initializing Resource\n");
     a_init_all();
-    
     //-- Starting AROMA Installer UI
     LOGS("Starting Interface\n");
     
@@ -194,7 +192,6 @@ int main(int argc, char ** argv) {
     //-- Close Graph Thread
     LOGS("Close Graph Thread\n");
     ag_close_thread();
-    
     //-- Wait Until Clean Up
     usleep(200000);
     //-- Release All Resource
