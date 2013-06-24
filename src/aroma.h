@@ -76,8 +76,8 @@
 // AROMA Main Configurations
 //
 #define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "2.70B5"
-#define AROMA_BUILD       "130622-040B"
+#define AROMA_VERSION     "2.70B6"
+#define AROMA_BUILD       "130624-042B"
 #define AROMA_BUILD_CN    "Flamboyan-Beta"
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"

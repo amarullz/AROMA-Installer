@@ -184,7 +184,9 @@ selectbox(
     "Generic",            "Unthemed AROMA Installer",                                    1,      #-- selected.0 = 1
     "MIUI Theme",         "MIUI Theme by mickey-r & amarullz",                           0,      #-- selected.0 = 2
     "ICS Theme",          "Ice Cream Sandwitch by DemonWav & amarullz",                  0,      #-- selected.0 = 3
-    "MIUI 4 Theme",       "MIUI 4/ICS Theme by amarullz & Lennox",                       0       #-- selected.0 = 4
+    "MIUI 4 Theme",       "MIUI 4/ICS Theme by amarullz & Lennox",                       0,      #-- selected.0 = 4
+    "Touchwiz",           "Touchwiz Theme by titanic_fanatic",                           0,      #-- selected.0 = 5
+    "Franzyroy",          "Franzyroy Theme by franzyroy",                                0       #-- selected.0 = 6
 
   #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
 );
@@ -206,6 +208,14 @@ endif;
 
 if prop("theme.prop","selected.0")=="4" then
   theme("miui4");
+endif;
+
+if prop("theme.prop","selected.0")=="5" then
+  theme("touchwiz");
+endif;
+
+if prop("theme.prop","selected.0")=="6" then
+  theme("franzyroy");
 endif;
 
 

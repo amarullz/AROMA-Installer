@@ -132,7 +132,7 @@ static  int     aparse_last_back_view = 0;
 //* MACROS
 //*
 #define _INITBACK() \
-  int func_pos = aparse_current_position++; \
+  int func_pos = ++aparse_current_position; \
   if (aparse_history_pos<APARSE_MAXHISTORY) { \
     aparse_history[aparse_history_pos++]=func_pos; \
   } \
@@ -145,10 +145,7 @@ static  int     aparse_last_back_view = 0;
   aparse_last_back_view = func_pos; \
   aparse_is_back_request = 0; \
   if (is_back_request!=5) is_back_request+=transition_style;
-/* \
-  if (is_back_request==2){ is_back_request=6; }\
-  else if (is_back_request==3){ is_back_request=7; }
-*/
+
 #define _FINISHBACK() \
   if (func_pos==-4){ \
     return NULL; \
@@ -848,7 +845,7 @@ Value * AROMA_RESREAD(const char * name, State * state, int argc, Expr * argv[])
 //* pleasewait
 //*
 Value * AROMA_PLEASEWAIT(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -1541,7 +1538,7 @@ Value * AROMA_INI_SET(const char * name, State * state, int argc, Expr * argv[])
 //* anisplash
 //*
 Value * AROMA_ANISPLASH(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -1645,7 +1642,7 @@ Value * AROMA_ANISPLASH(const char * name, State * state, int argc, Expr * argv[
 //* splash
 //*
 Value * AROMA_SPLASH(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -2991,7 +2988,7 @@ Value * AROMA_INSTALL(const char * name, State * state, int argc, Expr * argv[])
 //*
 Value * AROMA_CALIBTOOL(const char * name, State * state, int argc, Expr * argv[]) {
   /*
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   if (func_pos<aparse_startpos){
     return StringValue(strdup(""));
   }
@@ -3004,7 +3001,7 @@ Value * AROMA_CALIBTOOL(const char * name, State * state, int argc, Expr * argv[
 //* alert
 //*
 Value * AROMA_ALERT(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -3036,7 +3033,7 @@ Value * AROMA_ALERT(const char * name, State * state, int argc, Expr * argv[]) {
 //* confirm
 //*
 Value * AROMA_CONFIRM(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -3074,7 +3071,7 @@ Value * AROMA_CONFIRM(const char * name, State * state, int argc, Expr * argv[])
 //* textdialog
 //*
 Value * AROMA_TEXTDIALOG(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   
   if (func_pos < aparse_startpos) {
     return StringValue(strdup(""));
@@ -3195,7 +3192,7 @@ Value * AROMA_BACK(const char * name, State * state, int argc, Expr * argv[]) {
 //* Get Position
 //*
 Value * AROMA_GOLABEL(const char * name, State * state, int argc, Expr * argv[]) {
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   char pos[16];
   snprintf(pos, 16, "%i", func_pos);
   
@@ -3512,7 +3509,7 @@ Value * AROMA_INCLUDE(const char * name, State * state, int argc, Expr * argv[])
     return ErrorAbort(state, "%s() expects 1 args (include file path in aroma dir), got %d", name, argc);
   }
   
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   //-- This is Busy Function
   ag_setbusy();
   //-- Get Arguments
@@ -3589,7 +3586,7 @@ Value * AROMA_EVAL(const char * name, State * state, int argc, Expr * argv[]) {
     return ErrorAbort(state, "%s() expects 1 args (Script to execute), got %d", name, argc);
   }
   
-  int func_pos = aparse_current_position++;
+  int func_pos = ++aparse_current_position;
   //-- This is Busy Function
   ag_setbusy();
   byte show_log = (func_pos > aparse_startpos);

@@ -76,7 +76,7 @@ void acfg_init_ex(byte themeonly) {
   acfg_var.winroundsz   = 3;
   acfg_var.roundsz      = 2;
   acfg_var.btnroundsz   = 2;
-  acfg_var.fadeframes   = 7;
+  acfg_var.fadeframes   = 5;
   acfg_var.vibrate      = 5;
   set_vibrate_rate(acfg()->vibrate);
   snprintf(acfg_var.themename, 64, "");
