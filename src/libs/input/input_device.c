@@ -64,7 +64,7 @@ struct _AINPUT_STRUCT {
   byte  key_pressed[AINPUT_KEYCODE_MAX / 8];
   
   /* Touch Move Informations */
-  long  touch_last_tick;
+  // long  touch_last_tick;
   int   touch_last_x;
   int   touch_last_y;
 };
@@ -121,7 +121,7 @@ byte aipInit() {
   /* Set Screen Information */
   _aip->screen_width    = agw();
   _aip->screen_height   = agh();
-  _aip->touch_last_tick = aTick();
+  // _aip->touch_last_tick = aTick();
   _aip->touch_last_x    = 0;
   _aip->touch_last_y    = 0;
   /* Init Driver */
@@ -248,20 +248,22 @@ byte aipGetInput(AINPUT_EVENTP e) {
       case AINPUT_EV_RET_TOUCH: {
           /* Filter Move Event to Prevent Flooding Move Messages */
           if (e->state == AINPUT_EV_STATE_MOVE) {
-            /* 16ms Wait - ignore the floods */
+            /* 16ms Wait - ignore the floods 
             int difx = abs(_aip->touch_last_x - e->x);
             int dify = abs(_aip->touch_last_y - e->y);
             
             if ((difx + dify) >= agdp()) {
               if (_aip->touch_last_tick < aTick() - 2) {
-                aipSetKeyPress(AINPUT_TOUCH_KEYCODE, e->state);
-                /* Set Last Move Info */
-                _aip->touch_last_x = e->x;
-                _aip->touch_last_x = e->y;
-                _aip->touch_last_tick = aTick();
-                return ret;
+            */
+              aipSetKeyPress(AINPUT_TOUCH_KEYCODE, e->state);
+              /* Set Last Move Info */
+              _aip->touch_last_x = e->x;
+              _aip->touch_last_x = e->y;
+              // _aip->touch_last_tick = aTick();
+              return ret;
+            /*
               }
-            }
+            }*/
             
             /* Continue */
           }
@@ -270,7 +272,7 @@ byte aipGetInput(AINPUT_EVENTP e) {
             /* Set Last Move Info */
             _aip->touch_last_x = e->x;
             _aip->touch_last_x = e->y;
-            _aip->touch_last_tick = aTick();
+            // _aip->touch_last_tick = aTick();
             return ret;
           }
         }

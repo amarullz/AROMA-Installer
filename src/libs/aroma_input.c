@@ -42,7 +42,7 @@ static  byte      atouch_winmsg_n = 0;
 static  int       atouch_message_code = 889;
 
 //-- KEY QUEUE
-static  int       key_queue[512];
+static  int       key_queue[256];
 static  int       key_queue_len = 0;
 static pthread_mutex_t key_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t key_queue_cond = PTHREAD_COND_INITIALIZER;
@@ -205,11 +205,30 @@ static void * ev_input_thread(void * cookie) {
     }
     
     if (ret == AINPUT_EV_RET_TOUCH) {
-      // printf("%ix%i (%i)\n",e.x,e.y,e.state);
-      evtouch_x = e.x;
-      evtouch_y = e.y;
-      evtouch_state = e.state;
-      ev_post_message(evtouch_code, evtouch_state);
+      if ((e.x>0)&&(e.y>0)){
+        if (e.state==2){
+          int dx = abs(evtouch_x-e.x);
+          int dy = abs(evtouch_y-e.y);
+          if (dx+dy>0){
+            evtouch_x = e.x;
+            evtouch_y = e.y;
+            evtouch_state = e.state;
+            ev_post_message(evtouch_code, evtouch_state);
+          }
+        }
+        else{ 
+          evtouch_x = e.x;
+          evtouch_y = e.y;
+          evtouch_state = e.state;
+          ev_post_message(evtouch_code, evtouch_state);
+        }
+      }
+      else {
+        //-- False Event
+        evtouch_state = 0;
+        evtouch_x = 0;
+        evtouch_y = 0;
+      }
     }
     else if (e.type == AINPUT_EV_TYPE_KEY) {
       ev_post_message(e.key, e.state);

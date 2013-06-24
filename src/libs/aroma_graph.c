@@ -885,8 +885,9 @@ void ag_busyprogress() {
     ag_sync();
   }
 }
-
+#ifdef __ARM_NEON__
 #include "neon/blt_neon.c"
+#endif
 void ag32fbufcopy(dword * bfbz) {
   int x, y;
 #ifdef __ARM_NEON__
@@ -1063,29 +1064,24 @@ void ag_sync() {
     ag_refreshlock = 1;
     
     if (ag_32 == 1) {
-      /*
       #ifdef __ARM_NEON__
         int y;
-      
         for (y = 0; y < ag_fbv.yres; y++) {
           int yp = y * ag_fbv.xres;
           aBlt32_neon(ag_fbv.xres, (dword *) (ag_bf32 + yp), (word *) (ag_c.data + yp), 0);
         }
-      
-      #else*/
-      int x, y;
-      
-      for (y = 0; y < ag_fbv.yres; y++) {
-        int yp = y * ag_fbv.xres;
-        
-        for (x = 0; x < ag_fbv.xres; x++) {
-          int xy  = yp + x;
-          color c = ag_c.data[xy];
-          ag_bf32[xy] = ag_rgb32(ag_r(c), ag_g(c), ag_b(c));
+      #else
+        int x, y;
+        for (y = 0; y < ag_fbv.yres; y++) {
+          int yp = y * ag_fbv.xres;
+          
+          for (x = 0; x < ag_fbv.xres; x++) {
+            int xy  = yp + x;
+            color c = ag_c.data[xy];
+            ag_bf32[xy] = ag_rgb32(ag_r(c), ag_g(c), ag_b(c));
+          }
         }
-      }
-      
-      // #endif
+      #endif
     }
     else {
       memcpy(ag_b, ag_c.data, ag_fbsz);

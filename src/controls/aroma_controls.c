@@ -511,7 +511,6 @@ void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONT
         ag_draw(NULL, &tmpb[i], x, pos);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
-        usleep(1600);
       }
       
       free(tmpb);
@@ -554,7 +553,6 @@ void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONT
         ag_draw(NULL, &tmpb[i], x, pos);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
-        usleep(1600);
       }
       
       free(tmpb);
@@ -597,7 +595,6 @@ void aw_show_ex2(AWINDOWP win, byte anitype, int x, int pos, int w, int h, ACONT
         ag_draw(NULL, &tmpb[i], x, pos);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
-        usleep(1600);
       }
       
       free(tmpb);
@@ -987,7 +984,6 @@ void aw_unmaskparent(AWINDOWP win, CANVAS * p, CANVAS * maskc, int x, int y, int
         ag_draw(NULL, &tmpb[i], x, y);
         ag_ccanvas(&tmpb[i]);
         ag_sync();
-        usleep(1600);
       }
       
       free(tmpb);

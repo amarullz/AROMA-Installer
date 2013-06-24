@@ -1303,10 +1303,10 @@ Value * AROMA_INI_GET(const char * name, State * state, int argc, Expr * argv[])
   memset(retval, 0, 128);
   
   //-- Set Property
-  if      (strcmp(args[0], "roundsize") == 0) {
+  if (strcmp(args[0], "roundsize") == 0) {
     snprintf(retval, 128, "%i", acfg()->roundsz);
   }
-  else if (strcmp(args[0], "transition")) {
+  else if (strcmp(args[0], "transition")==0) {
     if (transition_style == 4) {
       snprintf(retval, 128, "stack");
     }
@@ -1437,8 +1437,6 @@ Value * AROMA_INI_SET(const char * name, State * state, int argc, Expr * argv[])
     set_vibrate_rate(acfg()->vibrate);
   }
   else if (strcmp(args[0], "transition") == 0) {
-    LOGS("Change Transition To %s\n", args[1]);
-    
     if (strcmp(args[1], "slide") == 0) {
       transition_style = 0;
     }
