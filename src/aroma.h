@@ -75,10 +75,13 @@
 //
 // AROMA Main Configurations
 //
-#define AROMA_NAME        "AROMA INSTALLER"
-#define AROMA_VERSION     "2.70B6"
-#define AROMA_BUILD       "130624-042B"
-#define AROMA_BUILD_CN    "Flamboyan-Beta"
+/*
+  //-- MOVE TO Android.mk
+  #define AROMA_NAME        "AROMA INSTALLER"
+  #define AROMA_VERSION     "2.70B6"
+  #define AROMA_BUILD       "130624-042B"
+  #define AROMA_BUILD_CN    "Flamboyan-Beta"
+*/
 #define AROMA_BUILD_L     "Bandung - Indonesia"
 #define AROMA_BUILD_A     "<support@amarullz.com>"
 #define AROMA_BUILD_URL   "http://www.amarullz.com/"

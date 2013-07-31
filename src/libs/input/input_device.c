@@ -248,23 +248,22 @@ byte aipGetInput(AINPUT_EVENTP e) {
       case AINPUT_EV_RET_TOUCH: {
           /* Filter Move Event to Prevent Flooding Move Messages */
           if (e->state == AINPUT_EV_STATE_MOVE) {
-            /* 16ms Wait - ignore the floods 
+            /* 16ms Wait - ignore the floods
             int difx = abs(_aip->touch_last_x - e->x);
             int dify = abs(_aip->touch_last_y - e->y);
             
             if ((difx + dify) >= agdp()) {
               if (_aip->touch_last_tick < aTick() - 2) {
             */
-              aipSetKeyPress(AINPUT_TOUCH_KEYCODE, e->state);
-              /* Set Last Move Info */
-              _aip->touch_last_x = e->x;
-              _aip->touch_last_x = e->y;
-              // _aip->touch_last_tick = aTick();
-              return ret;
+            aipSetKeyPress(AINPUT_TOUCH_KEYCODE, e->state);
+            /* Set Last Move Info */
+            _aip->touch_last_x = e->x;
+            _aip->touch_last_x = e->y;
+            // _aip->touch_last_tick = aTick();
+            return ret;
             /*
               }
             }*/
-            
             /* Continue */
           }
           else {

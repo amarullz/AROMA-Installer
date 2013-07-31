@@ -1303,7 +1303,7 @@ Value * AROMA_INI_GET(const char * name, State * state, int argc, Expr * argv[])
   if (strcmp(args[0], "roundsize") == 0) {
     snprintf(retval, 128, "%i", acfg()->roundsz);
   }
-  else if (strcmp(args[0], "transition")==0) {
+  else if (strcmp(args[0], "transition") == 0) {
     if (transition_style == 4) {
       snprintf(retval, 128, "stack");
     }

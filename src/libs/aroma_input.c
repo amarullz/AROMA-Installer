@@ -205,18 +205,19 @@ static void * ev_input_thread(void * cookie) {
     }
     
     if (ret == AINPUT_EV_RET_TOUCH) {
-      if ((e.x>0)&&(e.y>0)){
-        if (e.state==2){
-          int dx = abs(evtouch_x-e.x);
-          int dy = abs(evtouch_y-e.y);
-          if (dx+dy>0){
+      if ((e.x > 0) && (e.y > 0)) {
+        if (e.state == 2) {
+          int dx = abs(evtouch_x - e.x);
+          int dy = abs(evtouch_y - e.y);
+          
+          if (dx + dy > 0) {
             evtouch_x = e.x;
             evtouch_y = e.y;
             evtouch_state = e.state;
             ev_post_message(evtouch_code, evtouch_state);
           }
         }
-        else{ 
+        else {
           evtouch_x = e.x;
           evtouch_y = e.y;
           evtouch_state = e.state;
