@@ -193,6 +193,7 @@ void ev_input_callback_(struct input_event * ev) {
   }
 }
 
+byte touch_move_sent = 0;
 //-- INPUT THREAD
 static void * ev_input_thread(void * cookie) {
   //-- Loop for Input
@@ -207,14 +208,16 @@ static void * ev_input_thread(void * cookie) {
     if (ret == AINPUT_EV_RET_TOUCH) {
       if ((e.x > 0) && (e.y > 0)) {
         if (e.state == 2) {
-          int dx = abs(evtouch_x - e.x);
-          int dy = abs(evtouch_y - e.y);
+          evtouch_x = e.x;
+          evtouch_y = e.y;
+          evtouch_state = e.state;
           
-          if (dx + dy > 0) {
-            evtouch_x = e.x;
-            evtouch_y = e.y;
-            evtouch_state = e.state;
+          if (touch_move_sent == 0) {
+            touch_move_sent = 1;
             ev_post_message(evtouch_code, evtouch_state);
+          }
+          else {
+            touch_move_sent = 2;
           }
         }
         else {
@@ -288,13 +291,23 @@ void ui_clear_key_queue() {
 //-- Wait For Key
 int ui_wait_key() {
   pthread_mutex_lock(&key_queue_mutex);
+  int key = 0;
   
-  while (key_queue_len == 0) {
-    pthread_cond_wait(&key_queue_cond, &key_queue_mutex);
+  if (touch_move_sent == 2) {
+    touch_move_sent = 1;
+    key = evtouch_code;
+  }
+  else {
+    touch_move_sent = 0;
+    
+    while (key_queue_len == 0) {
+      pthread_cond_wait(&key_queue_cond, &key_queue_mutex);
+    }
+    
+    key = key_queue[0];
+    memcpy(&key_queue[0], &key_queue[1], sizeof(int) * --key_queue_len);
   }
   
-  int key = key_queue[0];
-  memcpy(&key_queue[0], &key_queue[1], sizeof(int) * --key_queue_len);
   pthread_mutex_unlock(&key_queue_mutex);
   return key;
 }

@@ -299,7 +299,7 @@ byte file_exists(const char * file);
 //
 // AROMA Kinetic Library Structures
 //
-#define AKINETIC_HISTORY_LENGTH     10
+#define AKINETIC_HISTORY_LENGTH     4
 #define AKINETIC_DAMPERING          0.98              // Gravity
 typedef struct  {
   byte    isdown;                                     // Is Touch Down

@@ -705,7 +705,7 @@ byte aw_setfocus(AWINDOWP win, ACONTROLP ctl) {
 dword aw_dispatch(AWINDOWP win) {
   dword msg;
   int i;
-  ui_clear_key_queue();
+  // ui_clear_key_queue();
   
   while (1) {
     //-- Wait For Event
