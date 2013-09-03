@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
   ## VERSIONING
   ##
   AROMA_NAME    := AROMA Installer
-  AROMA_VERSION := 2.70RC1
+  AROMA_VERSION := 2.70RC2
   AROMA_BUILD   := $(shell date +%y%m%d%H)
   AROMA_CN      := Flamboyan
 
@@ -143,6 +143,7 @@ include $(CLEAR_VARS)
   LOCAL_CFLAGS                  += -fdata-sections -ffunction-sections
   LOCAL_CFLAGS                  += -Wl,--gc-sections -fPIC -DPIC
   LOCAL_CFLAGS                  += -D_AROMA_NODEBUG
+#  LOCAL_CFLAGS                  += -D_AROMA_VERBOSE_INFO
   
   ## SET VERSION
   LOCAL_CFLAGS += -DAROMA_NAME="\"$(AROMA_NAME)\""
@@ -156,6 +157,17 @@ include $(CLEAR_VARS)
   
   ## INCLUDED LIBRARIES
   LOCAL_STATIC_LIBRARIES        := libm libc
+  
+  ifeq ($(MAKECMDGOALS),$(LOCAL_MODULE))
+    $(shell rm -rf $(PRODUCT_OUT)/obj/EXECUTABLES/$(LOCAL_MODULE)_intermediates)
+  endif
+  
+  ##
+  ## Remove Old Build
+  ##
+  ifeq ($(MAKECMDGOALS),$(LOCAL_MODULE))
+    $(shell rm -rf $(PRODUCT_OUT)/obj/EXECUTABLES/$(LOCAL_MODULE)_intermediates)
+  endif
 
 include $(BUILD_EXECUTABLE)
     

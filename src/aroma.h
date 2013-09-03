@@ -957,10 +957,17 @@ byte acchkopt_itemtype(ACONTROLP ctl, int index);
 #else
 #define LOGS(...) fprintf(stdout, _AROMA_DEBUG_TAG "/s: " __VA_ARGS__)
 #define LOGE(...) fprintf(stdout, _AROMA_DEBUG_TAG "/e: " __VA_ARGS__)
+#ifdef _AROMA_VERBOSE_INFO
+#define LOGW(...) fprintf(stdout, _AROMA_DEBUG_TAG "/w: " __VA_ARGS__)
+#define LOGI(...) fprintf(stdout, _AROMA_DEBUG_TAG "/i: " __VA_ARGS__)
+#define LOGV(...) fprintf(stdout, _AROMA_DEBUG_TAG "/v: " __VA_ARGS__)
+#define LOGD(...) fprintf(stdout, _AROMA_DEBUG_TAG "/d: " __VA_ARGS__)
+#else
 #define LOGW(...) /**/
 #define LOGI(...) /**/
 #define LOGV(...) /**/
 #define LOGD(...) /**/
+#endif
 #endif
 #define STRINGIFY(x) #x
 #define EXPAND(x) STRINGIFY(x)
