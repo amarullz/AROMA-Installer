@@ -171,7 +171,7 @@ void ev_input_callback_(struct input_event * ev) {
     evtouch_x = ev->value >> 16;
     evtouch_y = ev->value & 0xFFFF;
     
-    if ((evtouch_x > 0) && (evtouch_y > 0)) {
+    if ((evtouch_x != 0) && (evtouch_y != 0)) {
       if (ev->code == 0) {
         evtouch_state = 0;
       }
