@@ -110,45 +110,46 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
       case ABS_MT_POSITION:
         /* Multitouch XY Event */
         dev->p.state    |= INDR_POS_ST_SYNC_X | INDR_POS_ST_SYNC_Y;
+        if (dev->p.x != 0 && dev->p.y != 0) {
+          if (ev->value == (1 << 31)) {
+            dev->p.state  |= INDR_POS_ST_LASTSYNC;
+            dev->p.x = 0;
+            dev->p.y = 0;
+          }
+          else {
+            dev->p.state  &= ~INDR_POS_ST_LASTSYNC;
+            dev->p.x = (ev->value & 0x7FFF0000) >> 16;
+            dev->p.y = (ev->value & 0xFFFF);
+          }
         
-        if (ev->value == (1 << 31)) {
-          dev->p.state  |= INDR_POS_ST_LASTSYNC;
-          dev->p.x = 0;
-          dev->p.y = 0;
-        }
-        else {
-          dev->p.state  &= ~INDR_POS_ST_LASTSYNC;
-          dev->p.x = (ev->value & 0x7FFF0000) >> 16;
-          dev->p.y = (ev->value & 0xFFFF);
-        }
+          ev->type = EV_SYN;
+          ev->code = SYN_REPORT;
+          break;
         
-        ev->type = EV_SYN;
-        ev->code = SYN_REPORT;
-        break;
-        
-      case ABS_MT_TOUCH_MAJOR:
-      case ABS_MT_PRESSURE:
+        case ABS_MT_TOUCH_MAJOR:
+        case ABS_MT_PRESSURE:
       
-        /* Multitouch Pressure Event */
-        if (ev->value == 0) {
-          /* Screen UnTouched */
-          dev->p.state |= INDR_POS_ST_RLS_NEXT;
-          dev->p.x = 0;
-          dev->p.y = 0;
+          /* Multitouch Pressure Event */
+          if (ev->value == 0) {
+            /* Screen UnTouched */
+            dev->p.state |= INDR_POS_ST_RLS_NEXT;
+            dev->p.x = 0;
+            dev->p.y = 0;
+          }
+        
+          break;
+        
+        case ABS_MT_TRACKING_ID:
+          if (ev->value < 0) {
+            /* Screen UnTouched */
+            dev->p.state |= INDR_POS_ST_RLS_NEXT;
+            dev->p.x = 0;
+            dev->p.y = 0;
+            TOUCH_RELEASE_NEXTSYN = 1;
+            MT_TRACKING_IS_UNTOUCHED = 1;
+          }
         }
-        
-        break;
-        
-      case ABS_MT_TRACKING_ID:
-        if (ev->value < 0) {
-          /* Screen UnTouched */
-          dev->p.state |= INDR_POS_ST_RLS_NEXT;
-          dev->p.x = 0;
-          dev->p.y = 0;
-          TOUCH_RELEASE_NEXTSYN = 1;
-          MT_TRACKING_IS_UNTOUCHED = 1;
-        }
-        
+
         break;
         
       default:
