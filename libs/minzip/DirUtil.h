@@ -20,6 +20,13 @@
 #include <stdbool.h>
 #include <utime.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <selinux/selinux.h>
+#include <selinux/label.h>
+
 /* Like "mkdir -p", try to guarantee that all directories
  * specified in path are present, creating as many directories
  * as necessary.  The specified mode is passed to all mkdir
@@ -34,18 +41,15 @@
  * (usually if some element of path is not a directory).
  */
 int dirCreateHierarchy(const char *path, int mode,
-        const struct utimbuf *timestamp, bool stripFileName);
+        const struct utimbuf *timestamp, bool stripFileName,
+        struct selabel_handle* sehnd);
 
 /* rm -rf <path>
  */
 int dirUnlinkHierarchy(const char *path);
 
-/* chown -R <uid>:<gid> <path>
- * chmod -R <mode> <path>
- *
- * Sets directories to <dirMode> and files to <fileMode>.  Skips symlinks.
- */
-int dirSetHierarchyPermissions(const char *path,
-         int uid, int gid, int dirMode, int fileMode);
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // MINZIP_DIRUTIL_H_

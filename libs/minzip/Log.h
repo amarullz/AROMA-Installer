@@ -18,9 +18,6 @@
 
 // ---------------------------------------------------------------------
 
-#define NDEBUG
-#define LOG_NDEBUG 1
-
 /*
  * Normally we strip LOGV (VERBOSE messages) from release builds.
  * You can modify this (for example with "#define LOG_NDEBUG 0"
