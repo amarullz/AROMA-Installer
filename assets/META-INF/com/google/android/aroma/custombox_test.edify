@@ -1,0 +1,82 @@
+﻿###################################################################################################################
+#
+# FORM TEST
+#
+form(
+    "Form Example",
+    "Example of FORM usage checkbox-selectbox hybrid interface:",
+    "@default",
+    "form.prop",
+  #
+  # Type:
+  #  - group              = Group
+  #  - select             = Select Item
+  #  - select.selected    = Selected Select Item
+  #  - check              = Checkbox Item
+  #  - check.checked      = Checked Checkbox Item
+  #  - hide               = Hidden
+  #
+  #-------------+-----------------------[ Selectbox Without Group ]------------------------------#
+  # PROP ID     | TITLE            |  SUBTITLE                                   |    Type       #
+  #-------------+--------+-------------------------------------------------------+---------------#
+    "group1",     "Group 1",        "",                                         "group",
+      "opt1",     "Option 1",       "Group 1 Optionbox 1",                      "select",
+      "opt2",     "Option 2",       "Group 1 Optionbox 2",                      "select.selected",
+      "opt3",     "Option 3",       "Group 1 Optionbox 3",                      "select",
+      "chk1",     "Check  4",       "Group 1 Checkbox 4",                       "check",
+      "chk2",     "Check  5",       "Group 1 Checkbox 5",                       "check.checked",
+      
+    "group2",     "Group 2",        "",                                         "group",
+      "chk3",     "Check  1",       "Group 2 Checkbox 1",                       "check",
+      "chk4",     "Check  2",       "Group 2 Checkbox 2",                       "check.checked",
+      "opta",     "Option 3",       "Group 2 Optionbox 3",                      "select",
+      "optb",     "Option 4",       "Group 2 Optionbox 4",                      "select.selected",
+      "optc",     "Option 5",       "Group 2 Optionbox 5",                      "select",
+      "chk5",     "Check  6",       "Group 2 Checkbox 6",                       "check.checked",
+      "chk6",     "Check  7",       "Group 2 Checkbox 7",                       "check.checked"
+);
+
+textbox(
+ "Form Example",
+ "Form generated prop file",
+ "@update",
+ readtmpfile("form.prop")
+);
+
+###################################################################################################################
+#
+# COLORSPACE
+#
+form(
+    "Setting Example",
+    "Example of usage force_colorspace (Works only for 32bit display), and transition style:",
+    "@default",
+    "colorspace.prop",
+  #
+  # Type:
+  #  - group              = Group
+  #  - select             = Select Item
+  #  - select.selected    = Selected Select Item
+  #  - check              = Checkbox Item
+  #  - check.checked      = Checked Checkbox Item
+  #  - hide               = Hidden
+  #
+  #-------------+-----------------------[ Selectbox Without Group ]------------------------------#
+  # PROP ID     | TITLE            |  SUBTITLE                                   |    Type       #
+  #-------------+--------+-------------------------------------------------------+---------------#
+    "colorspace", "Select Color Space",        "",                              "group",
+      "default",  "Default",        "Don't Change The Colorspace",              "select.selected",
+      "argb",     "ARGB",           "Color Position: (8, 16, 24, 0)",           "select",
+      "abgr",     "ABGR",           "Color Position: (24, 16, 8, 0)",           "select",
+      "rgba",     "RGBA",           "Color Position: (0, 8, 16, 24)",           "select",
+      "bgra",     "BGRA",           "Color Position: (16, 8, 0, 24)",           "select",
+    
+    "transition", "Select Transition",        "",                              "group",
+      "slide",    "Slide",        "Slide from left-right vice-vesa",           "select.selected",
+      "stack",    "Stack",        "Like Card stack in Android Stock Launcher Drawer", "select"
+);
+if prop("colorspace.prop","colorspace")!="default" then
+  ini_set("force_colorspace",prop("colorspace.prop","colorspace"));
+endif;
+
+ini_set("transition",prop("colorspace.prop","transition"));

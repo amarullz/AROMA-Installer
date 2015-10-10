@@ -1,0 +1,1612 @@
+﻿### LICENSE:
+#
+# Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+### FILE INFO:
+#
+# AROMA Installer 2.70 - AROMA Installer Test Script Configuration
+#       (c) 2011-2012 by Ahmad Amarullah
+#           amarullz - xda-developers
+#           http://www.amarullz.com/
+#
+#       Binary Version  : 2.70B
+#       Binary Codename : Flamboyan
+#
+### INFO:
+#
+# * AROMA Resource Dir  = META-INF/com/google/android/aroma
+#
+# * AROMA Temporary Dir = /tmp/aroma/
+#
+# * About Icon          = @alert - show <AROMA Resource Dir>/icons/alert.png
+#                         or if theme used it will find <themedir>/icon.alert.png
+#                         you can still access it via "icons/alert"
+#
+# * dp                  = Device Pixelate. WVGA/QHD = 3, HVGA = 2.
+#                         dp calculated with = round(min(width,height) / 160)
+#
+###
+
+##
+# Fix Colorspace Issue
+#
+# For device which have a problem with color ( not display the correct color )
+# try to set "force_colorspace" with ini_set. It may caused by wrong framebuffer
+# information that passed by kernel into framebuffer device.
+#
+# You can use one of following values:
+#   "rgba", "abgr", "argb", "bgra"
+#
+# NOTE: It must be in top most script, or you will got the color flicker
+#
+#ini_set("force_colorspace","argb");
+#
+
+##
+# Forcing Device Pixelate Size
+#  defaut: floor( min( width, height ) / 160 )
+#
+# Usefull for tablet device, if interface was too big, you can
+# force dp size for smaller UI size.
+#
+#-------- Uncomment one of this to use custom dp size:
+#
+# ini_set("dp","1"); #-- LDPI ( 240x320 / QVGA )
+# ini_set("dp","2"); #-- MDPI ( 340x480 / HVGA )
+# ini_set("dp","3"); #-- HDPI ( 480x800 / WVGA )
+# ini_set("dp","4");
+# ini_set("dp","5");
+#
+
+##
+# Custom Key Code - Usefull For Some Device which not used
+#                   Standard key code for up/down/select/back/menu
+#
+# You can capture the keycode in
+# recovery using "aroma-keycapture-flashable.zip" Available in
+# AROMA Installer Thread.
+#
+# Press some key when it run, it will return key code,
+# that key can override up/down/select/back/menu actions in
+# AROMA Installer, you can even set your home key for up, or
+# volume down for select item
+#
+#-------- Uncomment & Modify this Code:
+#
+# ini_set("customkeycode_up",     "115");
+# ini_set("customkeycode_down",   "114");
+# ini_set("customkeycode_select", "116");
+# ini_set("customkeycode_menu",   "229");
+# ini_set("customkeycode_back",   "158");
+#
+
+##
+# Initializing Rom Information
+#
+ini_set("rom_name",             "AROMA Test Zip");
+ini_set("rom_version",          "2.70");
+ini_set("rom_author",           "amarullz");
+ini_set("rom_device",           "Any Device");
+ini_set("rom_date",             "June, 18 2013");
+
+
+##
+# Show Simple Splash
+#
+splash(
+#  #-- Duration 2000ms / 2 seconds
+    2000,
+  
+  #-- <AROMA Resource Dir>/sample.png
+    "sample"
+);
+
+##
+# Show Animated Splash
+#
+anisplash(
+#  #-- Number of Loop
+    4,
+  
+  #-- Frame 1 [ Image, duration in millisecond ]. <AROMA Resource Dir>/splash/a[1..6].png
+    "splash/a1", 500,
+    "splash/a2", 30,
+    "splash/a3", 30,
+    "splash/a4", 30,
+    "splash/a5", 30,
+    "splash/a6", 30
+);
+
+#
+# Set Small Font to Support all fonts
+#
+fontresload( "0", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "12" ); #-- Use sets of font (Font Family)
+fontresload( "1", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "14" ); #-- Use sets of font (Font Family)
+
+#
+# INCLUDE EXAMPLE = Language Selection & Form Example
+#
+include("language_select.edify");
+include("custombox_test.edify");
+
+
+###################################################################################################################
+#
+# SHOW LANGUAGE TEST MULTILINE
+#
+viewbox(
+  #-- Title
+    lang("langtest.title"),  #-- you can use lang("langtest.title") function or directly in string "<~langtest.title>"
+  
+  #-- Text
+    "<~langtest.multiline>",
+  
+  #-- Icon
+    "@info"
+);
+
+eval("alert(\"On Eval Function\",\"This Alert was executed from Eval Function...\", \"@info\");");
+
+
+###################################################################################################################
+#
+# STEP 1 - SELECT THEME
+#
+selectbox(
+  #-- Title
+    "<~themes.title>",
+  
+  #-- Sub Title
+    "<~themes.desc>",
+  
+  #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
+    "@personalize",
+  
+  #-- Will be saved in /tmp/aroma/theme.prop
+    "theme.prop",
+  
+  #---------------------------------[ Selectbox Without Group ]----------------------------------#
+  # TITLE            |  SUBTITLE                                                 | Initial Value #
+  #------------------+-----------------------------------------------------------+---------------#
+
+    "Generic",            "Unthemed AROMA Installer",                                    1,      #-- selected.0 = 1
+    "MIUI Theme",         "MIUI Theme by mickey-r & amarullz",                           0,      #-- selected.0 = 2
+    "ICS Theme",          "Ice Cream Sandwitch by DemonWav & amarullz",                  0,      #-- selected.0 = 3
+    "MIUI 4 Theme",       "MIUI 4/ICS Theme by amarullz & Lennox",                       0,      #-- selected.0 = 4
+    "Touchwiz",           "Touchwiz Theme by titanic_fanatic",                           0,      #-- selected.0 = 5
+    "Franzyroy",          "Franzyroy Theme by franzyroy",                                0       #-- selected.0 = 6
+
+  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+);
+
+##
+# SET THEME
+#
+#-- Change Info:
+# file_getprop : should use absolute path "/tmp/aroma/theme.prop"
+# prop         : just use relative path "theme.prop" will automatically read the "/tmp/aroma/theme.prop"
+#
+if prop("theme.prop","selected.0")=="2" then
+  theme("miui");
+endif;
+
+if prop("theme.prop","selected.0")=="3" then
+  theme("ics");
+endif;
+
+if prop("theme.prop","selected.0")=="4" then
+  theme("miui4");
+endif;
+
+if prop("theme.prop","selected.0")=="5" then
+  theme("touchwiz");
+endif;
+
+if prop("theme.prop","selected.0")=="6" then
+  theme("franzyroy");
+endif;
+
+
+###################################################################################################################
+#
+# STEP 2 - SHOW ROM INFORMATION
+#
+viewbox(
+  #-- Title
+    "<~welcome.title>",
+  
+  #-- Text
+    "<~welcome.text1> <b>"+
+	  #-- Get Config Value
+	  ini_get("rom_name")+
+	"</b> <~common.for> <b>"+ini_get("rom_device")+"</b>.\n\n"+
+    
+    "<~welcome.text2>\n\n"+
+	
+      "  <~welcome.version>\t: <b><#selectbg_g>"+ini_get("rom_version")+"</#></b>\n"+
+      "  <~welcome.codename>\t\t: <b><#selectbg_g>Flamboyan Beta</#></b>\n"+
+      "  <~welcome.updated>\t\t: <b><#selectbg_g>"+ini_get("rom_date")+"</#></b>\n\n\n"+
+
+    "<~welcome.next>",
+  
+  #-- Icon
+    "@welcome"
+);
+
+
+###################################################################################################################
+#
+# STEP 3 - LICENSE
+#
+agreebox(
+  #-- Title
+    "<~terms.title>",
+  
+  #-- Subtitle / Description
+    "<~terms.desc>",
+  
+  #-- Icon
+    "@license",
+  
+  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+    resread("license.txt"),
+  
+  #-- Checkbox Text
+    "<~terms.check>",
+  
+  #-- Unchecked Alert Message
+    "<~terms.confirm>"
+);
+
+
+###################################################################################################################
+#
+# STEP 4 - CHANGELOG
+#
+textbox(
+  #-- Title
+    "<~changelog.title>",
+  
+  #-- Subtitle
+    "<~changelog.desc>",
+  
+  #-- Icon
+    "@update",
+  
+  #-- Arg 4
+    resread("changelog.txt")
+);
+
+##
+##-- Back To English :D - and Use Roboto-Regular.ttf
+##
+alert("Back To English","OK, Multilanguage demo ends here... It will use english now...", "@info");
+loadlang("langs/en.lang");
+fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
+fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
+##
+##
+
+
+#
+# Save Demo Menu Position
+#
+gotolabel("aroma_installer_demo_pos");
+
+###################################################################################################################
+#
+# STEP 5 - SHOW MENUBOX - AROMA INSTALLER DEMO MENU
+#
+menubox(
+  #-- Title
+    "AROMA Installer Demo",
+  
+  #-- Sub Title
+    "Please select menu below to start AROMA Installer Features Demonstration",
+  
+  #-- Icon
+    "@apps",
+    
+  #-- Will be saved in /tmp/aroma/demo.prop
+    "demo.prop",
+    
+  #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+  # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+  #-------------------------+-----------------------------------------------------------+---------------#
+  
+    "Installation Demo",      "ROM Installation demonstration with AROMA Installer",       "@install",      #-- selected = 1
+    "System Info Demo",       "Get and show device/partition informations",                "@info",         #-- selected = 2
+    "Exec Demo",              "Run system program & shell script then show it results",    "@default",      #-- selected = 3
+    "AMS Demo",               "AROMA Markup String demonstration",                         "@agreement",    #-- selected = 4
+    "Dialog Demo",            "Show AROMA dialogs demonstration",                          "@alert",        #-- selected = 5
+    "Back Sequence Demo",     "Show AROMA back feature demonstration",                     "@customize",    #-- selected = 6
+	"Presistent Data Demo",   "Save & Load customize data into/from sdcard",               "@update",       #-- selected = 7
+	"Fonts & Unicode",        "Show TrueType/OpenType Fonts and UNICODE demonstration",    "@welcome",      #-- selected = 8
+    "Other Demo",             "Show others AROMA Features demonstration",                  "@apps"          #-- selected = 9
+);
+
+
+###################################################################################################################
+#                                                                                                                 #
+#                                         AROMA INSTALLER DEMO                                                    #
+#                                                                                                                 #
+###################################################################################################################
+
+##--------------------------------------
+#
+# System Info Demo
+#
+if prop("demo.prop","selected")=="2" then
+
+  #-- Show Please Wait
+  pleasewait("Get System Informations...");
+
+  #-- Fetch System Information
+  setvar(
+    #-- Variable Name
+      "sysinfo",
+    
+    #-- Variable Value
+      "<@center><b>Your Device System Information</b></@>\n\n"+
+      
+      "Model\t\t\t: <b><#selectbg_g>"+sysprop("ro.product.model")+"</#></b>\n"+
+      "Name\t\t\t: <b><#selectbg_g>"+sysprop("ro.product.name")+"</#></b>\n"+
+      "Device Name\t\t: <b><#selectbg_g>"+sysprop("ro.product.device")+"</#></b>\n"+
+      "Board Name\t\t: <b><#selectbg_g>"+sysprop("ro.product.board")+"</#></b>\n"+
+      "Manufacturer\t\t: <b><#selectbg_g>"+sysprop("ro.product.manufacturer")+"</#></b>\n\n"+
+      
+      "CPU\t\t\t: <b><#selectbg_g>"+sysprop("ro.product.cpu.abi")+"</#></b>\n"+
+      "LCD Desinty\t\t: <b><#selectbg_g>"+sysprop("ro.sf.lcd_density")+"</#></b>\n\n"+
+      
+      "System Size\t\t: <b><#selectbg_g>"+getdisksize("/system","m")+" MB</#></b>\n"+
+        "\tFree\t\t: <b><#selectbg_g>"+getdiskfree("/system","m")+" MB</#></b>\n\n"+
+      "Data Size\t\t: <b><#selectbg_g>"+getdisksize("/data","m")+" MB</#></b>\n"+
+        "\tFree\t\t: <b><#selectbg_g>"+getdiskfree("/data","m")+" MB</#></b>\n\n"+
+      "(/mnt/sdcard)\t\t: <b><#selectbg_g>"+getdisksize("/mnt/sdcard","m")+" MB</#></b>\n"+
+        "\tFree\t\t: <b><#selectbg_g>"+getdiskfree("/mnt/sdcard","m")+" MB</#></b>\n\n"+
+      "SDCard Size\t\t: <b><#selectbg_g>"+getdisksize("/sdcard","m")+" MB</#></b>\n"+
+        "\tFree\t\t: <b><#selectbg_g>"+getdiskfree("/sdcard","m")+" MB</#></b>\n\n"+
+      "SD-EXT Size\t\t: <b><#selectbg_g>"+getdisksize("/sd-ext","m")+" MB</#></b>\n"+
+        "\tFree\t\t: <b><#selectbg_g>"+getdiskfree("/sd-ext","m")+" MB</#></b>\n\n"+
+
+      ""
+  );
+  
+  #-- Show Textbox
+  textbox(
+    #-- Title
+      "System Information",
+    
+    #-- Subtitle
+      "Current system information may not supported in all devices.",
+    
+    #-- Icon
+      "@info",
+    
+    #-- Text
+      getvar("sysinfo")
+  );
+  
+  #-- Show Alert
+  alert(
+    #-- Alert Title
+      "Demo Finished",
+    
+    #-- Alert Text
+      "You will be back to Demo Main Menu",
+    
+    #-- Alert Icon
+      "@alert"
+  );
+  
+  #-- Back to Demo Menu ( 2 Wizard UI to Back )
+  back("2");
+  
+endif;
+
+
+##--------------------------------------
+#
+# Exec Demo
+#
+if prop("demo.prop","selected")=="3" then
+
+  #-- Show Please Wait
+  pleasewait("Executing Shell...");
+  
+  #-- Resource Exec
+  setvar(
+    #-- Save Return Status
+      "resexec_retstatus",
+    
+    #-- Run Shell
+      resexec("exec_demo/exec_demo1.sh")
+  );
+  
+  #-- Show Exec Buffer
+  textbox(
+    #-- Title
+      "AROMA Exec Demo",
+    
+    #-- Subtitle
+      "This textbox Contain Buffer Output from <b>resexec</b> function. And at the end, the return status is appended.",
+    
+    #-- Icon
+      "@default",
+    
+    #-- Text
+      getvar("exec_buffer")+
+      "\n\n<b>RETURN STATUS : "+
+      getvar("resexec_retstatus")
+  );
+  
+  
+  #-- Resource Exec
+  setvar(
+    #-- Save Return Status
+      "resexec_retstatus2",
+    
+    #-- Run Shell
+      resexec("exec_demo/exec_demo2.sh")
+  );
+  
+  #-- Show Exec Buffer
+  textbox(
+    #-- Title
+      "AROMA Exec Demo 2",
+    
+    #-- Subtitle
+      "This textbox Contain Buffer Output from <b>resexec</b> function. And at the end, the return status is appended.",
+    
+    #-- Icon
+      "@default",
+    
+    #-- Text
+      getvar("exec_buffer")+
+      "\n\n<b>RETURN STATUS : "+
+      getvar("resexec_retstatus2")
+  );
+  
+  #-- Extract displaycapture to /tmp/aroma/displaycapture
+  restotmp("exec_demo/displaycapture","displaycapture");
+  
+  #-- Exec
+  setvar(
+    #-- Save Return Status
+      "resexec_retstatus3",
+    
+    #-- Run Shell
+      exec("/tmp/aroma/displaycapture","This is First Argument","This is 2nd Argument","OK_LAST_ARGUMENT")
+  );
+  
+  #-- Show Exec Buffer
+  textbox(
+    #-- Title
+      "AROMA Exec Demo 3",
+    
+    #-- Subtitle
+      "This demo extract binary executable into AROMA tmp using <b>restotmp()</b>, then execute it using <b>exec()</b> function with arguments.",
+    
+    #-- Icon
+      "@default",
+    
+    #-- Text
+      getvar("exec_buffer")+
+      "\n\n<b>RETURN STATUS : "+
+      getvar("resexec_retstatus3")
+  );
+  
+  #-- Show Alert
+  alert(
+    #-- Alert Title
+      "Demo Finished",
+    
+    #-- Alert Text
+      "You will be back to Demo Main Menu",
+    
+    #-- Alert Icon
+      "@alert"
+  );
+  
+  #-- Back to Demo Menu ( 3 Wizard UI to Back )
+  back("4");
+  
+endif;
+
+
+##--------------------------------------
+#
+# AROMA Markup String Demo
+#
+if prop("demo.prop","selected")=="4" then
+
+  #-- Show Textbox
+  textbox(
+    #-- Title
+      "AROMA Markup String",
+    
+    #-- Subtitle
+      "This textbox demonstration how to use AROMA Markup String for formatting text in AROMA UI.",
+    
+    #-- Icon
+      "@agreement",
+    
+    #-- Text
+      resread("ams_sample.txt")
+  );
+  
+  #-- Show Alert
+  alert(
+    #-- Alert Title
+      "Demo Finished",
+    
+    #-- Alert Text
+      "You will be back to Demo Main Menu",
+    
+    #-- Alert Icon
+      "@alert"
+  );
+  
+  #-- Back to Demo Menu ( 2 Wizard UI to Back )
+  back("2");
+  
+endif;
+
+
+##--------------------------------------
+#
+# Dialog Demo
+#
+if prop("demo.prop","selected")=="5" then
+
+  #-- Show Back Menu
+  menubox(
+    #-- Title
+      "AROMA Dialog Demo",
+    
+    #-- Sub Title
+      "Please select menu below to Test AROMA Dialog Demonstration.",
+    
+    #-- Icon
+      "@alert",
+      
+    #-- Will be saved in /tmp/aroma/dialog_demo.prop
+      "dialog_demo.prop",
+      
+    #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+    # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+    #-------------------------+-----------------------------------------------------------+---------------#
+    
+      "Alert Demo",             "Show Alert Dialog with OK and Custom OK Button",            "@alert",      #-- selected = 1
+      "Confirm Demo",           "Show Confirmation Dialog and Display The Selected Button",  "@info",       #-- selected = 2
+      "Text Dialog",            "Show Text Dialog, same as Alert but text is scrollable",    "@agreement"   #-- selected = 3
+  );
+  
+  #-- Show Alert
+  if prop("dialog_demo.prop","selected")=="1" then
+    #-- Alert Demo 1
+    alert(
+      #-- Title
+        "Alert Demo 1",
+      #-- Text
+        "Demo 1: Show Text only with default OK button..."
+    );
+    
+    #-- Alert Demo 2
+    alert(
+      #-- Title
+        "Alert Demo 2",
+      #-- Text
+        "Demo 2: Show Text and Info Icon with default OK button...",
+      #-- Icon
+        "@info"
+    );
+    
+    #-- Alert Demo 3
+    alert(
+      #-- Title
+        "Alert Demo 3",
+      #-- Text
+        "Demo 3: Show Text and Alert Icon with default OK button...",
+      #-- Icon
+        "@alert"
+    );
+    
+    #-- Alert Demo 4
+    alert(
+      #-- Title
+        "Alert Demo 3",
+      #-- Text
+        "Demo 3: Show Text and Alert Icon with custom OK button...",
+      #-- Icon
+        "@alert",
+      #-- Ok text
+        "Custom OK Text"
+    );
+    
+  endif;
+  
+  
+  #-- Show Confirm
+  if prop("dialog_demo.prop","selected")=="2" then
+    #-- Confirm Demo 1
+    if
+      confirm(
+        #-- Title
+          "Confirm Demo 1",
+        #-- Text
+          "Please Select Yes or No?",
+        #-- Icon (Optional)
+          "@info"
+      )=="yes"
+    then
+      alert("Result","You press Yes Button...");
+    else
+      alert("Result","You press No Button...");
+    endif;
+    
+    #-- Confirm Demo 2
+    if
+      confirm(
+        #-- Title
+          "Confirm Demo 2",
+        #-- Text
+          "Are you Noobs or Real Dev (lol)?",
+        #-- Icon (Optional)
+          "@personalize",
+        #-- Yes Text
+          "Noobs",
+        #-- No Text
+          "Real Dev"
+      )=="yes"
+    then
+      alert("You Are Noobs","But no problem if you are a human...");
+    else
+      alert("You Are Real Dev","That's Great! If you are not lie ...");
+    endif;
+  endif;
+  
+  #-- Show Confirm
+  if prop("dialog_demo.prop","selected")=="3" then
+  
+    #-- TextDialog Demo 1
+    textdialog(
+      #-- Title
+        "TextDialog Demo 1",
+      #-- Text
+        resread("license.txt")
+    );
+    
+    #-- TextDialog Demo 2
+    textdialog(
+      #-- Title
+        "TextDialog Demo 2",
+      #-- Text
+        resread("ams_sample.txt"),
+      #-- Custom OK Button Text (Optional)
+        "Close"
+    );
+  endif;
+  
+  #-- Back to Dialog Demo Menu (Note: Dialog wasn't Wizard UI, so back("1") will back to dialog demo menu
+  back("1");
+endif;
+
+
+##--------------------------------------
+#
+# Back Sequence Demo
+#
+if prop("demo.prop","selected")=="6" then
+
+  #-- Show Back Menu
+  menubox(
+    #-- Title
+      "AROMA Back Demo",
+    
+    #-- Sub Title
+      "Please select menu below to Test Back Sequence Demonstration.\n\n<b>NOTE:</b> Back=1 is back to current UI.",
+    
+    #-- Icon
+      "@customize",
+      
+    #-- Will be saved in /tmp/aroma/back_demo.prop
+      "back_demo.prop",
+      
+    #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+    # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+    #-------------------------+-----------------------------------------------------------+---------------#
+    
+      "Demo Menu",              "Back = 2 - Back to Demo Menu",                              "@apps",       #-- selected = 1
+      "Changelog",              "Back = 3 - Back to Changelog Screen",                       "@update",     #-- selected = 2
+      "Terms and Conditions",   "Back = 4 - Back to Terms and Conditions",                   "@license",    #-- selected = 3
+      "Welcome",                "Back = 5 - Back to Welcome Message",                        "@welcome",    #-- selected = 4
+      "Select Theme",           "Back = 6 - Back to Select Theme",                           "@personalize" #-- selected = 5
+  );
+  
+  #-- Back Size will be saved in "back_value" variable 
+  setvar(
+    #-- Variable Name
+      "back_value",
+    
+    #-- Variable Value ( use calculate to set selected+1 )
+      cal(
+        #-- First Value
+        prop("back_demo.prop","selected"), 
+        
+        #-- Operator (+ = add)
+        "+",
+        
+        #-- Second Value
+        "1"
+      )
+  );
+  
+  #-- Do Back Action
+  back(
+    getvar("back_value")
+  );
+endif;
+
+
+##--------------------------------------
+#
+# Presistent Data Demo
+#
+if prop("demo.prop","selected")=="7" then
+	
+	#-- Ask SDCARD Mount Point
+	if (getvar("sdcard_location")=="") then
+		#-- Confirm Demo 1
+		if
+		  confirm(
+			#-- Title
+			  "SDCard Mount Point",
+			#-- Text
+			  "Where is your SDCard mounted?",
+			#-- Icon (Optional)
+			  "@info",
+			#-- Yes Text
+			  "/sdcard",
+			#-- No Text
+			  "/mnt/sdcard"
+		  )=="yes"
+		then
+		  setvar("sdcard_location","/sdcard");
+		else
+		  setvar("sdcard_location","/mnt/sdcard");
+		endif;
+	endif;
+	
+	#-- Load aroma_demo_presistent.prop into variable
+	setvar(
+	  #-- Variable name
+	    "presistent_prop",
+	  #-- Value
+	    read(
+		  #-- Absolute Path
+			getvar("sdcard_location")+"/aroma_demo_presistent.prop"
+		)
+	);
+	
+	#-- Check is there any aroma_demo_presistent.prop in sdcard
+	if (getvar("presistent_prop")!="") then
+		#-- aroma_demo_presistent.prop is available
+		if
+		  confirm(
+			#-- Title
+			  "Load Data",
+			#-- Text
+			  "Saved File <u>aroma_demo_presistent.prop</u> is Available in your SDCard\n\n"+
+			  "Do you want to load previous customization data?",
+			#-- Icon (Optional)
+			  "@info"
+		  )=="yes"
+		then
+		  #-- Write "presistent_prop" into temporary file
+		  writetmpfile("presistent.prop",getvar("presistent_prop"));
+		endif;
+	endif;
+	
+	##
+	# Show Customize Test Checkbox
+	#
+	checkbox(
+	  # Title
+		"Select Main Mods",
+	  
+	  # Sub Title
+		"This customize data will be saved into <b>aroma_demo_presistent.prop</b> in your sdcard:\n\n"+
+		"After saving the data, try exit installer, then run this demo again.",
+	  
+	  # Icon
+		"@update",
+	  
+	  # Will be saved in /tmp/aroma/mods.prop
+		"presistent.prop",
+	  
+	  #----------------------------------[ Selectbox With Groups ]-----------------------------------#
+	  # TITLE            |  SUBTITLE                                                 | Initial Value #
+	  #------------------+-----------------------------------------------------------+---------------#
+		"About Yourself",     "",                                                            2,      #-- Group 1
+		"I am a real Dev",    "If you are the real developer",                               0,      #-- item.1.1
+		"I am a noobs",       "If you are the real noobs",                                   0,      #-- item.1.2
+		"I am xda-developers","If you have an account in xda-developers.com",                0,      #-- item.1.3
+		
+		"Your Projects",      "",                                                            2,      #-- Group 2
+		"Custom ROM",         "If you made a custom ROM",                                    0,      #-- item.2.1
+		"Custom Troll",       "If you post many trolls in forum",                            0       #-- item.2.2
+
+	  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+	);
+	
+	##
+	# Show Save Confirmation
+	#
+	if
+	  confirm(
+		#-- Title
+		  "Save Data",
+		#-- Text
+		  "Your customize data will be saved into <u>aroma_demo_presistent.prop</u> in your SDCard\n\n"+
+		  "Do you want to save it?",
+		#-- Icon (Optional)
+		  "@info"
+	  )=="yes"
+	then
+	  #-- Write String Into File
+	  write(
+		#-- Absolute path into the file
+		  getvar("sdcard_location")+"/aroma_demo_presistent.prop",
+		
+		#-- File Content to be write into the file
+		  readtmpfile("presistent.prop");
+	  );
+	  
+	  #-- Show Alert
+	  alert(
+		#-- Alert Title
+		  "Data Has Been Saved",
+			
+		#-- Alert Text
+		  "Customized data has been saved into your SDCard\n\n"+
+		  "Try to exit the installer, then run this demo again.",
+			
+		#-- Alert Icon
+		  "@info"
+	  );
+	  
+	endif;
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+endif;
+
+# fontresload("0","droid.ttf","12");
+# fontresload("1","droid.ttf","14");
+##--------------------------------------
+#
+# FONTS & UNICODE DEMO
+#
+if prop("demo.prop","selected")=="8" then
+
+  #-- Show Other Demo
+  menubox(
+    #-- Title
+      "Fonts & UNICODE Demo",
+    
+    #-- Sub Title
+      "Please Select Fonts & UNICODE Demo Below.",
+    
+    #-- Icon
+      "@welcome",
+      
+    #-- Will be saved in /tmp/aroma/other_demo.prop
+      "fonts_demo.prop",
+      
+    #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+    # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+    #-------------------------+-----------------------------------------------------------+---------------#
+    
+      "DroidSans",              "Show License text with DroidSans Truetype font",            "@default",     #-- selected = 1
+      "DroidSerif-Regular",     "Show License text with DroidSerif-Regular Truetype font",   "@default",     #-- selected = 2
+      "Chinesse Characters",    "Show Chinesse text example",                                "@update",      #-- selected = 3
+	  "Russian & Latin Characters",     "Show Russian & Latin text example",                 "@update"       #-- selected = 4
+  );
+  
+  #-- Font Demo
+  if (prop("fonts_demo.prop","selected")=="1") || (prop("fonts_demo.prop","selected")=="2") then
+	
+	if (prop("fonts_demo.prop","selected")=="1") then
+	
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "0",
+		#-- Font File
+		  "ttf/Roboto-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "12"
+	  );
+	  
+	  #-- Load Truetype Font ( Absolute From ZIP Path )
+	  fontload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "1",
+		#-- Font File
+		  "META-INF/com/google/android/aroma/ttf/Roboto-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "14"
+	  );
+	  
+	endif;
+	
+	if (prop("fonts_demo.prop","selected")=="2") then
+	
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "0",
+		#-- Font File
+		  "ttf/DroidSerif-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "12"
+	  );
+	  
+	  #-- Load Truetype Font ( From AROMA Res )
+	  fontresload(
+	    #-- Font Type ( 0 = Small, 1 = Big )
+	      "1",
+		#-- Font File
+		  "ttf/DroidSerif-Regular.ttf",
+		#-- Font Size ( 0 = png font, >0 = font size )
+		  "14"
+	  );
+	  
+	endif;
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"Terms and Conditions",
+	  
+	  #-- Subtitle / Description
+		"Please read carefully The AROMA Installer Terms and Conditions Below.",
+	  
+	  #-- Icon
+		"@license",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("license.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+  #-- Chinesse Demo
+  if (prop("fonts_demo.prop","selected")=="3") then
+	
+    #-- Load Chinesse Fonts
+    fontresload( "0", "ttf/DroidSansFallback.ttf;ttf/Roboto-Regular.ttf", "12" );
+	  fontresload( "1", "ttf/DroidSansFallback.ttf;ttf/Roboto-Regular.ttf", "14" );
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"UNICODE DEMO",
+	  
+	  #-- Subtitle / Description
+		"This text below was demonstration of AROMA Installer rendering chinesse unicode characters",
+	  
+	  #-- Icon
+		"@update",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("unicode/chinesse.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+  #-- Russian & Latin Demo
+  if (prop("fonts_demo.prop","selected")=="4") then
+	
+    #-- Load Chinesse Fonts
+    fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
+	fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
+	
+	#-- Show License
+	textbox(
+	  #-- Title
+		"UNICODE DEMO",
+	  
+	  #-- Subtitle / Description
+		"This text below was demonstration of AROMA Installer rendering chinesse unicode characters",
+	  
+	  #-- Icon
+		"@update",
+	  
+	  #-- Text Content ( Read from <AROMA Resource Dir>/license.txt )
+		resread("unicode/russian_latin.txt")
+	);
+	
+	#-- Change Back To Normal Font
+	fontresload("0","fonts/small","0"); #-- Small Font
+	fontresload("1","fonts/big","0");   #-- Big Font
+	
+	#-- Show Alert
+	alert(
+	  #-- Alert Title
+	    "Demo Finished",
+		
+	  #-- Alert Text
+		"You will be back to Demo Main Menu",
+		
+	  #-- Alert Icon
+		"@alert"
+	);
+  
+	#-- Back to Dialog Demo Menu
+	back("2");
+  endif;
+  
+endif;
+
+
+
+##--------------------------------------
+#
+# Other Demo
+#
+if prop("demo.prop","selected")=="9" then
+
+  #-- Show Other Demo
+  menubox(
+    #-- Title
+      "AROMA Other Demo",
+    
+    #-- Sub Title
+      "Please Select Misc Demo Below.",
+    
+    #-- Icon
+      "@apps",
+      
+    #-- Will be saved in /tmp/aroma/other_demo.prop
+      "other_demo.prop",
+      
+    #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+    # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+    #-------------------------+-----------------------------------------------------------+---------------#
+    
+      "Reboot",                 "Reboot Your Device",                                        "@alert",       #-- selected = 1
+      "Exit",                   "Terminate AROMA Installer",                                 "@install",     #-- selected = 2
+      "Calculation",            "cal() function demo",                                       "@agreement",   #-- selected = 3
+      "Inline IF",              "iif() & cmp() function demo",                               "@info"         #-- selected = 4
+  );
+  
+  #-- Reboot
+  if prop("other_demo.prop","selected")=="1" then
+  	if
+  	  confirm(
+  		#-- Title
+  		  "Reboot",
+  		#-- Text
+  		  "Are you sure want to reboot your device?",
+  		#-- Icon (Optional)
+  		  "@alert"
+  	  )=="yes"
+  	then
+  	  #
+  	  # reboot("onfinish");   - Reboot if anything finished
+  	  # reboot("now");        - Reboot Directly
+  	  # reboot("disable");    - If you set reboot("now") before, use this command to revert it.
+  	  #
+  	  #-- NEW
+  	  # reboot("onfinish", "recovery");
+  	  # reboot("now", "fastboot");
+  	  #
+  	  if
+    	  confirm(
+    		#-- Title
+    		  "Reboot To Recovery",
+    		#-- Text
+    		  "Do You Want to Reboot To Recovery ?",
+    		#-- Icon (Optional)
+    		  "@alert"
+    	  )=="yes"
+    	then
+  	    reboot("now", "recovery");
+  	  else
+  	    reboot("now");
+  	  endif;
+  	endif;
+  endif;
+  
+  #-- Exit
+  if prop("other_demo.prop","selected")=="2" then
+	if
+	  confirm(
+		#-- Title
+		  "Exit",
+		#-- Text
+		  "Are you sure want to exit the Installer?",
+		#-- Icon (Optional)
+		  "@alert"
+	  )=="yes"
+	then
+	  #-- Exit - NOTE: Add dummy argument
+	  exit("");
+	endif;
+  endif;
+  
+  #-- Calculation
+  if prop("other_demo.prop","selected")=="3" then
+	#-- Calculation Alert
+	alert(
+	  #-- Alert Title
+	    "Calculation",
+		
+	  #-- Alert Text
+		"1024 * 1024\t= "+cal("1024","*","1024")+"\n"+
+		"2000 / 10\t= "+cal("2000","/","10")+"\n"+
+		"468 + 520\t= "+cal("468","+","520")+"\n"+
+		"9860 - 45\t= "+cal("9860","-","45")+"\n"+
+		"1113 mod 99\t= "+cal("1113","%","99"),
+		
+	  #-- Alert Icon
+		"@agreement"
+	);
+  endif;
+  
+  #-- Inline If
+  if prop("other_demo.prop","selected")=="4" then
+	#-- Inline If Alert
+	alert(
+	  #-- Alert Title
+	    "Inline If",
+		
+	  #-- Alert Text
+		"200 > 100\t= "+iif(cmp("200",">","100"),"True","False")+"\n"+
+		"200 < 100\t= "+iif(cmp("200","<","100"),"True","False")+"\n"+
+		"200 >= 200\t= "+iif(cmp("200",">=","200"),"True","False")+"\n"+
+		"200 <= 100\t= "+iif(cmp("200","<=","100"),"True","False")+"\n"+
+		"100 != 100\t= "+iif(cmp("100","!=","100"),"Yes, It's True","No, It's False")+"\n"+
+		"410 == 410\t= "+iif(cmp("410","==","410"),"True","False")
+		,
+		
+	  #-- Alert Icon
+		"@agreement"
+	);
+  endif;
+  
+  
+  
+  #-- Back To Other Demo Menu
+  back(
+    getvar("1")
+  );
+endif;
+
+
+
+###################################################################################################################
+#                                                                                                                 #
+#                                           INSTALLATION DEMO                                                     #
+#                                                                                                                 #
+###################################################################################################################
+
+
+###################################################################################################################
+#
+# STEP 6 - SHOW MENUBOX - INSTALLATION TYPE
+#
+menubox(
+  #-- Title
+    "Installation Type",
+  
+  #-- Sub Title
+    "Choose the installation type that best suits your needs.",
+  
+  #-- Icon
+    "@install",
+    
+  #-- Will be saved in /tmp/aroma/type.prop
+    "type.prop",
+    
+  #-------------------------+-----------------[ Menubox Items ]-------------------------+---------------#
+  # TITLE                   |  SUBTITLE                                                 |   Item Icons  #
+  #-------------------------+-----------------------------------------------------------+---------------#
+	
+	"Default",                "Will install default features and configurations",          "@install",      #-- selected = 1
+    "Typical",                "All recommended features will be installed",                "@default",      #-- selected = 2
+    "Minimalist",             "Only required features will be installed",                  "@apps",         #-- selected = 3
+    "Custom",                 "Choose which program or mod features you want to installed. "+
+	                          "Recommended for advanced users",                            "@customize"     #-- selected = 4
+);
+
+
+###################################################################################################################
+#
+# STEP 7 - SELECT MAIN MODS
+#
+if (prop("type.prop","selected")=="1") then
+  #-- IF "Default" Installation, don't show configuration, then write default mods.prop
+  #-- NOTE: mods.prop should exists, or updater-script will error
+  writetmpfile(
+    #-- Prop file will write to /tmp/aroma/mods.prop
+	  "mods.prop",
+	
+	#-- Default Values
+	  "selected.1=1\n"+    #-- Default Kernel = 2.6.0 Kernel
+	  "selected.2=1\n"+    #-- Default Boot Animation = Default Nexus S
+	  "selected.3=1\n"+    #-- Default SD-EXT Mods = Generic APP2SD
+	  "selected.4=1\n"+    #-- Default IME = Android IME
+	  "selected.5=1\n"     #-- Default Camera = Android Generic Camera
+  );
+else
+  #-- IF Not "Default" Show Main Features Selection
+  selectbox(
+    #-- Title
+      "Main Features",
+	  
+    #-- Sub Title
+      "Please select installer theme that you want to use in this installation test:",
+	  
+    #-- Icon: <AROMA Resource Dir>/icons/default.png or <ThemeDir>/icon.default.png
+      "@default",
+	  
+    #-- Will be saved in /tmp/aroma/mods.prop
+      "mods.prop",
+	  
+	  #-----------------------------------[ Selectbox With Groups ]----------------------------------#
+	  # TITLE            |  SUBTITLE                                                 | Initial Value #
+	  #------------------+-----------------------------------------------------------+---------------#
+
+	  "Kernel",                "",                                                            2,  #-- Group 1. key = "selected.1"
+	    "2.6.8 Kernel",        "Stable amarullz kernel 2.6.8",                                1,      #-- selected.1 = 1
+		"3.0.0 Kernel",        "Experimental amarullz kernel 3.0.0",                          0,      #-- selected.1 = 2
+		"AROMA Kernel",        "High performance amarullz AROMA kernel, base on 2.6.8",       0,      #-- selected.1 = 3
+
+      "Boot Animation",        "",                                                            2,  #-- Group 2. key = "selected.2"
+	    "Default Nexus S",     "Default Nexus S Android boot animation",                      1,      #-- selected.2 = 1
+		"AROMA Boot Animation","AROMA Earthquake logo boot animation",                        0,      #-- selected.2 = 2
+		"HTC Generic",         "Generic white HTC Quitely Briliant boot animation",           0,      #-- selected.2 = 3
+		"Old Android",         "Old Android logo boot animation",                             0,      #-- selected.2 = 4
+      
+	  "SD-EXT Mods",           "",                                                            2,  #-- Group 3. key = "selected.3"
+	    "Generic APP2SD",      "Generic app2sd, all non-system apk in sd-ext",                1,      #-- selected.3 = 1
+		"AD2SDX",              "All non-system files in sd-ext",                              0,      #-- selected.3 = 2
+		"Data2SD",             "All data files in sd-ext",                                    0,      #-- selected.3 = 3
+	  
+	  "Input Method",          "",                                                            2,  #-- Group 3. key = "selected.3"
+	    "Android IME",         "Android AOSP Keyboard",                                       1,      #-- selected.3 = 1
+		"HTC IME",             "HTC IME with T9 Support",                                     0,      #-- selected.3 = 2
+	  
+	  "Camera",                "",                                                            2,  #-- Group 3. key = "selected.4"
+	    "Android Camera",      "Android AOSP Generic Camera",                                 1,      #-- selected.4 = 1
+		"HTC Camera 3.5",      "New and No FC Error, but No 720p Video Recording",            0,      #-- selected.4 = 2
+		"HTC Camera 3.0",      "Old Camera With 720p Recording, but FC Error in Preview.",    0       #-- selected.4 = 3
+
+	  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+  );
+endif;
+
+
+###################################################################################################################
+#
+# STEP 8 - CUSTOMIZE YOUR INSTALLATION
+#
+if (prop("type.prop","selected")!="4") then
+  #-- IF Installation type not "Custom", don't show custom setup, then write default customize.prop
+  #-- NOTE: customize.prop should exists, or updater-script will error
+  writetmpfile(
+    #-- Prop file will write to /tmp/aroma/customize.prop
+	  "customize.prop",
+	
+	#-- Default Values ( item.x.x = value. value=1 selected, value=0 un-selected )
+	  iif(
+	    #-- If Minimalist
+	    prop("type.prop","selected")=="3",
+		
+		#-- True Value (minimal install)
+		  "item.1.1=0\n"+    #-- Facebook
+		  "item.1.2=0\n"+    #-- Twitter
+		  "item.1.3=0\n"+    #-- AdobeFlashPlayer
+		  "item.1.4=0\n"+    #-- AdobeReader
+		  
+		  "item.2.1=0\n"+    #-- EStrongFilemanager
+		  "item.2.2=0\n"+    #-- BackupEverything
+		  "item.2.3=0\n"+    #-- DaemonController
+		  "item.2.4=0\n"+    #-- DSPManager
+		  
+		  "item.3.1=0\n"+    #-- BookmarksWidget
+		  "item.3.2=0\n"+    #-- CalculatorWidget
+		  "item.3.3=0\n"+    #-- CalendarWidget
+		  "item.3.4=0\n"+    #-- ContactWidget
+		  "item.3.5=0\n"+    #-- FMRadioWidget
+		  "item.3.6=0\n"+    #-- MusicWidget
+		  "item.3.7=0\n"+    #-- QuickLaunchWidget
+		  "item.3.8=0\n"+    #-- TrendsWidget
+		  "item.3.9=0\n"+    #-- GenieWidget
+		  
+		  "item.4.1=0\n"+    #-- HTCSkins
+		  "item.4.2=0\n"     #-- MoreSkins
+		,
+		#-- False Value (non minimal install)
+		  "item.1.1=1\n"+    #-- Facebook
+		  "item.1.2=1\n"+    #-- Twitter
+		  "item.1.3=0\n"+    #-- AdobeFlashPlayer
+		  "item.1.4=0\n"+    #-- AdobeReader
+		  
+		  "item.2.1=1\n"+    #-- EStrongFilemanager
+		  "item.2.2=0\n"+    #-- BackupEverything
+		  "item.2.3=1\n"+    #-- DaemonController
+		  "item.2.4=0\n"+    #-- DSPManager
+		  
+		  "item.3.1=0\n"+    #-- BookmarksWidget
+		  "item.3.2=0\n"+    #-- CalculatorWidget
+		  "item.3.3=0\n"+    #-- CalendarWidget
+		  "item.3.4=1\n"+    #-- ContactWidget
+		  "item.3.5=1\n"+    #-- FMRadioWidget
+		  "item.3.6=1\n"+    #-- MusicWidget
+		  "item.3.7=1\n"+    #-- QuickLaunchWidget
+		  "item.3.8=1\n"+    #-- TrendsWidget
+		  "item.3.9=0\n"+    #-- GenieWidget
+		  
+		  "item.4.1=1\n"+    #-- HTCSkins
+		  "item.4.2=0\n"     #-- MoreSkins
+	  )
+  );
+else
+  #-- IF Installation type = "Custom" Show Customize Selection
+  checkbox(
+    #-- Title
+      "Customize Your Installation",
+	  
+    #-- Sub Title
+      "Select the program or mod features you want to installed.\n"+
+	  "Select an item in the list below to change how a feature is installed.",
+	  
+    #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
+      "@personalize",
+	  
+    #-- Will be saved in /tmp/aroma/customize.prop
+      "customize.prop",
+	  
+	  #------------------------------------------------[ Checkbox Without Group ]----------------------------------------------#
+	  # TITLE            |  SUBTITLE                                                                           | Initial Value #
+	  #------------------+-------------------------------------------------------------------------------------+---------------#
+
+	  "Applications",         "",                                                                                  2,  #-- Group 1. key = "item.1.x"
+	    "Facebook",           "Share and stay connected with your friends with the Facebook for Android app",      1,      #-- item.1.1 = Selected by default
+		"Twitter",            "Follow your interests: instant updates from your friends",                          1,      #-- item.1.2 = Selected by default
+	    "Adobe FlashPlayer",  "Bring the FULL web to your device with Flash Player",                               0,      #-- item.1.3 = Un-Selected by default
+	    "Adobe Reader",       "The global standard for reliably viewing and sharing PDF documents",                0,      #-- item.1.4 = Un-Selected by default
+      
+	  "Tools & File Manager", "",                                                                                  2,  #-- Group 2. key = "item.2.x"
+	    "EStrong Filemanager","All-in-one File manager, Application manager, Task killer, "+
+		                      "Dropbox client & ftp client",                                                       1,      #-- item.2.1 = Selected by default
+		"Backup Everything",  "Makes it easy to backup/restore your files from your Android",                      0,      #-- item.2.2 = Un-Selected by default
+		"Daemon Controller",  "Control your CPU, Overclock, Governoor, Voltage an many more",                      1,      #-- item.2.3 = Selected by default
+		"DSPManager",         "Independent equalizer for the headphone, speaker, and bluetooth.",                  0,      #-- item.2.4 = Un-Selected by default
+      
+	  "Widgets",              "",                                                                                  2,  #-- Group 3. key = "item.3.x"
+	    "Bookmarks Widget",   "Your browsing bookmarks widget",                                                    0,      #-- item.3.1 = Selected by default
+        "Calculator Widget",  "Calculator on your Home Screen with selectable skins",                              0,      #-- item.3.2 = Selected by default
+        "Calendar Widget",    "Calendar and Agenda on your Home Screen",                                           0,      #-- item.3.3 = Selected by default
+        "Contact Widget",     "Show your favorite contacts in slick HTC Sense Contact Widgets",                    1,      #-- item.3.4 = Selected by default
+        "FM Radio Widget",    "Access your FM Radio directly from your Home Screen",                               1,      #-- item.3.5 = Selected by default
+        "Music Widget",       "Music Player on Home Screen Widget",                                                1,      #-- item.3.6 = Selected by default
+        "QuickLaunch Widget", "Bliss Home Screen Widget with clock and shortcuts",                                 1,      #-- item.3.7 = Selected by default
+        "Trends Widget",      "Show current trends topic on your Home Screen",                                     1,      #-- item.3.8 = Selected by default
+	    "Genie Widget",       "Show News/Weather Widget on Home screen",                                           0,      #-- item.3.9 = Un-Selected by default
+	
+	  "Skins",                "",                                                                                  2,  #-- Group 4. key = "item.4.x"
+	    "HTC Skins",          "BlueSky and Burgundy skins",                                                        1,      #-- item.4.1 = Selected by default
+        "More Skins",         "HoneyHD and IceHD Skins",                                                           0       #-- item43.2 = Un-Selected by default
+		
+	  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+  );
+endif;
+
+
+##
+#
+# Next Screen is Installation UI, So change the next button text to "Install Now"
+#
+ini_set("text_next", "Install Now");
+ini_set("icon_next", "@installbutton");
+
+###################################################################################################################
+#
+# STEP 9 - MAKE SURE USER KNOW THAT NEXT STEP WAS INSTALLATION PROCESS
+#
+viewbox(
+  #-- Title
+    "Ready to Install",
+
+  #-- Text
+    "The wizard is ready to begin installation.\n\n"+
+	"Press <b>Install Now</b> to begin the installation.\n\n"+
+	"If you want to review or change any of your installation settings, press <b>Back</b>. Press Menu Key -> Quit Installation to exit the wizard.",
+
+  #-- Icon
+    "@install"
+);
+
+##
+#
+# Next Button in successfull installation should be back to "Next >"
+#
+ini_set("text_next", "Next");
+ini_set("icon_next", "@next");
+
+#-- Extract sleep to /tmp/aroma/sleep. It will be used in updater-script for testing wait script
+restotmp("exec_demo/sleep","sleep");
+
+
+###################################################################################################################
+#
+# STEP 10 - INSTALLATION PROCESS
+#
+setvar("retstatus",
+  install(
+	#-- Title
+      "Installing",
+	
+	#-- Installation Process message
+	  "<b>"+ini_get("rom_name")+"</b> are being installed.\n\n"+
+      "Please wait while installation wizard installs <b>"+ini_get("rom_name")+
+	  "</b>. This may take several minutes.",
+	
+	#-- Installation Icon
+      "@install",
+	
+	#-- Installation Finish Message
+      "The installation wizard has successfully installed <b>"+ini_get("rom_name")+
+	  "</b>. Press Next to continue."
+  )
+);
+
+#
+# ASK If We Want to back to demo main menu
+#
+checkviewbox(
+  #-- Title
+    "Post Installation",
+  
+  #-- Text
+    "Installation Finished. Do you want to go back to Demo Main Menu?",
+	
+  #-- Icon
+    "@welcome",
+
+  #-- Checkbox Text
+    "Back To Demo Main Menu.",
+
+  #-- Initial Checkbox value ( 0=unchecked, 1=checked ) -  (Optional, default:0)
+    "1",
+
+  #-- Save checked value in variable "reboot_it" (Optional)
+    "goto_mainmenu"
+);
+if
+  getvar("goto_mainmenu")=="1"
+then
+  goto("aroma_installer_demo_pos");
+endif;
+
+
+
+##
+#
+# Next Button is "Finish"
+#
+ini_set("text_next", "Finish");
+ini_set("icon_next", "@finish");
+
+###################################################################################################################
+#
+# STEP 11 - FINISH MESSAGE, Add Checkbox to Reboot or No. Save in "reboot_it" variable
+#
+# You can use return value or "reboot_it" variable to retrive checkbox value
+# Example:
+# if (checkviewbox(....)=="1" then
+#    ... checked ...
+# endif;
+#
+checkviewbox(
+  #-- Title
+    "Installation Completed",
+  
+  #-- Text
+    "<#selectbg_g><b>Congratulation...</b></#>\n\n"+
+    "<b>"+ini_get("rom_name")+"</b> has been installed into your device.\n\n"+
+    "Installer Status: "+getvar("retstatus")+"\n\n",
+	
+  #-- Icon
+    "@welcome",
+
+  #-- Checkbox Text
+    "Reboot your device now.",
+
+  #-- Initial Checkbox value ( 0=unchecked, 1=checked ) -  (Optional, default:0)
+    "1",
+
+  #-- Save checked value in variable "reboot_it" (Optional)
+    "reboot_it"
+);
+
+###
+#
+# Check if reboot checkbox was checked
+if
+  getvar("reboot_it")=="1"
+then
+  #
+  # reboot("onfinish");   - Reboot if anything finished
+  # reboot("now");        - Reboot Directly
+  # reboot("disable");    - If you set reboot("onfinish") before, use this command to revert it.
+  #
+  reboot("onfinish");
+endif;
+
+#---- FINISH
