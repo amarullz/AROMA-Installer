@@ -11,7 +11,7 @@ include $(CLEAR_VARS)
   ## Force Compiling Without ARM NEON
   ##   -- Uncomment This Line --
   ##
-  # AROMA_ARM_NEON      := false
+  AROMA_ARM_NEON      := false
   #
   
   ##
@@ -157,7 +157,7 @@ include $(CLEAR_VARS)
   
   ## INCLUDED LIBRARIES
   LOCAL_STATIC_LIBRARIES        := libm libc
-  
+  LOCAL_FORCE_STATIC_EXECUTABLE := true
   ifeq ($(MAKECMDGOALS),$(LOCAL_MODULE))
     $(shell rm -rf $(PRODUCT_OUT)/obj/EXECUTABLES/$(LOCAL_MODULE)_intermediates)
   endif
