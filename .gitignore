@@ -1,0 +1,5 @@
+*.zip
+out/aroma_installer
+out/aroma.zip
+out/out_folder.txt
+assets/META-INF/com/google/android/update-binary
