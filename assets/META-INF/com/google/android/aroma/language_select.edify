@@ -18,7 +18,7 @@ selectbox(
   #---------------------------------[ Selectbox Without Group ]----------------------------------#
   # TITLE            |  SUBTITLE                                                 | Initial Value #
   #------------------+-----------------------------------------------------------+---------------#
-
+    
     "English",            "Welcome to Installer",                                        1,      #-- selected.0 = 1
     "Indonesian",         "Selamat datang di Installer",                                 0,      #-- selected.0 = 2
     "Espanol",            "Bienvenido al Instalador",                                    0,      #-- selected.0 = 3
@@ -29,6 +29,7 @@ selectbox(
   	"Germany",            "Willkommen bei Installer",									                   0, 		 #-- selected.0 = 8
   	"Hebrew",             "ברוכים הבאים להתקנה",										                          0		 #-- selected.0 = 9
   	"Japanese",            "インストーラへようこそ",                               0,      #-- selected.0 = 10
+    "Turkish",            "Kuruluma Hoşgeldiniz",                                        0,      #-- selected.0 = 11
   #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
 );
 
@@ -73,5 +74,9 @@ endif;
 
 if prop("lang.prop","selected.0")=="10" then
   loadlang("langs/ja.lang");
+endif;
+
+if prop("lang.prop","selected.0")=="11" then
+  loadlang("langs/tr.lang");
 endif;
 
