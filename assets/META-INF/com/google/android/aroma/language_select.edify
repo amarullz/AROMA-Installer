@@ -79,3 +79,4 @@ endif;
 if prop("lang.prop","selected.0")=="11" then
   loadlang("langs/tr.lang");
 endif;
+
