@@ -124,32 +124,32 @@ byte INDR_translate_touch(AINPUTP me, INDR_DEVICEP dev,
         
           ev->type = EV_SYN;
           ev->code = SYN_REPORT;
-          break;
-        
-        case ABS_MT_TOUCH_MAJOR:
-        case ABS_MT_PRESSURE:
-      
-          /* Multitouch Pressure Event */
-          if (ev->value == 0) {
-            /* Screen UnTouched */
-            dev->p.state |= INDR_POS_ST_RLS_NEXT;
-            dev->p.x = 0;
-            dev->p.y = 0;
-          }
-        
-          break;
-        
-        case ABS_MT_TRACKING_ID:
-          if (ev->value < 0) {
-            /* Screen UnTouched */
-            dev->p.state |= INDR_POS_ST_RLS_NEXT;
-            dev->p.x = 0;
-            dev->p.y = 0;
-            TOUCH_RELEASE_NEXTSYN = 1;
-            MT_TRACKING_IS_UNTOUCHED = 1;
-          }
         }
-
+        break;
+        
+      case ABS_MT_TOUCH_MAJOR:
+      case ABS_MT_PRESSURE:
+      
+        /* Multitouch Pressure Event */
+        if (ev->value == 0) {
+          /* Screen UnTouched */
+          dev->p.state |= INDR_POS_ST_RLS_NEXT;
+          dev->p.x = 0;
+          dev->p.y = 0;
+        }
+        
+        break;
+        
+      case ABS_MT_TRACKING_ID:
+        if (ev->value < 0) {
+          /* Screen UnTouched */
+          dev->p.state |= INDR_POS_ST_RLS_NEXT;
+          dev->p.x = 0;
+          dev->p.y = 0;
+          TOUCH_RELEASE_NEXTSYN = 1;
+          MT_TRACKING_IS_UNTOUCHED = 1;
+        }
+        
         break;
         
       default:

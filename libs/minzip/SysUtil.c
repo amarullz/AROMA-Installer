@@ -44,19 +44,19 @@ static void* sysCreateAnonShmem(size_t length)
     return ptr;
 }
 
-static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
+static int getFileStartAndLength(int fd, loff_t *start_, size_t *length_)
 {
-    off_t start, end;
+    loff_t start, end;
     size_t length;
 
     assert(start_ != NULL);
     assert(length_ != NULL);
 
-    start = lseek(fd, 0L, SEEK_CUR);
-    end = lseek(fd, 0L, SEEK_END);
-    (void) lseek(fd, start, SEEK_SET);
+    start = lseek64(fd, 0L, SEEK_CUR);
+    end = lseek64(fd, 0L, SEEK_END);
+    (void) lseek64(fd, start, SEEK_SET);
 
-    if (start == (off_t) -1 || end == (off_t) -1) {
+    if (start == (loff_t) -1 || end == (loff_t) -1) {
         LOGE("could not determine length of file\n");
         return -1;
     }
@@ -82,7 +82,7 @@ static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
  */
 int sysLoadFileInShmem(int fd, MemMapping* pMap)
 {
-    off_t start;
+    loff_t start;
     size_t length, actual;
     void* memPtr;
 
@@ -117,7 +117,7 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
  */
 int sysMapFileInShmem(int fd, MemMapping* pMap)
 {
-    off_t start;
+    loff_t start;
     size_t length;
     void* memPtr;
 
@@ -146,6 +146,9 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
  * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
  * value and does not disturb "pMap".
  */
+ //nkk71: function not used by aroma installer, don't fix it
+ //       it would break anyway, because mmap handles off_t not loff_t
+ //       in mmap(....actualStart)
 int sysMapFileSegmentInShmem(int fd, off_t start, long length,
     MemMapping* pMap)
 {
