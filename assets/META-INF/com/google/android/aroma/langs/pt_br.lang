@@ -1,0 +1,80 @@
+﻿### LICENSE:
+#
+# Copyright (C) 2011 Ahmad Amarullah ( http://amarullz.com/ )
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+### LANGUAGE STRING RESOURCE FILE
+#
+#   Language  : Portugues do Brasil
+#   By        : pedrolucasbp
+#
+
+#
+#--- COMMON SYSTEM STRING RESOURCE
+#
+text_ok=OK
+text_next=Próximo
+text_back=Voltar
+text_yes=Sim
+text_no=Não
+text_about=Sobre
+text_calibrating=Ferramentas de Calibração
+text_quit=Instalação rápida
+text_quit_msg=Você tem certeza que deseja sair do instalador?
+
+#
+#-- CUSTOM STRING RESOURCE
+#
+common.for=para
+
+devsel.name=Configurações de instalação
+devsel.cpt=Por favor, selecione a configuração para o instalador:
+devsel.type=Selecione seu dispositivo:
+devsel.sim=Selecione o número de cartões SIM que são suportados pelo seu celular:
+devsel.other=A300F e outros
+ins.type=Selecione o tipo de instalação:
+ins.clean=Instalação completa
+ins.fmt=Atualizar com limpeza do Sistema (recomendada)
+ins.update=Atualizar o Sistema e dar boot
+ins.boot=Reparar o boot
+ins.clean1=Instalação limpa. PERDERÁ TODAS AS APPS!!!
+ins.fmt1=Todas as mudanças no /system serão canceladas. Se você tem o Google Services, vai precisar reinsta-las.
+ins.update1=Atualizar o sistema, todos os dados serão salvos.
+ins.boot1=Apenas atualizar a boot.img.
+
+langtest.title=Teste de linguagem
+langtest.multiline=Esse texto está localizado em langs/pt_br.lang\
+Use barra invertida antes para adicionar nova linha\
+\
+Você pode fazer <b>Formatação</b> dentro do recurso string.\
+\
+Obrigado por usar o instalador AROMA
+
+#-- End of string without any backslash for multiline text
+
+
+themes.title=Selecione o tema
+themes.desc=Por favor, selecione o tema do instalador que você quer usar neste teste de instalação:
+
+welcome.title=Bem vindo
+welcome.text1=Você está prestes a instalar
+welcome.text2=O desenvolvedor não será responsável em caso de danos no seu dispositivo.
+welcome.version=VERSION
+welcome.codename=AUTHOR
+welcome.updated=UPDATED
+welcome.next= Precione próximo para continuar a instalação
+
+inst.1=Instalando
+inst.2=Por favor, aguarde...
+inst.3=Instalado com sucesso!
